@@ -1,10 +1,10 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:output |src) (:port 6001) (:reload-fn |app.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.1)
+{} (:package |gen-code)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:output |src) (:port 6001) (:reload-fn |gen-code.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.1)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |app.comp.container $ %{} :FileEntry
+    |gen-code.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -211,7 +211,7 @@
         :code $ %{} :Expr (:at 1499755354983) (:by nil)
           :data $ {}
             |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |ns)
-            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.comp.container)
+            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.comp.container)
             |v $ %{} :Expr (:at 1499755354983) (:by nil)
               :data $ {}
                 |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |:require)
@@ -258,12 +258,12 @@
                         |j $ %{} :Leaf (:at 1507461858342) (:by |root) (:text |comp-reel)
                 |yj $ %{} :Expr (:at 1521954061310) (:by |root)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1527788377809) (:by |root) (:text |app.config)
+                    |j $ %{} :Leaf (:at 1527788377809) (:by |root) (:text |gen-code.config)
                     |r $ %{} :Leaf (:at 1521954064826) (:by |root) (:text |:refer)
                     |v $ %{} :Expr (:at 1521954065004) (:by |root)
                       :data $ {}
                         |j $ %{} :Leaf (:at 1521954067604) (:by |root) (:text |dev?)
-    |app.config $ %{} :FileEntry
+    |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1544873875614) (:by |rJG4IHzWf)
@@ -295,8 +295,8 @@
         :code $ %{} :Expr (:at 1527788237503) (:by |root)
           :data $ {}
             |T $ %{} :Leaf (:at 1527788237503) (:by |root) (:text |ns)
-            |j $ %{} :Leaf (:at 1527788237503) (:by |root) (:text |app.config)
-    |app.main $ %{} :FileEntry
+            |j $ %{} :Leaf (:at 1527788237503) (:by |root) (:text |gen-code.config)
+    |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -597,7 +597,7 @@
         :code $ %{} :Expr (:at 1499755354983) (:by nil)
           :data $ {}
             |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |ns)
-            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.main)
+            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.main)
             |r $ %{} :Expr (:at 1499755354983) (:by nil)
               :data $ {}
                 |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |:require)
@@ -611,21 +611,21 @@
                         |r $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |clear-cache!)
                 |v $ %{} :Expr (:at 1499755354983) (:by nil)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.comp.container)
+                    |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.comp.container)
                     |r $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |:refer)
                     |v $ %{} :Expr (:at 1499755354983) (:by nil)
                       :data $ {}
                         |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |comp-container)
                 |y $ %{} :Expr (:at 1499755354983) (:by nil)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1508556737455) (:by |root) (:text |app.updater)
+                    |j $ %{} :Leaf (:at 1508556737455) (:by |root) (:text |gen-code.updater)
                     |r $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |:refer)
                     |v $ %{} :Expr (:at 1499755354983) (:by nil)
                       :data $ {}
                         |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |updater)
                 |yT $ %{} :Expr (:at 1499755354983) (:by nil)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.schema)
+                    |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.schema)
                     |r $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |:as)
                     |v $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |schema)
                 |yj $ %{} :Expr (:at 1507399674125) (:by |root)
@@ -650,7 +650,7 @@
                     |v $ %{} :Leaf (:at 1507399757678) (:by |root) (:text |reel-schema)
                 |yy $ %{} :Expr (:at 1527788302920) (:by |root)
                   :data $ {}
-                    |j $ %{} :Leaf (:at 1527788304925) (:by |root) (:text |app.config)
+                    |j $ %{} :Leaf (:at 1527788304925) (:by |root) (:text |gen-code.config)
                     |r $ %{} :Leaf (:at 1527788306048) (:by |root) (:text |:as)
                     |v $ %{} :Leaf (:at 1527788306884) (:by |root) (:text |config)
                 |yyT $ %{} :Expr (:at 1626201173819) (:by |rJG4IHzWf)
@@ -663,7 +663,7 @@
                     |T $ %{} :Leaf (:at 1626290810913) (:by |rJG4IHzWf) (:text "|\"bottom-tip")
                     |j $ %{} :Leaf (:at 1626290816153) (:by |rJG4IHzWf) (:text |:default)
                     |r $ %{} :Leaf (:at 1626290825711) (:by |rJG4IHzWf) (:text |hud!)
-    |app.schema $ %{} :FileEntry
+    |gen-code.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -689,8 +689,8 @@
         :code $ %{} :Expr (:at 1499755354983) (:by nil)
           :data $ {}
             |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |ns)
-            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.schema)
-    |app.updater $ %{} :FileEntry
+            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.schema)
+    |gen-code.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1499755354983) (:by nil)
@@ -743,7 +743,7 @@
         :code $ %{} :Expr (:at 1499755354983) (:by nil)
           :data $ {}
             |T $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |ns)
-            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |app.updater)
+            |j $ %{} :Leaf (:at 1499755354983) (:by |root) (:text |gen-code.updater)
             |r $ %{} :Expr (:at 1584874614885) (:by |rJG4IHzWf)
               :data $ {}
                 |T $ %{} :Leaf (:at 1584874616480) (:by |rJG4IHzWf) (:text |:require)

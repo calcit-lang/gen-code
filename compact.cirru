@@ -1,10 +1,10 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:version |0.0.1)
+{} (:package |gen-code)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.1)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |app.comp.container $ %{} :FileEntry
+    |gen-code.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -35,13 +35,13 @@
                   when dev? $ comp-reel (>> states :reel) reel ({})
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.comp.container $ :require (respo-ui.css :as css)
+          ns gen-code.comp.container $ :require (respo-ui.css :as css)
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
-            app.config :refer $ dev?
-    |app.config $ %{} :FileEntry
+            gen-code.config :refer $ dev?
+    |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -50,8 +50,8 @@
           :code $ quote
             def site $ {} (:storage-key "\"workflow")
       :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns app.config)
-    |app.main $ %{} :FileEntry
+        :code $ quote (ns gen-code.config)
+    |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -102,18 +102,18 @@
             defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.main $ :require
+          ns gen-code.main $ :require
             respo.core :refer $ render! clear-cache!
-            app.comp.container :refer $ comp-container
-            app.updater :refer $ updater
-            app.schema :as schema
+            gen-code.comp.container :refer $ comp-container
+            gen-code.updater :refer $ updater
+            gen-code.schema :as schema
             reel.util :refer $ listen-devtools!
             reel.core :refer $ reel-updater refresh-reel
             reel.schema :as reel-schema
-            app.config :as config
+            gen-code.config :as config
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
-    |app.schema $ %{} :FileEntry
+    |gen-code.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -121,8 +121,8 @@
               :states $ {}
                 :cursor $ []
       :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns app.schema)
-    |app.updater $ %{} :FileEntry
+        :code $ quote (ns gen-code.schema)
+    |gen-code.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -134,5 +134,5 @@
                 _ $ do (eprintln "\"unknown op:" op) store
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.updater $ :require
+          ns gen-code.updater $ :require
             respo.cursor :refer $ update-states
