@@ -17,21 +17,7 @@
                     {} $ :content "\""
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
-                  textarea $ {}
-                    :value $ :content state
-                    :placeholder "\"Content"
-                    :class-name $ str-spaced css/expand css/textarea
-                    :style $ {} (:height 320)
-                    :on-input $ fn (e d!)
-                      d! cursor $ assoc state :content (:value e)
-                  =< 8 nil
-                  div
-                    {} $ :class-name css/expand
-                    <> "|This is some content with `code`"
-                    =< |8px nil
-                    button $ {} (:class-name css/button) (:inner-text "\"Run")
-                      :on-click $ fn (e d!)
-                        println $ :content state
+                  comp-drafter $ >> states :drafter
                   when dev? $ comp-reel (>> states :reel) reel ({})
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -41,6 +27,137 @@
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
+            gen-code.comp.drafter :refer $ comp-drafter
+    |gen-code.comp.drafter $ %{} :FileEntry
+      :defs $ {}
+        |*abort-control $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *abort-control nil)
+        |*gen-ai-new $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *gen-ai-new nil)
+        |call-genai-msg! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn call-genai-msg! (variant cursor state prompt-text d! *text) (hint-fn async)
+              if (nil? @*gen-ai-new)
+                reset! *gen-ai-new $ new GoogleGenAI
+                  js-object $ :apiKey (get-gemini-key!)
+              if-let
+                abort $ deref *abort-control
+                do (js/console.warn "\"Aborting prev") (.!abort abort)
+              js/setTimeout $ fn ()
+                d! $ :: :states cursor
+                  -> state (assoc :answer nil) (assoc :loading? true)
+              let
+                  gen-ai $ let
+                      ai @*gen-ai-new
+                    ; js/console.log ai
+                    , ai
+                  model $ pick-model variant
+                  content prompt-text
+                  json? $ or (.!includes prompt-text "\"{{json}}") (.!includes prompt-text "\"{{JSON}}")
+                  pro? $ .!includes model "\"pro"
+                  think? $ or pro? (.!includes prompt-text "\"{{think}}") (.!includes prompt-text "\"{{THINK}}") (.!includes prompt-text "\"???")
+                  search? $ or (.!includes prompt-text "\"{{search}}") (.!includes prompt-text "\"{{SEARCH}}")
+                  has-url? $ or (.!includes prompt-text "\"http://") (.!includes prompt-text "\"https://")
+                  sdk-result $ js-await
+                    .!generateContentStream (.-models gen-ai)
+                      js-object (:model model)
+                        :contents $ js-array
+                          js-object (:role "\"user")
+                            :parts $ js-array
+                              js-object $ :text content
+                        :config $ js/Object.assign
+                          js-object
+                            :thinkingConfig $ if think?
+                              js-object
+                                :thinkingBudget $ if pro? 10000 1000
+                                :includeThoughts think?
+                              js-object (:thinkingBudget 0) (:includeThoughts false)
+                            :httpOptions $ js-object
+                              :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                            :tools $ let
+                                t $ ->
+                                  js-array
+                                    if search? $ js-object
+                                      :googleSearch $ js-object
+                                    if has-url? $ js-object
+                                      :urlContext $ js-object
+                                  .!filter $ fn (x & _a) x
+                              if
+                                = 0 $ .-length t
+                                , js/undefined t
+                            :abortSignal $ let
+                                abort $ new js/AbortController
+                              reset! *abort-control abort
+                              .-signal abort
+                          if json?
+                            js-object $ "\"responseMimeType" "\"application/json"
+                            , js/undefined
+                js-await $ js-for-await sdk-result
+                  fn (? chunk)
+                    if (some? chunk)
+                      do
+                        swap! *text str $ let
+                            t $ either (.-text chunk) js/chunk.candidates[0].content?.parts?.[0]?.text
+                          if (nil? t) (js/console.warn "\"empty text in:" chunk)
+                          , t
+                        d! $ :: :states cursor
+                          -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                    d! $ :: :states cursor
+                      -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                d! $ :: :states cursor
+                  -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? true)
+        |comp-drafter $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn comp-drafter (states)
+              let
+                  cursor $ :cursor states
+                  state $ either (:data states)
+                    {} (:answer "\"") (:loading? false) (:done? false) (:query "\"")
+                js/console.log "\"State" state
+                div
+                  {}
+                    :style $ {} (:padding 16)
+                    :class-name css/row
+                  div ({})
+                    textarea $ {}
+                      :class-name $ str-spaced css/textarea css/font-code!
+                      :style $ {} (:width 400) (:height 120)
+                      :placeholder "\"inputs"
+                      :value $ :query state
+                      :on-input $ fn (e d!)
+                        d! cursor $ assoc state :query (:value e)
+                    pre $ {}
+                      :innerText $ :answer state
+                  div ({})
+                    button $ {} (:class-name css/button) (:inner-text "\"Run")
+                      :on-click $ fn (e d!)
+                        let
+                            *text $ atom "\""
+                          call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+        |get-gemini-key! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn get-gemini-key! () $ let
+                key $ js/localStorage.getItem "\"gemini-key"
+              if (blank? key)
+                let
+                    v $ js/prompt "\"Required gemini-key in localStorage"
+                  if (blank? v)
+                    raise $ new js/Error "\"key is empty"
+                  js/localStorage.setItem "\"gemini-key" v
+                  , v
+                , key
+        |pick-model $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn pick-model (variant)
+              case-default variant "\"gemini-2.5-flash-preview-05-20" (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote
+          ns gen-code.comp.drafter $ :require
+            respo.core :refer $ defcomp defeffect <> >> div button textarea span input a pre img
+            respo.css :refer $ defstyle
+            respo-ui.css :as css
+            respo.util.format :refer $ hsl
+            "\"@google/genai" :refer $ GoogleGenAI Modality
     |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
