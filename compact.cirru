@@ -54,8 +54,6 @@
                   model $ pick-model variant
                   content prompt-text
                   json? $ or (.!includes prompt-text "\"{{json}}") (.!includes prompt-text "\"{{JSON}}")
-                  pro? $ .!includes model "\"pro"
-                  think? $ or pro? (.!includes prompt-text "\"{{think}}") (.!includes prompt-text "\"{{THINK}}") (.!includes prompt-text "\"???")
                   search? $ or (.!includes prompt-text "\"{{search}}") (.!includes prompt-text "\"{{SEARCH}}")
                   has-url? $ or (.!includes prompt-text "\"http://") (.!includes prompt-text "\"https://")
                   sdk-result $ js-await
@@ -67,11 +65,7 @@
                               js-object $ :text content
                         :config $ js/Object.assign
                           js-object
-                            :thinkingConfig $ if think?
-                              js-object
-                                :thinkingBudget $ if pro? 10000 1000
-                                :includeThoughts think?
-                              js-object (:thinkingBudget 0) (:includeThoughts false)
+                            ; :thinkingConfig $ js-object (:thinkingBudget 1000) (:includeThoughts true)
                             :httpOptions $ js-object
                               :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
                             :tools $ let
@@ -89,19 +83,29 @@
                                 abort $ new js/AbortController
                               reset! *abort-control abort
                               .-signal abort
+                            :responseMimeType |application/json
+                            :responseSchema $ js-object
+                              :type $ .-ARRAY Type
+                              :items $ js-object
+                                :anyOf $ js-array
+                                  js-object
+                                    :type $ .-STRING Type
+                                    :description "\"this is a token. normally token does not includes special characters like brackets or spaces, expected it's string(prefixed with `|` or unclosed `\"`)."
+                                  js-object
+                                    :type $ .-TYPE_UNSPECIFIED Type
+                                    :description "\"this is a piece of recursive data structure in arrays and strings"
                           if json?
                             js-object $ "\"responseMimeType" "\"application/json"
                             , js/undefined
                 js-await $ js-for-await sdk-result
                   fn (? chunk)
                     if (some? chunk)
-                      do
-                        swap! *text str $ let
-                            t $ either (.-text chunk) js/chunk.candidates[0].content?.parts?.[0]?.text
-                          if (nil? t) (js/console.warn "\"empty text in:" chunk)
-                          , t
-                        d! $ :: :states cursor
-                          -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                      if-let
+                        t $ .-text chunk
+                        do (swap! *text str t)
+                          d! $ :: :states cursor
+                            -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                        do $ js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text
                     d! $ :: :states cursor
                       -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
                 d! $ :: :states cursor
@@ -113,27 +117,36 @@
                   cursor $ :cursor states
                   state $ either (:data states)
                     {} (:answer "\"") (:loading? false) (:done? false) (:query "\"")
-                js/console.log "\"State" state
                 div
                   {}
                     :style $ {} (:padding 16)
-                    :class-name css/row
-                  div ({})
+                    :class-name css/column
+                  div
+                    {} $ :class-name (str-spaced css/row css/gap8)
                     textarea $ {}
                       :class-name $ str-spaced css/textarea css/font-code!
-                      :style $ {} (:width 400) (:height 120)
+                      :style $ {} (:width 600) (:height 200)
                       :placeholder "\"inputs"
                       :value $ :query state
                       :on-input $ fn (e d!)
                         d! cursor $ assoc state :query (:value e)
-                    pre $ {}
-                      :innerText $ :answer state
+                      :on-keydown $ fn (e d!)
+                        if
+                          and (-> e :event .-metaKey)
+                            = 13 $ -> e :event .-keyCode
+                          let
+                              *text $ atom "\""
+                            call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                    div ({})
+                      button $ {} (:class-name css/button) (:inner-text "\"Run")
+                        :on-click $ fn (e d!)
+                          let
+                              *text $ atom "\""
+                            call-genai-msg! "\"gemini" cursor state (:query state) d! *text
                   div ({})
-                    button $ {} (:class-name css/button) (:inner-text "\"Run")
-                      :on-click $ fn (e d!)
-                        let
-                            *text $ atom "\""
-                          call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                    pre $ {}
+                      :class-name $ str-spaced css/font-code! style-codebox
+                      :innerText $ :answer state
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -150,6 +163,10 @@
           :code $ quote
             defn pick-model (variant)
               case-default variant "\"gemini-2.5-flash-preview-05-20" (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+        |style-codebox $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-codebox $ {}
+              "\"&" $ {} (:margin 0) (:line-height "\"20px")
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.comp.drafter $ :require
@@ -157,7 +174,7 @@
             respo.css :refer $ defstyle
             respo-ui.css :as css
             respo.util.format :refer $ hsl
-            "\"@google/genai" :refer $ GoogleGenAI Modality
+            "\"@google/genai" :refer $ GoogleGenAI Modality Type
     |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
@@ -177,7 +194,7 @@
           :code $ quote
             defn dispatch! (op)
               when
-                and config/dev? $ not= op :states
+                and config/dev? $ not= (nth op 0) :states
                 js/console.log "\"Dispatch:" op
               reset! *reel $ reel-updater updater @*reel op
         |main! $ %{} :CodeEntry (:doc |)
