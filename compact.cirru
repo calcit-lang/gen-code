@@ -52,8 +52,7 @@
                     ; js/console.log ai
                     , ai
                   model $ pick-model variant
-                  content $ str prompt-text (include-file! "\"format-guide.md")
-                  json? $ or (.!includes prompt-text "\"{{json}}") (.!includes prompt-text "\"{{JSON}}")
+                  content $ str (include-file! "\"declare-task.md") prompt-text sep (include-file! "\"format-guide.md") sep (include-file! "\"calcit-lang.md") sep (include-file! "\"respo.md")
                   search? $ or (.!includes prompt-text "\"{{search}}") (.!includes prompt-text "\"{{SEARCH}}")
                   has-url? $ or (.!includes prompt-text "\"http://") (.!includes prompt-text "\"https://")
                   sdk-result $ js-await
@@ -84,9 +83,6 @@
                               reset! *abort-control abort
                               .-signal abort
                             :responseMimeType |application/json
-                          if json?
-                            js-object $ "\"responseMimeType" "\"application/json"
-                            , js/undefined
                 js-await $ js-for-await sdk-result
                   fn (? chunk)
                     if (some? chunk)
@@ -100,13 +96,16 @@
                       -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
                 d! $ :: :states cursor
                   -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? true)
+                    assoc :code $ try
+                      writeCirruCode $ js-array (js/JSON.parse @*text)
+                      fn (err) (js/console.error err) (str err)
         |comp-drafter $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn comp-drafter (states)
               let
                   cursor $ :cursor states
                   state $ either (:data states)
-                    {} (:answer "\"") (:loading? false) (:done? false) (:query "\"")
+                    {} (:answer "\"") (:loading? false) (:done? false) (:query "\"") (:code "\"")
                 div
                   {}
                     :style $ {} (:padding 16)
@@ -115,7 +114,7 @@
                     {} $ :class-name (str-spaced css/row css/gap8)
                     textarea $ {}
                       :class-name $ str-spaced css/textarea css/font-code!
-                      :style $ {} (:width 600) (:height 200)
+                      :style $ {} (:width 480) (:height 120)
                       :placeholder "\"inputs"
                       :value $ :query state
                       :on-input $ fn (e d!)
@@ -127,21 +126,31 @@
                           let
                               *text $ atom "\""
                             call-genai-msg! "\"gemini" cursor state (:query state) d! *text
-                    div ({})
+                    div
+                      {} $ :class-name (str-spaced css/row-middle css/gap8)
                       button $ {} (:class-name css/button) (:inner-text "\"Run")
                         :on-click $ fn (e d!)
                           let
                               *text $ atom "\""
-                            call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                            call-genai-msg! "\"gemini" cursor (assoc state :code "\"") (:query state) d! *text
                       button $ {} (:class-name css/button-danger) (:inner-text "\"Abort")
                         :on-click $ fn (e d!)
                           if-let
                             abort $ deref *abort-control
                             do (js/console.warn "\"Aborting prev") (.!abort abort)
-                  div ({})
+                      button $ {} (:class-name css/button) (:inner-text "\"Gen")
+                        :on-click $ fn (e d!)
+                          d! cursor $ assoc state :code
+                            writeCirruCode $ js-array
+                              js/JSON.parse $ :answer state
+                  div
+                    {} $ :class-name css/row
+                    pre $ {}
+                      :class-name $ str-spaced css/font-code! style-codebox style-code-secondary
+                      :innerText $ :answer state
                     pre $ {}
                       :class-name $ str-spaced css/font-code! style-codebox
-                      :innerText $ :answer state
+                      :innerText $ :code state
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -162,10 +171,20 @@
           :code $ quote
             defn pick-model (variant)
               case-default variant "\"gemini-2.5-flash-preview-05-20" (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+        |sep $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def sep $ str &newline &newline "\"-----------" &newline &newline
+        |style-code-secondary $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-code-secondary $ {}
+              "\"&" $ {} (:font-size 12) (:max-width "\"480px") (:line-height "\"16px")
         |style-codebox $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-codebox $ {}
-              "\"&" $ {} (:margin 0) (:line-height "\"20px") (:max-height 600) (:overflow :auto)
+              "\"&" $ {} (:margin 0) (:line-height "\"20px") (:max-height 600) (:overflow :auto) (:padding "\"8px")
+                :border $ str "\"1px solid " (hsl 0 0 90)
+                :border-radius "\"6px"
+                :max-width "\"600px"
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.comp.drafter $ :require
@@ -174,6 +193,7 @@
             respo-ui.css :as css
             respo.util.format :refer $ hsl
             "\"@google/genai" :refer $ GoogleGenAI Modality Type
+            "\"@cirru/writer.ts" :refer $ writeCirruCode
     |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
