@@ -52,7 +52,7 @@
                     ; js/console.log ai
                     , ai
                   model $ pick-model variant
-                  content prompt-text
+                  content $ str prompt-text (include-file! "\"format-guide.md")
                   json? $ or (.!includes prompt-text "\"{{json}}") (.!includes prompt-text "\"{{JSON}}")
                   search? $ or (.!includes prompt-text "\"{{search}}") (.!includes prompt-text "\"{{SEARCH}}")
                   has-url? $ or (.!includes prompt-text "\"http://") (.!includes prompt-text "\"https://")
@@ -65,7 +65,7 @@
                               js-object $ :text content
                         :config $ js/Object.assign
                           js-object
-                            ; :thinkingConfig $ js-object (:thinkingBudget 1000) (:includeThoughts true)
+                            :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts true)
                             :httpOptions $ js-object
                               :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
                             :tools $ let
@@ -84,16 +84,6 @@
                               reset! *abort-control abort
                               .-signal abort
                             :responseMimeType |application/json
-                            :responseSchema $ js-object
-                              :type $ .-ARRAY Type
-                              :items $ js-object
-                                :anyOf $ js-array
-                                  js-object
-                                    :type $ .-STRING Type
-                                    :description "\"this is a token. normally token does not includes special characters like brackets or spaces, expected it's string(prefixed with `|` or unclosed `\"`)."
-                                  js-object
-                                    :type $ .-TYPE_UNSPECIFIED Type
-                                    :description "\"this is a piece of recursive data structure in arrays and strings"
                           if json?
                             js-object $ "\"responseMimeType" "\"application/json"
                             , js/undefined
@@ -143,6 +133,11 @@
                           let
                               *text $ atom "\""
                             call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                      button $ {} (:class-name css/button-danger) (:inner-text "\"Abort")
+                        :on-click $ fn (e d!)
+                          if-let
+                            abort $ deref *abort-control
+                            do (js/console.warn "\"Aborting prev") (.!abort abort)
                   div ({})
                     pre $ {}
                       :class-name $ str-spaced css/font-code! style-codebox
@@ -159,6 +154,10 @@
                   js/localStorage.setItem "\"gemini-key" v
                   , v
                 , key
+        |include-file! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defmacro include-file! (filepath)
+              read-file $ str "\"prompts/" filepath
         |pick-model $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
@@ -166,7 +165,7 @@
         |style-codebox $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-codebox $ {}
-              "\"&" $ {} (:margin 0) (:line-height "\"20px")
+              "\"&" $ {} (:margin 0) (:line-height "\"20px") (:max-height 600) (:overflow :auto)
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.comp.drafter $ :require
