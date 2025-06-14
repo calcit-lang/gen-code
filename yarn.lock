@@ -304,6 +304,11 @@ camelize@^1.0.0:
   resolved "https://registry.yarnpkg.com/camelize/-/camelize-1.0.1.tgz#89b7e16884056331a35d6b5ad064332c91daa6c3"
   integrity sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==
 
+cirru-color@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/cirru-color/-/cirru-color-0.2.4.tgz#19c5cb33cbf45d5bcccf8ecf1e45ef5673962a7a"
+  integrity sha512-2ruNYgSyzrXirizCk2r9LNeu9+BXxEHNQVS1/RE2P7b1xoMjfYRiOpRaX2ecyCu4oF4HJGwYWi8vamiXI8ADEQ==
+
 copy-text-to-clipboard@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/copy-text-to-clipboard/-/copy-text-to-clipboard-3.2.0.tgz#0202b2d9bdae30a49a53f898626dcc3b49ad960b"

@@ -27,8 +27,18 @@
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
-            gen-code.comp.drafter :refer $ comp-drafter
-    |gen-code.comp.drafter $ %{} :FileEntry
+            gen-code.core :refer $ comp-drafter
+    |gen-code.config $ %{} :FileEntry
+      :defs $ {}
+        |dev? $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def dev? $ = "\"dev" (get-env "\"mode" "\"release")
+        |site $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def site $ {} (:storage-key "\"workflow")
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote (ns gen-code.config)
+    |gen-code.core $ %{} :FileEntry
       :defs $ {}
         |*abort-control $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *abort-control nil)
@@ -90,10 +100,10 @@
                         t $ .-text chunk
                         do (swap! *text str t)
                           d! $ :: :states cursor
-                            -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                            -> state (assoc :answer @*text) (assoc :loading? true) (assoc :done? false)
                         do $ js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text
                     d! $ :: :states cursor
-                      -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? false)
+                      -> state (assoc :answer @*text) (assoc :loading? true) (assoc :done? false)
                 d! $ :: :states cursor
                   -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? true)
                     assoc :code $ try
@@ -106,15 +116,16 @@
                   cursor $ :cursor states
                   state $ either (:data states)
                     {} (:answer "\"") (:loading? false) (:done? false) (:query "\"") (:code "\"")
+                  loading? $ :loading? state
                 div
                   {}
                     :style $ {} (:padding 16)
                     :class-name css/column
                   div
-                    {} $ :class-name (str-spaced css/row css/gap8)
+                    {} $ :class-name (str-spaced css/column css/gap8)
                     textarea $ {}
                       :class-name $ str-spaced css/textarea css/font-code!
-                      :style $ {} (:width 480) (:height 120)
+                      :style $ {} (:width "\"100%") (:height 120)
                       :placeholder "\"inputs"
                       :value $ :query state
                       :on-input $ fn (e d!)
@@ -127,30 +138,31 @@
                               *text $ atom "\""
                             call-genai-msg! "\"gemini" cursor state (:query state) d! *text
                     div
-                      {} $ :class-name (str-spaced css/row-middle css/gap8)
-                      button $ {} (:class-name css/button) (:inner-text "\"Run")
-                        :on-click $ fn (e d!)
-                          let
-                              *text $ atom "\""
-                            call-genai-msg! "\"gemini" cursor (assoc state :code "\"") (:query state) d! *text
-                      button $ {} (:class-name css/button-danger) (:inner-text "\"Abort")
-                        :on-click $ fn (e d!)
-                          if-let
-                            abort $ deref *abort-control
-                            do (js/console.warn "\"Aborting prev") (.!abort abort)
-                      button $ {} (:class-name css/button) (:inner-text "\"Gen")
-                        :on-click $ fn (e d!)
-                          d! cursor $ assoc state :code
-                            writeCirruCode $ js-array
-                              js/JSON.parse $ :answer state
-                  div
-                    {} $ :class-name css/row
-                    pre $ {}
-                      :class-name $ str-spaced css/font-code! style-codebox style-code-secondary
-                      :innerText $ :answer state
-                    pre $ {}
-                      :class-name $ str-spaced css/font-code! style-codebox
-                      :innerText $ :code state
+                      {} $ :class-name css/row-parted
+                      span nil
+                      div
+                        {} $ :class-name (str-spaced css/row-middle css/gap8)
+                        if loading?
+                          button $ {} (:class-name css/button-danger) (:inner-text "\"Abort")
+                            :on-click $ fn (e d!)
+                              if-let
+                                abort $ deref *abort-control
+                                do (js/console.warn "\"Aborting prev") (.!abort abort)
+                          button $ {} (:class-name css/button) (:inner-text "\"Run")
+                            :on-click $ fn (e d!)
+                              let
+                                  *text $ atom "\""
+                                call-genai-msg! "\"gemini" cursor (assoc state :code "\"") (:query state) d! *text
+                    div
+                      {} $ :class-name css/row
+                      if loading?
+                        pre $ {}
+                          :class-name $ str-spaced css/font-code! style-codebox style-code-secondary
+                          :innerText $ :answer state
+                        if
+                          not $ blank? (:code state)
+                          comp-cirru-snippet (:code state)
+                            {} $ :class-name style-codebox
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -184,26 +196,16 @@
               "\"&" $ {} (:margin 0) (:line-height "\"20px") (:max-height 600) (:overflow :auto) (:padding "\"8px")
                 :border $ str "\"1px solid " (hsl 0 0 90)
                 :border-radius "\"6px"
-                :max-width "\"600px"
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns gen-code.comp.drafter $ :require
+          ns gen-code.core $ :require
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input a pre img
             respo.css :refer $ defstyle
             respo-ui.css :as css
             respo.util.format :refer $ hsl
             "\"@google/genai" :refer $ GoogleGenAI Modality Type
             "\"@cirru/writer.ts" :refer $ writeCirruCode
-    |gen-code.config $ %{} :FileEntry
-      :defs $ {}
-        |dev? $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def dev? $ = "\"dev" (get-env "\"mode" "\"release")
-        |site $ %{} :CodeEntry (:doc |)
-          :code $ quote
-            def site $ {} (:storage-key "\"workflow")
-      :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns gen-code.config)
+            respo-ui.comp :refer $ comp-cirru-snippet
     |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)

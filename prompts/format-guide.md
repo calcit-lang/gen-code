@@ -23,7 +23,7 @@ data Expr = String | Array String
     ],
     [
       "let",
-      [ ["*text", ["atom", "\"" ]] ],
+      [ ["*text", ["atom", "|" ]] ],
       [
         "call-genai-msg!", "\"gemini", "cursor", "state",
         [":query", "state"],
