@@ -102,13 +102,15 @@ Calcit 使用前缀结构来初始化数据, 比如 List(数组),
 
 ### 循环
 
-对于数组的循环可以用 `&doseq` 取出其中的元素,
+对于数组副作用的操作的循环可以用 `&doseq` 取出其中的元素,
 
 ```json
 ["&doseq", ["a", "a-list"],
   ["println", "a"]
-  ]
+]
 ```
+
+不过 `&doseq` 执行结果返回的是 `nil`, 在 Respo 描述 DOM 列表的需要返回值的情况, 还是得用 `.map` 方法.
 
 或者用尾递归的方式, 习惯上写成:
 
@@ -122,6 +124,14 @@ Calcit 使用前缀结构来初始化数据, 比如 List(数组),
   ]
 ]
 ```
+
+对应 JavaScript 中 Array `list.map(x => x+1)` 这样的场景, 可以使用 `map` 函数或者 `.map` 方法:
+
+```json
+["map", "a-list", ["fn", ["x"], ["+", "x", "1"]]]
+```
+
+类似也有 `each` 以及 `.each` 这样的写法.
 
 ### JavaScript InterOp
 
