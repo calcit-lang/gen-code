@@ -1,6 +1,6 @@
 
 {} (:package |gen-code)
-  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.1)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.2)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -194,7 +194,9 @@
         |include-file! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro include-file! (filepath)
-              read-file $ str "\"prompts/" filepath
+              read-file $ str
+                if (empty? calcit-dirname) "\"." calcit-dirname
+                , "\"/prompts/" filepath
         |pick-model $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
@@ -223,6 +225,7 @@
             "\"@cirru/writer.ts" :refer $ writeCirruCode
             respo-ui.comp :refer $ comp-cirru-snippet
             respo.comp.space :refer $ =<
+            gen-code.$meta :refer $ calcit-dirname
     |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)

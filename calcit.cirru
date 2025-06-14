@@ -1,6 +1,6 @@
 
 {} (:package |gen-code)
-  :configs $ {} (:init-fn |gen-code.main/main!) (:output |src) (:port 6001) (:reload-fn |gen-code.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.1)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:output |src) (:port 6001) (:reload-fn |gen-code.main/reload!) (:storage-key |calcit.cirru) (:version |0.0.2)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -1340,7 +1340,16 @@
                   |b $ %{} :Expr (:at 1749827862806) (:by |rJG4IHzWf)
                     :data $ {}
                       |T $ %{} :Leaf (:at 1749827864134) (:by |rJG4IHzWf) (:text |str)
-                      |b $ %{} :Leaf (:at 1749827868075) (:by |rJG4IHzWf) (:text "|\"prompts/")
+                      |X $ %{} :Expr (:at 1749924403708) (:by |rJG4IHzWf)
+                        :data $ {}
+                          |D $ %{} :Leaf (:at 1749924524954) (:by |rJG4IHzWf) (:text |if)
+                          |T $ %{} :Expr (:at 1749924525864) (:by |rJG4IHzWf)
+                            :data $ {}
+                              |D $ %{} :Leaf (:at 1749924529001) (:by |rJG4IHzWf) (:text |empty?)
+                              |T $ %{} :Leaf (:at 1749924398238) (:by |rJG4IHzWf) (:text |calcit-dirname)
+                          |b $ %{} :Leaf (:at 1749924530852) (:by |rJG4IHzWf) (:text "|\".")
+                          |h $ %{} :Leaf (:at 1749924533721) (:by |rJG4IHzWf) (:text |calcit-dirname)
+                      |b $ %{} :Leaf (:at 1749924401716) (:by |rJG4IHzWf) (:text "|\"/prompts/")
                       |h $ %{} :Leaf (:at 1749827869915) (:by |rJG4IHzWf) (:text |filepath)
         |pick-model $ %{} :CodeEntry (:doc |)
           :code $ %{} :Expr (:at 1749664670577) (:by |rJG4IHzWf)
@@ -1536,6 +1545,13 @@
                     |h $ %{} :Expr (:at 1749921341618) (:by |rJG4IHzWf)
                       :data $ {}
                         |T $ %{} :Leaf (:at 1749921342517) (:by |rJG4IHzWf) (:text |=<)
+                |v $ %{} :Expr (:at 1749924371357) (:by |rJG4IHzWf)
+                  :data $ {}
+                    |T $ %{} :Leaf (:at 1749924380173) (:by |rJG4IHzWf) (:text |gen-code.$meta)
+                    |b $ %{} :Leaf (:at 1749924384301) (:by |rJG4IHzWf) (:text |:refer)
+                    |h $ %{} :Expr (:at 1749924384572) (:by |rJG4IHzWf)
+                      :data $ {}
+                        |T $ %{} :Leaf (:at 1749924390246) (:by |rJG4IHzWf) (:text |calcit-dirname)
     |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
