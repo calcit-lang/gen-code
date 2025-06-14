@@ -17,7 +17,9 @@
                     {} $ :content "\""
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
-                  comp-drafter $ >> states :drafter
+                  comp-gen-code (>> states :drafter)
+                    fn () "\"println |demo"
+                    fn (code d!) (println "\"submit code" code)
                   when dev? $ comp-reel (>> states :reel) reel ({})
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
@@ -27,7 +29,7 @@
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
-            gen-code.core :refer $ comp-drafter
+            gen-code.core :refer $ comp-gen-code
     |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
@@ -109,9 +111,9 @@
                     assoc :code $ try
                       writeCirruCode $ js-array (js/JSON.parse @*text)
                       fn (err) (js/console.error err) (str err)
-        |comp-drafter $ %{} :CodeEntry (:doc |)
+        |comp-gen-code $ %{} :CodeEntry (:doc "|this component can be used to integrate")
           :code $ quote
-            defn comp-drafter (states)
+            defn comp-gen-code (states get-hint-code on-submit)
               let
                   cursor $ :cursor states
                   state $ either (:data states)
@@ -139,7 +141,11 @@
                             call-genai-msg! "\"gemini" cursor state (:query state) d! *text
                     div
                       {} $ :class-name css/row-parted
-                      span nil
+                      a $ {} (:class-name css/link) (:inner-text "\"Take")
+                        :on-click $ fn (e d!)
+                          d! cursor $ update state :query
+                            fn (q)
+                              str q &newline &newline $ get-hint-code
                       div
                         {} $ :class-name (str-spaced css/row-middle css/gap8)
                         if loading?
@@ -161,8 +167,18 @@
                           :innerText $ :answer state
                         if
                           not $ blank? (:code state)
-                          comp-cirru-snippet (:code state)
-                            {} $ :class-name style-codebox
+                          div
+                            {} $ :class-name css/column
+                            comp-cirru-snippet (:code state)
+                              {} $ :class-name style-codebox
+                            =< nil 8
+                            div
+                              {} $ :class-name css/row-parted
+                              span nil
+                              div ({})
+                                button $ {} (:class-name css/button) (:inner-text "\"Accept")
+                                  :on-click $ fn (e d!)
+                                    on-submit (:code state) d!
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -206,6 +222,7 @@
             "\"@google/genai" :refer $ GoogleGenAI Modality Type
             "\"@cirru/writer.ts" :refer $ writeCirruCode
             respo-ui.comp :refer $ comp-cirru-snippet
+            respo.comp.space :refer $ =<
     |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
