@@ -10,17 +10,22 @@ Import code:
 
 ```cirru
 :deps $ {}
-  |calcit-lang/gen-code |0.0.1
+  |calcit-lang/gen-code |0.0.3
 ```
 
 ```cirru
 :require
-  gen-code.core :refer $ comp-gen-code
+  gen-code.core :refer $ use-gen-code
 
-comp-gen-code (>> states :drafter)
-  fn () "\"println |demo"
-  fn (code d!)
-    println "\"submit code" code
+let
+    plugin $ use-gen-code (>> states :drafter)
+      fn () "\"println |demo"
+      fn (code d!)
+        println "\"submit code" code
+
+  .render plugin
+
+  .reset-state plugin
 ```
 
 ### Workflow
