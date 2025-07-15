@@ -1,6 +1,6 @@
 
 {} (:package |gen-code)
-  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.3)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.4)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -59,14 +59,12 @@
                   d! cursor initial-state
         |*abort-control $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *abort-control nil)
-        |*gen-ai-new $ %{} :CodeEntry (:doc |)
-          :code $ quote (defatom *gen-ai-new nil)
-        |call-genai-msg! $ %{} :CodeEntry (:doc |)
+        |*ai-chat $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *ai-chat nil)
+        |call-genai-msg! $ %{} :CodeEntry (:doc "|**TODO** this function does not throw error correctly")
           :code $ quote
             defn call-genai-msg! (variant cursor state prompt-text d! *text) (hint-fn async)
-              if (nil? @*gen-ai-new)
-                reset! *gen-ai-new $ new GoogleGenAI
-                  js-object $ :apiKey (get-gemini-key!)
+              if (nil? @*ai-chat) (initialize-chat! variant)
               if-let
                 abort $ deref *abort-control
                 do (js/console.warn "\"Aborting prev") (.!abort abort)
@@ -74,44 +72,22 @@
                 d! $ :: :states cursor
                   -> state (assoc :answer nil) (assoc :loading? true)
               let
-                  gen-ai $ let
-                      ai @*gen-ai-new
+                  ai-chat $ let
+                      chat @*ai-chat
                     ; js/console.log ai
-                    , ai
-                  model $ pick-model variant
-                  respo? $ or (.includes? prompt-text "\"respo") (.includes? prompt-text "\"Respo") (.includes? prompt-text "\"组件") (.includes? prompt-text "\"component")
-                  content $ str (include-file! "\"declare-task.md") prompt-text sep (include-file! "\"format-guide.md") sep (include-file! "\"calcit-lang.md") sep
-                    if respo? (include-file! "\"respo.md") "\""
-                  search? $ or (.!includes prompt-text "\"{{search}}") (.!includes prompt-text "\"{{SEARCH}}")
-                  has-url? $ or (.!includes prompt-text "\"http://") (.!includes prompt-text "\"https://")
+                    , chat
                   sdk-result $ js-await
-                    .!generateContentStream (.-models gen-ai)
-                      js-object (:model model)
-                        :contents $ js-array
-                          js-object (:role "\"user")
-                            :parts $ js-array
-                              js-object $ :text content
-                        :config $ js/Object.assign
-                          js-object
-                            :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts true)
-                            :httpOptions $ js-object
-                              :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
-                            :tools $ let
-                                t $ ->
-                                  js-array
-                                    if search? $ js-object
-                                      :googleSearch $ js-object
-                                    if has-url? $ js-object
-                                      :urlContext $ js-object
-                                  .!filter $ fn (x & _a) x
-                              if
-                                = 0 $ .-length t
-                                , js/undefined t
-                            :abortSignal $ let
-                                abort $ new js/AbortController
-                              reset! *abort-control abort
-                              .-signal abort
-                            :responseMimeType |application/json
+                    .!sendMessageStream ai-chat $ js-object (:message prompt-text)
+                      :config $ js/Object.assign
+                        js-object
+                          ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
+                          :httpOptions $ js-object
+                            :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                          :abortSignal $ let
+                              abort $ new js/AbortController
+                            reset! *abort-control abort
+                            .-signal abort
+                          :responseMimeType |application/json
                 js-await $ js-for-await sdk-result
                   fn (? chunk)
                     if (some? chunk)
@@ -149,10 +125,29 @@
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:answer "\"") (:loading? false) (:done? false) (:query "\"") (:code "\"")
+        |initialize-chat! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn initialize-chat! (variant)
+              reset! *ai-chat $ let
+                  model $ pick-model variant
+                  doc-content $ str (include-file! "\"declare-task.md") sep (include-file! "\"format-guide.md") sep (include-file! "\"calcit-lang.md") sep (include-file! "\"respo.md")
+                  ai $ new GoogleGenAI
+                    js-object $ :apiKey (get-gemini-key!)
+                -> ai .-chats $ .!create
+                  js-object (:model model)
+                    :config $ js/Object.assign
+                      js-object
+                        :httpOptions $ js-object
+                          :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                        :responseMimeType |application/json
+                    :history $ js-array
+                      js-object (:role "\"model")
+                        :parts $ js-array
+                          js-object $ :text doc-content
         |pick-model $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
-              case-default variant "\"gemini-2.5-flash-preview-05-20" (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+              case-default variant "\"gemini-2.5-flash" (:gemini "\"gemini-2.5-flash") (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
         |sep $ %{} :CodeEntry (:doc |)
           :code $ quote
             def sep $ str &newline &newline "\"-----------" &newline &newline
@@ -196,7 +191,14 @@
                                 = 13 $ -> e :event .-keyCode
                               let
                                   *text $ atom "\""
-                                call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                                try
+                                  call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                                  fn (e)
+                                    d! $ :: :states cursor
+                                      -> state $ assoc :answer
+                                        str @*text &newline &newline $ str "\"Failed to load: " e
+                                        assoc :loading? false
+                                        assoc :done? true
                         div
                           {} $ :class-name css/row-parted
                           a $ {} (:class-name css/link) (:inner-text "\"Take")
@@ -206,6 +208,9 @@
                                   str q &newline &newline $ trim (get-hint-code)
                           div
                             {} $ :class-name (str-spaced css/row-middle css/gap8)
+                            a $ {} (:class-name css/link) (:inner-text "\"Refresh")
+                              :on-click $ fn (e d!) (initialize-chat! :gemini)
+                                d! $ :: :states cursor (assoc state :loading? false)
                             if loading?
                               button $ {} (:class-name css/button) (:inner-text "\"Abort")
                                 :style $ {} (:border-color :red) (:color :red)
@@ -217,7 +222,14 @@
                                 :on-click $ fn (e d!)
                                   let
                                       *text $ atom "\""
-                                    call-genai-msg! "\"gemini" cursor (assoc state :code "\"") (:query state) d! *text
+                                    try
+                                      call-genai-msg! :gemini cursor (assoc state :code "\"") (:query state) d! *text
+                                      fn (e)
+                                        d! $ :: :states cursor
+                                          -> state $ assoc :answer
+                                            str @*text &newline &newline $ str "\"Failed to load: " e
+                                            assoc :loading? false
+                                            assoc :done? true
                         if loading?
                           pre $ {}
                             :class-name $ str-spaced css/font-code! style-codebox
