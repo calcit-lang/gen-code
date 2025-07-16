@@ -1,6 +1,6 @@
 
 {} (:package |gen-code)
-  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.4)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.5)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -69,39 +69,34 @@
                 abort $ deref *abort-control
                 do (js/console.warn "\"Aborting prev") (.!abort abort)
               js/setTimeout $ fn ()
-                d! $ :: :states cursor
-                  -> state (assoc :answer nil) (assoc :loading? true)
+                d! $ :: :states-merge cursor state
+                  {} (:answer nil) (:loading? true)
               let
-                  ai-chat $ let
-                      chat @*ai-chat
-                    ; js/console.log ai
-                    , chat
                   sdk-result $ js-await
-                    .!sendMessageStream ai-chat $ js-object (:message prompt-text)
-                      :config $ js/Object.assign
-                        js-object
-                          ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
-                          :httpOptions $ js-object
-                            :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
-                          :abortSignal $ let
-                              abort $ new js/AbortController
-                            reset! *abort-control abort
-                            .-signal abort
-                          :responseMimeType |application/json
+                    .!sendMessageStream @*ai-chat $ js-object (:message prompt-text)
+                      :config $ js-object
+                        ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
+                        :httpOptions $ js-object
+                          :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                        :abortSignal $ let
+                            abort $ new js/AbortController
+                          reset! *abort-control abort
+                          .-signal abort
+                        :responseMimeType |application/json
                 js-await $ js-for-await sdk-result
                   fn (? chunk)
                     if (some? chunk)
                       if-let
                         t $ .-text chunk
                         do (swap! *text str t)
-                          d! $ :: :states cursor
-                            -> state (assoc :answer @*text) (assoc :loading? true) (assoc :done? false)
+                          d! $ :: :states-merge cursor state
+                            {} (:answer @*text) (:loading? true) (:done? false)
                         do $ js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text
-                    d! $ :: :states cursor
-                      -> state (assoc :answer @*text) (assoc :loading? true) (assoc :done? false)
-                d! $ :: :states cursor
-                  -> state (assoc :answer @*text) (assoc :loading? false) (assoc :done? true)
-                    assoc :code $ try
+                    d! $ :: :states-merge cursor state
+                      {} (:answer @*text) (:loading? true) (:done? false)
+                d! $ :: :states-merge cursor state
+                  {} (:answer @*text) (:loading? false) (:done? true)
+                    :code $ try
                       writeCirruCode $ js-array (js/JSON.parse @*text)
                       fn (err) (js/console.error err) (str err)
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
@@ -194,11 +189,11 @@
                                 try
                                   js-await $ call-genai-msg! "\"gemini" cursor state (:query state) d! *text
                                   fn (e)
-                                    d! $ :: :states cursor
-                                      -> state
-                                        assoc :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
-                                        assoc :loading? false
-                                        assoc :done? true
+                                    d! $ :: :states-merge cursor state
+                                      {}
+                                        :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
+                                        :loading? false
+                                        :done? true
                         div
                           {} $ :class-name css/row-parted
                           a $ {} (:class-name css/link) (:inner-text "\"Take")
@@ -210,7 +205,8 @@
                             {} $ :class-name (str-spaced css/row-middle css/gap8)
                             a $ {} (:class-name css/link) (:inner-text "\"Refresh")
                               :on-click $ fn (e d!) (initialize-chat! :gemini)
-                                d! $ :: :states cursor (assoc state :loading? false)
+                                d! $ :: :states-merge cursor state
+                                  {} $ :loading? false
                             if loading?
                               button $ {} (:class-name css/button) (:inner-text "\"Abort")
                                 :style $ {} (:border-color :red) (:color :red)
@@ -225,11 +221,11 @@
                                     try
                                       js-await $ call-genai-msg! :gemini cursor (assoc state :code "\"") (:query state) d! *text
                                       fn (e)
-                                        d! $ :: :states cursor
-                                          -> state
-                                            assoc :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
-                                            assoc :loading? false
-                                            assoc :done? true
+                                        d! $ :: :states-merge cursor state
+                                          {}
+                                            :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
+                                            :loading? false
+                                            :done? true
                         if loading?
                           pre $ {}
                             :class-name $ str-spaced css/font-code! style-codebox
@@ -339,9 +335,10 @@
               tag-match op
                   :states cursor s
                   update-states store cursor s
+                (:states-merge cursor s0 changes) (update-states-merge store cursor s0 changes)
                 (:hydrate-storage data) data
                 _ $ do (eprintln "\"unknown op:" op) store
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
-            respo.cursor :refer $ update-states
+            respo.cursor :refer $ update-states update-states-merge
