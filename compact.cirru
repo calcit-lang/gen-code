@@ -61,7 +61,7 @@
           :code $ quote (defatom *abort-control nil)
         |*ai-chat $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *ai-chat nil)
-        |call-genai-msg! $ %{} :CodeEntry (:doc "|**TODO** this function does not throw error correctly")
+        |call-genai-msg! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn call-genai-msg! (variant cursor state prompt-text d! *text) (hint-fn async)
               if (nil? @*ai-chat) (initialize-chat! variant)
@@ -185,18 +185,18 @@
                           :value $ :query state
                           :on-input $ fn (e d!)
                             d! cursor $ assoc state :query (:value e)
-                          :on-keydown $ fn (e d!)
+                          :on-keydown $ fn (e d!) (hint-fn async)
                             if
                               and (-> e :event .-metaKey)
                                 = 13 $ -> e :event .-keyCode
                               let
                                   *text $ atom "\""
                                 try
-                                  call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                                  js-await $ call-genai-msg! "\"gemini" cursor state (:query state) d! *text
                                   fn (e)
                                     d! $ :: :states cursor
-                                      -> state $ assoc :answer
-                                        str @*text &newline &newline $ str "\"Failed to load: " e
+                                      -> state
+                                        assoc :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
                                         assoc :loading? false
                                         assoc :done? true
                         div
@@ -219,15 +219,15 @@
                                     abort $ deref *abort-control
                                     do (js/console.warn "\"Aborting prev") (.!abort abort)
                               button $ {} (:class-name css/button) (:inner-text "\"Run")
-                                :on-click $ fn (e d!)
+                                :on-click $ fn (e d!) (hint-fn async)
                                   let
                                       *text $ atom "\""
                                     try
-                                      call-genai-msg! :gemini cursor (assoc state :code "\"") (:query state) d! *text
+                                      js-await $ call-genai-msg! :gemini cursor (assoc state :code "\"") (:query state) d! *text
                                       fn (e)
                                         d! $ :: :states cursor
-                                          -> state $ assoc :answer
-                                            str @*text &newline &newline $ str "\"Failed to load: " e
+                                          -> state
+                                            assoc :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
                                             assoc :loading? false
                                             assoc :done? true
                         if loading?
