@@ -1,29 +1,31 @@
 
-Respo workflow in Calcit-js
+Gen Code Component for Calcit
 ----
 
-> Respo web page based on [calcit-js](https://github.com/calcit-lang/calcit).
-
-Demo https://repo.calcit-lang.org/respo-calcit-workflow/ .
+Demo https://repo.calcit-lang.org/gen-code/ .
 
 ### Usages
 
-To develop:
+Import code:
 
-```bash
-cr js # watching
-
-yarn # to install vite
-yarn vite # watching and running on localhost:3000
+```cirru
+:deps $ {}
+  |calcit-lang/gen-code |0.0.3
 ```
 
-calcit-js is using [Calcit Editor](https://github.com/calcit-lang/editor).
+```cirru
+:require
+  gen-code.core :refer $ use-gen-code
 
-To build:
+let
+    plugin $ use-gen-code (>> states :drafter)
+      fn () "\"println |demo"
+      fn (code d!)
+        println "\"submit code" code
 
-```bash
-yarn vite build
-http-server dist/
+  .render plugin
+
+  .reset-state plugin
 ```
 
 ### Workflow

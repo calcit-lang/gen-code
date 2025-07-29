@@ -1,10 +1,10 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:version |0.0.1)
+{} (:package |gen-code)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.5)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
-    |app.comp.container $ %{} :FileEntry
+    |gen-code.comp.container $ %{} :FileEntry
       :defs $ {}
         |comp-container $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -15,33 +15,26 @@
                   cursor $ or (:cursor states) ([])
                   state $ or (:data states)
                     {} $ :content "\""
+                  plugin-gen-code $ use-gen-code (>> states :drafter)
+                    fn () "\"println |demo"
+                    fn (code d!) (println "\"submit code" code)
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
-                  textarea $ {}
-                    :value $ :content state
-                    :placeholder "\"Content"
-                    :class-name $ str-spaced css/expand css/textarea
-                    :style $ {} (:height 320)
-                    :on-input $ fn (e d!)
-                      d! cursor $ assoc state :content (:value e)
-                  =< 8 nil
                   div
-                    {} $ :class-name css/expand
-                    <> "|This is some content with `code`"
-                    =< |8px nil
-                    button $ {} (:class-name css/button) (:inner-text "\"Run")
-                      :on-click $ fn (e d!)
-                        println $ :content state
+                    {} $ :style
+                      {} $ :width 800
+                    .render plugin-gen-code
                   when dev? $ comp-reel (>> states :reel) reel ({})
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.comp.container $ :require (respo-ui.css :as css)
+          ns gen-code.comp.container $ :require (respo-ui.css :as css)
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
-            app.config :refer $ dev?
-    |app.config $ %{} :FileEntry
+            gen-code.config :refer $ dev?
+            gen-code.core :refer $ use-gen-code
+    |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -50,8 +43,220 @@
           :code $ quote
             def site $ {} (:storage-key "\"workflow")
       :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns app.config)
-    |app.main $ %{} :FileEntry
+        :code $ quote (ns gen-code.config)
+    |gen-code.core $ %{} :FileEntry
+      :defs $ {}
+        |%gen-code-actions $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defrecord! %gen-code-actions
+              :render $ fn (self)
+                tag-match self $ 
+                  :plugin render-node cursor state
+                  render-node
+              :reset-state $ fn (self d!)
+                tag-match self $ 
+                  :plugin r cursor state
+                  d! cursor initial-state
+        |*abort-control $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *abort-control nil)
+        |*ai-chat $ %{} :CodeEntry (:doc |)
+          :code $ quote (defatom *ai-chat nil)
+        |call-genai-msg! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn call-genai-msg! (variant cursor state prompt-text d! *text) (hint-fn async)
+              if (nil? @*ai-chat) (initialize-chat! variant)
+              if-let
+                abort $ deref *abort-control
+                do (js/console.warn "\"Aborting prev") (.!abort abort)
+              js/setTimeout $ fn ()
+                d! $ :: :states-merge cursor state
+                  {} (:answer nil) (:loading? true)
+              let
+                  sdk-result $ js-await
+                    .!sendMessageStream @*ai-chat $ js-object (:message prompt-text)
+                      :config $ js-object
+                        ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
+                        :httpOptions $ js-object
+                          :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                        :abortSignal $ let
+                            abort $ new js/AbortController
+                          reset! *abort-control abort
+                          .-signal abort
+                        :responseMimeType |application/json
+                js-await $ js-for-await sdk-result
+                  fn (? chunk)
+                    if (some? chunk)
+                      if-let
+                        t $ .-text chunk
+                        do (swap! *text str t)
+                          d! $ :: :states-merge cursor state
+                            {} (:answer @*text) (:loading? true) (:done? false)
+                        do $ js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text
+                    d! $ :: :states-merge cursor state
+                      {} (:answer @*text) (:loading? true) (:done? false)
+                d! $ :: :states-merge cursor state
+                  {} (:answer @*text) (:loading? false) (:done? true)
+                    :code $ try
+                      writeCirruCode $ js-array (js/JSON.parse @*text)
+                      fn (err) (js/console.error err) (str err)
+        |get-gemini-key! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn get-gemini-key! () $ let
+                key $ js/localStorage.getItem "\"gemini-key"
+              if (blank? key)
+                let
+                    v $ js/prompt "\"Required gemini-key in localStorage"
+                  if (blank? v)
+                    raise $ new js/Error "\"key is empty"
+                  js/localStorage.setItem "\"gemini-key" v
+                  , v
+                , key
+        |include-file! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defmacro include-file! (filepath)
+              read-file $ str
+                if (empty? calcit-dirname) "\"." calcit-dirname
+                , "\"/prompts/" filepath
+        |initial-state $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def initial-state $ {} (:answer "\"") (:loading? false) (:done? false) (:query "\"") (:code "\"")
+        |initialize-chat! $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn initialize-chat! (variant)
+              reset! *ai-chat $ let
+                  model $ pick-model variant
+                  doc-content $ str (include-file! "\"declare-task.md") sep (include-file! "\"format-guide.md") sep (include-file! "\"calcit-lang.md") sep (include-file! "\"respo.md")
+                  ai $ new GoogleGenAI
+                    js-object $ :apiKey (get-gemini-key!)
+                -> ai .-chats $ .!create
+                  js-object (:model model)
+                    :config $ js/Object.assign
+                      js-object
+                        :httpOptions $ js-object
+                          :baseUrl $ get-env "\"gemini-host" "\"https://ja.chenyong.life"
+                        :responseMimeType |application/json
+                    :history $ js-array
+                      js-object (:role "\"model")
+                        :parts $ js-array
+                          js-object $ :text doc-content
+        |pick-model $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defn pick-model (variant)
+              case-default variant "\"gemini-2.5-flash" (:gemini "\"gemini-2.5-flash") (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+        |sep $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def sep $ str &newline &newline "\"-----------" &newline &newline
+        |style-codebox $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-codebox $ {}
+              "\"&" $ {} (:margin 0) (:max-height 600) (:overflow :auto) (:padding "\"8px")
+                :border $ str "\"1px solid " (hsl 0 0 90)
+                :border-radius "\"6px"
+                :overflow :auto
+                :font-size 12
+                :line-height "\"16px"
+        |style-snippet $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defstyle style-snippet $ {}
+              "\"&" $ {} (:margin 0) (:line-height "\"20px") (:overflow :auto) (; :padding "\"8px") (:border-radius "\"6px") (:width |100%) (:max-height 600) (:padding-right 0)
+        |use-gen-code $ %{} :CodeEntry (:doc "|this component can be used to integrate")
+          :code $ quote
+            defn use-gen-code (states get-hint-code on-submit)
+              let
+                  cursor $ :cursor states
+                  state $ either (:data states) initial-state
+                  loading? $ :loading? state
+                  render-node $ fn ()
+                    div
+                      {}
+                        :style $ {} (:padding 16)
+                        :class-name css/column
+                      div
+                        {} $ :class-name (str-spaced css/column css/gap8)
+                        textarea $ {}
+                          :class-name $ str-spaced css/textarea css/font-code!
+                          :style $ {} (:width "\"100%") (:height 120)
+                          :placeholder "\"prompts about the task...\n\n<code example>"
+                          :value $ :query state
+                          :on-input $ fn (e d!)
+                            d! cursor $ assoc state :query (:value e)
+                          :on-keydown $ fn (e d!) (hint-fn async)
+                            if
+                              and (-> e :event .-metaKey)
+                                = 13 $ -> e :event .-keyCode
+                              let
+                                  *text $ atom "\""
+                                try
+                                  js-await $ call-genai-msg! "\"gemini" cursor state (:query state) d! *text
+                                  fn (e)
+                                    d! $ :: :states-merge cursor state
+                                      {}
+                                        :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
+                                        :loading? false
+                                        :done? true
+                        div
+                          {} $ :class-name css/row-parted
+                          a $ {} (:class-name css/link) (:inner-text "\"Take")
+                            :on-click $ fn (e d!)
+                              d! cursor $ update state :query
+                                fn (q)
+                                  str q &newline &newline $ trim (get-hint-code)
+                          div
+                            {} $ :class-name (str-spaced css/row-middle css/gap8)
+                            a $ {} (:class-name css/link) (:inner-text "\"Refresh")
+                              :on-click $ fn (e d!) (initialize-chat! :gemini)
+                                d! $ :: :states-merge cursor state
+                                  {} $ :loading? false
+                            if loading?
+                              button $ {} (:class-name css/button) (:inner-text "\"Abort")
+                                :style $ {} (:border-color :red) (:color :red)
+                                :on-click $ fn (e d!)
+                                  if-let
+                                    abort $ deref *abort-control
+                                    do (js/console.warn "\"Aborting prev") (.!abort abort)
+                              button $ {} (:class-name css/button) (:inner-text "\"Run")
+                                :on-click $ fn (e d!) (hint-fn async)
+                                  let
+                                      *text $ atom "\""
+                                    try
+                                      js-await $ call-genai-msg! :gemini cursor (assoc state :code "\"") (:query state) d! *text
+                                      fn (e)
+                                        d! $ :: :states-merge cursor state
+                                          {}
+                                            :answer $ str @*text &newline &newline (str "\"Failed to load: " e)
+                                            :loading? false
+                                            :done? true
+                        if loading?
+                          pre $ {}
+                            :class-name $ str-spaced css/font-code! style-codebox
+                            :innerText $ :answer state
+                          if
+                            not $ blank? (:code state)
+                            div
+                              {} $ :class-name css/column
+                              comp-cirru-snippet (:code state)
+                                {} $ :class-name style-snippet
+                              =< nil 8
+                              div
+                                {} $ :class-name css/row-parted
+                                span nil
+                                button $ {} (:class-name css/button) (:inner-text "\"Accept")
+                                  :on-click $ fn (e d!)
+                                    on-submit (:code state) d!
+                %:: %gen-code-actions :plugin render-node cursor state
+      :ns $ %{} :CodeEntry (:doc |)
+        :code $ quote
+          ns gen-code.core $ :require
+            respo.core :refer $ defcomp defeffect <> >> div button textarea span input a pre img
+            respo.css :refer $ defstyle
+            respo-ui.css :as css
+            respo.util.format :refer $ hsl
+            "\"@google/genai" :refer $ GoogleGenAI Modality Type
+            "\"@cirru/writer.ts" :refer $ writeCirruCode
+            respo-ui.comp :refer $ comp-cirru-snippet
+            respo.comp.space :refer $ =<
+            gen-code.$meta :refer $ calcit-dirname
+    |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -60,7 +265,7 @@
           :code $ quote
             defn dispatch! (op)
               when
-                and config/dev? $ not= op :states
+                and config/dev? $ not= (nth op 0) :states
                 js/console.log "\"Dispatch:" op
               reset! *reel $ reel-updater updater @*reel op
         |main! $ %{} :CodeEntry (:doc |)
@@ -102,18 +307,18 @@
             defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.main $ :require
+          ns gen-code.main $ :require
             respo.core :refer $ render! clear-cache!
-            app.comp.container :refer $ comp-container
-            app.updater :refer $ updater
-            app.schema :as schema
+            gen-code.comp.container :refer $ comp-container
+            gen-code.updater :refer $ updater
+            gen-code.schema :as schema
             reel.util :refer $ listen-devtools!
             reel.core :refer $ reel-updater refresh-reel
             reel.schema :as reel-schema
-            app.config :as config
+            gen-code.config :as config
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
-    |app.schema $ %{} :FileEntry
+    |gen-code.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -121,8 +326,8 @@
               :states $ {}
                 :cursor $ []
       :ns $ %{} :CodeEntry (:doc |)
-        :code $ quote (ns app.schema)
-    |app.updater $ %{} :FileEntry
+        :code $ quote (ns gen-code.schema)
+    |gen-code.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
           :code $ quote
@@ -130,9 +335,10 @@
               tag-match op
                   :states cursor s
                   update-states store cursor s
+                (:states-merge cursor s0 changes) (update-states-merge store cursor s0 changes)
                 (:hydrate-storage data) data
                 _ $ do (eprintln "\"unknown op:" op) store
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
-          ns app.updater $ :require
-            respo.cursor :refer $ update-states
+          ns gen-code.updater $ :require
+            respo.cursor :refer $ update-states update-states-merge
