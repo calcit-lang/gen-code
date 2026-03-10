@@ -1,6 +1,6 @@
 
-{} (:package |gen-code)
-  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.5)
+{} (:about "|file is generated - never edit directly; learn cr edit/tree workflows before changing") (:package |gen-code)
+  :configs $ {} (:init-fn |gen-code.main/main!) (:reload-fn |gen-code.main/reload!) (:version |0.0.6)
     :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |reel.calcit/
   :entries $ {}
   :files $ {}
@@ -25,6 +25,7 @@
                       {} $ :width 800
                     .render plugin-gen-code
                   when dev? $ comp-reel (>> states :reel) reel ({})
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.comp.container $ :require (respo-ui.css :as css)
@@ -34,33 +35,48 @@
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
             gen-code.core :refer $ use-gen-code
+        :examples $ []
     |gen-code.config $ %{} :FileEntry
       :defs $ {}
         |dev? $ %{} :CodeEntry (:doc |)
           :code $ quote
             def dev? $ = "\"dev" (get-env "\"mode" "\"release")
+          :examples $ []
         |site $ %{} :CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:storage-key "\"workflow")
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns gen-code.config)
+        :examples $ []
     |gen-code.core $ %{} :FileEntry
       :defs $ {}
         |%gen-code-actions $ %{} :CodeEntry (:doc |)
           :code $ quote
-            defrecord! %gen-code-actions
+            defimpl %gen-code-actions GenCodeActions
               :render $ fn (self)
-                tag-match self $ 
+                tag-match self $
                   :plugin render-node cursor state
                   render-node
               :reset-state $ fn (self d!)
-                tag-match self $ 
+                tag-match self $
                   :plugin r cursor state
                   d! cursor initial-state
+          :examples $ []
         |*abort-control $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *abort-control nil)
+          :examples $ []
         |*ai-chat $ %{} :CodeEntry (:doc |)
           :code $ quote (defatom *ai-chat nil)
+          :examples $ []
+        |GenCodeActions $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenCodeActions (:render :fn) (:reset-state :fn)
+          :examples $ []
+        |GenCodePluginData $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            defenum GenCodePluginData $ :plugin :fn :list :map
+          :examples $ []
         |call-genai-msg! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn call-genai-msg! (variant cursor state prompt-text d! *text) (hint-fn async)
@@ -99,6 +115,11 @@
                     :code $ try
                       writeCirruCode $ js-array (js/JSON.parse @*text)
                       fn (err) (js/console.error err) (str err)
+          :examples $ []
+        |gen-code-actions-plugin $ %{} :CodeEntry (:doc |)
+          :code $ quote
+            def gen-code-actions-plugin $ impl-traits GenCodePluginData %gen-code-actions
+          :examples $ []
         |get-gemini-key! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -111,15 +132,18 @@
                   js/localStorage.setItem "\"gemini-key" v
                   , v
                 , key
+          :examples $ []
         |include-file! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defmacro include-file! (filepath)
               read-file $ str
                 if (empty? calcit-dirname) "\"." calcit-dirname
                 , "\"/prompts/" filepath
+          :examples $ []
         |initial-state $ %{} :CodeEntry (:doc |)
           :code $ quote
             def initial-state $ {} (:answer "\"") (:loading? false) (:done? false) (:query "\"") (:code "\"")
+          :examples $ []
         |initialize-chat! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn initialize-chat! (variant)
@@ -139,13 +163,16 @@
                       js-object (:role "\"model")
                         :parts $ js-array
                           js-object $ :text doc-content
+          :examples $ []
         |pick-model $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
               case-default variant "\"gemini-2.5-flash" (:gemini "\"gemini-2.5-flash") (:gemini-pro "\"gemini-2.5-pro-preview-06-05") (:gemini-pro-1.5 "\"gemini-1.5-pro") (:gemini-flash-lite "\"gemini-2.0-flash-lite") (:gemma "\"gemma-3-27b-it")
+          :examples $ []
         |sep $ %{} :CodeEntry (:doc |)
           :code $ quote
             def sep $ str &newline &newline "\"-----------" &newline &newline
+          :examples $ []
         |style-codebox $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-codebox $ {}
@@ -155,10 +182,12 @@
                 :overflow :auto
                 :font-size 12
                 :line-height "\"16px"
+          :examples $ []
         |style-snippet $ %{} :CodeEntry (:doc |)
           :code $ quote
             defstyle style-snippet $ {}
               "\"&" $ {} (:margin 0) (:line-height "\"20px") (:overflow :auto) (; :padding "\"8px") (:border-radius "\"6px") (:width |100%) (:max-height 600) (:padding-right 0)
+          :examples $ []
         |use-gen-code $ %{} :CodeEntry (:doc "|this component can be used to integrate")
           :code $ quote
             defn use-gen-code (states get-hint-code on-submit)
@@ -243,7 +272,8 @@
                                 button $ {} (:class-name css/button) (:inner-text "\"Accept")
                                   :on-click $ fn (e d!)
                                     on-submit (:code state) d!
-                %:: %gen-code-actions :plugin render-node cursor state
+                %:: gen-code-actions-plugin :plugin render-node cursor state
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.core $ :require
@@ -256,11 +286,13 @@
             respo-ui.comp :refer $ comp-cirru-snippet
             respo.comp.space :refer $ =<
             gen-code.$meta :refer $ calcit-dirname
+        :examples $ []
     |gen-code.main $ %{} :FileEntry
       :defs $ {}
         |*reel $ %{} :CodeEntry (:doc |)
           :code $ quote
             defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
+          :examples $ []
         |dispatch! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
@@ -268,6 +300,7 @@
                 and config/dev? $ not= (nth op 0) :states
                 js/console.log "\"Dispatch:" op
               reset! *reel $ reel-updater updater @*reel op
+          :examples $ []
         |main! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn main! ()
@@ -285,15 +318,18 @@
                 when (some? raw)
                   dispatch! $ :: :hydrate-storage (parse-cirru-edn raw)
               println "|App started."
+          :examples $ []
         |mount-target $ %{} :CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
+          :examples $ []
         |persist-storage! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! ()
               println "\"Saved at" $ .!toISOString (new js/Date)
               js/localStorage.setItem (:storage-key config/site)
                 format-cirru-edn $ :store @*reel
+          :examples $ []
         |reload! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
@@ -302,9 +338,11 @@
                 reset! *reel $ refresh-reel @*reel schema/store updater
                 hud! "\"ok~" "\"Ok"
               hud! "\"error" build-errors
+          :examples $ []
         |render-app! $ %{} :CodeEntry (:doc |)
           :code $ quote
             defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.main $ :require
@@ -318,6 +356,7 @@
             gen-code.config :as config
             "\"./calcit.build-errors" :default build-errors
             "\"bottom-tip" :default hud!
+        :examples $ []
     |gen-code.schema $ %{} :FileEntry
       :defs $ {}
         |store $ %{} :CodeEntry (:doc |)
@@ -325,8 +364,10 @@
             def store $ {}
               :states $ {}
                 :cursor $ []
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote (ns gen-code.schema)
+        :examples $ []
     |gen-code.updater $ %{} :FileEntry
       :defs $ {}
         |updater $ %{} :CodeEntry (:doc |)
@@ -338,7 +379,9 @@
                 (:states-merge cursor s0 changes) (update-states-merge store cursor s0 changes)
                 (:hydrate-storage data) data
                 _ $ do (eprintln "\"unknown op:" op) store
+          :examples $ []
       :ns $ %{} :CodeEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
             respo.cursor :refer $ update-states update-states-merge
+        :examples $ []
