@@ -23,10 +23,12 @@ jobs:
           yarn --version
 
       - uses: calcit-lang/setup-cr@0.0.8
+        with:
+          version: 0.13.11
 
       - name: "compiles to js"
         run: >
-          caps --ci && cr --once js
+          caps --ci && cr calcit.cirru js
           && yarn && yarn vite build --base=./
 
       - name: Deploy to server

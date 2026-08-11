@@ -28,12 +28,13 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@calcit/procs", "npm:0.11.5"],\
+          ["@calcit/procs", "npm:0.13.11"],\
           ["@cirru/writer.ts", "npm:0.1.7"],\
           ["@google/genai", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:1.4.0"],\
           ["bottom-tip", "npm:0.1.5"],\
           ["cirru-color", "npm:0.2.4"],\
           ["copy-text-to-clipboard", "npm:3.2.0"],\
+          ["dayjs", "npm:1.11.21"],\
           ["root-workspace-0b6124", "workspace:."],\
           ["vite", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:6.3.5"]\
         ],\
@@ -41,31 +42,31 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@calcit/procs", [\
-      ["npm:0.11.5", {\
-        "packageLocation": "../../../.yarn/berry/cache/@calcit-procs-npm-0.11.5-0d7bd84611-10c0.zip/node_modules/@calcit/procs/",\
+      ["npm:0.13.11", {\
+        "packageLocation": "../../../.yarn/berry/cache/@calcit-procs-npm-0.13.11-82d0e7b9c2-10c0.zip/node_modules/@calcit/procs/",\
         "packageDependencies": [\
-          ["@calcit/procs", "npm:0.11.5"],\
-          ["@calcit/ternary-tree", "npm:0.0.25"],\
-          ["@cirru/parser.ts", "npm:0.0.8"],\
-          ["@cirru/writer.ts", "npm:0.1.7"]\
+          ["@calcit/procs", "npm:0.13.11"],\
+          ["@calcit/ternary-tree", "npm:0.0.26"],\
+          ["@cirru/parser.ts", "npm:0.0.9"],\
+          ["@cirru/writer.ts", "npm:0.1.9"]\
         ],\
         "linkType": "HARD"\
       }]\
     ]],\
     ["@calcit/ternary-tree", [\
-      ["npm:0.0.25", {\
-        "packageLocation": "../../../.yarn/berry/cache/@calcit-ternary-tree-npm-0.0.25-9fe008f777-10c0.zip/node_modules/@calcit/ternary-tree/",\
+      ["npm:0.0.26", {\
+        "packageLocation": "../../../.yarn/berry/cache/@calcit-ternary-tree-npm-0.0.26-842160961c-10c0.zip/node_modules/@calcit/ternary-tree/",\
         "packageDependencies": [\
-          ["@calcit/ternary-tree", "npm:0.0.25"]\
+          ["@calcit/ternary-tree", "npm:0.0.26"]\
         ],\
         "linkType": "HARD"\
       }]\
     ]],\
     ["@cirru/parser.ts", [\
-      ["npm:0.0.8", {\
-        "packageLocation": "../../../.yarn/berry/cache/@cirru-parser.ts-npm-0.0.8-9b8400220e-10c0.zip/node_modules/@cirru/parser.ts/",\
+      ["npm:0.0.9", {\
+        "packageLocation": "../../../.yarn/berry/cache/@cirru-parser.ts-npm-0.0.9-d7e6fe396b-10c0.zip/node_modules/@cirru/parser.ts/",\
         "packageDependencies": [\
-          ["@cirru/parser.ts", "npm:0.0.8"]\
+          ["@cirru/parser.ts", "npm:0.0.9"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -75,6 +76,13 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../.yarn/berry/cache/@cirru-writer.ts-npm-0.1.7-8af4bd8836-10c0.zip/node_modules/@cirru/writer.ts/",\
         "packageDependencies": [\
           ["@cirru/writer.ts", "npm:0.1.7"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:0.1.9", {\
+        "packageLocation": "../../../.yarn/berry/cache/@cirru-writer.ts-npm-0.1.9-6e0d3d3bb3-10c0.zip/node_modules/@cirru/writer.ts/",\
+        "packageDependencies": [\
+          ["@cirru/writer.ts", "npm:0.1.9"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -696,6 +704,15 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../.yarn/berry/cache/copy-text-to-clipboard-npm-3.2.0-46c47374b9-10c0.zip/node_modules/copy-text-to-clipboard/",\
         "packageDependencies": [\
           ["copy-text-to-clipboard", "npm:3.2.0"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["dayjs", [\
+      ["npm:1.11.21", {\
+        "packageLocation": "../../../.yarn/berry/cache/dayjs-npm-1.11.21-4094f6afc1-10c0.zip/node_modules/dayjs/",\
+        "packageDependencies": [\
+          ["dayjs", "npm:1.11.21"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -1502,12 +1519,13 @@ const RAW_RUNTIME_STATE =
       ["workspace:.", {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@calcit/procs", "npm:0.11.5"],\
+          ["@calcit/procs", "npm:0.13.11"],\
           ["@cirru/writer.ts", "npm:0.1.7"],\
           ["@google/genai", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:1.4.0"],\
           ["bottom-tip", "npm:0.1.5"],\
           ["cirru-color", "npm:0.2.4"],\
           ["copy-text-to-clipboard", "npm:3.2.0"],\
+          ["dayjs", "npm:1.11.21"],\
           ["root-workspace-0b6124", "workspace:."],\
           ["vite", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:6.3.5"]\
         ],\
