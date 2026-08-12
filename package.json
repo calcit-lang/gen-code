@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "^0.13.11",
+    "@calcit/procs": "^0.13.12",
     "@cirru/writer.ts": "^0.1.7",
     "@google/genai": "^1.4.0",
     "cirru-color": "^0.2.4",
