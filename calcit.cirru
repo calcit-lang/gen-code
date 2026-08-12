@@ -87,7 +87,7 @@
           :schema $ :: 'Dynamic
         |GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defenum GenCodePluginData $ :plugin :fn :list :map
+            defenum GenCodePluginData $ :plugin 'Fn 'List 'Map
           :examples $ []
           :schema $ :: 'Dynamic
         |call-genai-msg! $ %{} 'CodeEntry (:doc |)
