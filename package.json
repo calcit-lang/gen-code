@@ -11,6 +11,6 @@
     "bottom-tip": "^0.1.5",
     "vite": "^6.3.5"
   },
-  "version": "0.0.5",
+  "version": "0.0.7",
   "packageManager": "yarn@4.12.0"
 }
