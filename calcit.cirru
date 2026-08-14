@@ -97,7 +97,7 @@
                 do (js/console.warn "|Aborting prev") (.!abort abort)
               js/setTimeout $ fn ()
                 d! $ :: :states-merge cursor state
-                  {} (:answer nil) (:loading? true)
+                  {} (:answer |) (:loading? true)
               let
                   sdk-result $ js-await
                     .!sendMessageStream @*ai-chat $ js-object (:message prompt-text)
