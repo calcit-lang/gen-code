@@ -460,13 +460,21 @@
           :schema $ :: 'Dynamic
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def store $ {}
+            def store $ %{} gen-code.types/StoreData
               :states $ {}
-                :cursor $ []
           :examples $ []
-          :schema $ :: 'Map 'Tag 'Dynamic
+          :schema $ :: 'gen-code.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.schema)
+    |gen-code.types $ %{} 'FileEntry
+      :defs $ {}
+        |StoreData $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defstruct StoreData $ :states 'Map
+          :examples $ []
+          :schema $ :: 'Dynamic
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote (ns gen-code.types)
     |gen-code.updater $ %{} 'FileEntry
       :defs $ {}
         |updater $ %{} 'CodeEntry (:doc |)
@@ -479,9 +487,8 @@
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn
-            {}
-              :args $ [] (:: 'Map 'Tag 'Dynamic) 'gen-code.schema/GenCodeOp 'String 'Number
-              :return $ :: 'Map 'Tag 'Dynamic
+            {} (:return 'gen-code.types/StoreData)
+              :args $ [] 'gen-code.types/StoreData 'gen-code.schema/GenCodeOp 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
