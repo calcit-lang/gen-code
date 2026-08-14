@@ -458,19 +458,23 @@
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'Dynamic
+        |store $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            def store $ %{} gen-code.types/StoreData
+              :states $ {}
+          :examples $ []
+          :schema $ :: 'gen-code.types/StoreData
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote (ns gen-code.schema)
+    |gen-code.types $ %{} 'FileEntry
+      :defs $ {}
         |StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct StoreData $ :states 'Map
           :examples $ []
           :schema $ :: 'Dynamic
-        |store $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def store $ %{} gen-code.schema/StoreData
-              :states $ {}
-          :examples $ []
-          :schema $ :: 'gen-code.schema/StoreData
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns gen-code.schema)
+        :code $ quote (ns gen-code.types)
     |gen-code.updater $ %{} 'FileEntry
       :defs $ {}
         |updater $ %{} 'CodeEntry (:doc |)
@@ -483,8 +487,8 @@
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'gen-code.schema/StoreData)
-              :args $ [] 'gen-code.schema/StoreData 'gen-code.schema/GenCodeOp 'String 'Number
+            {} (:return 'gen-code.types/StoreData)
+              :args $ [] 'gen-code.types/StoreData 'gen-code.schema/GenCodeOp 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
