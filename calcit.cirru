@@ -13,11 +13,8 @@
               let
                   store $ option:unwrap-or (get reel :store) {}
                   states $ option:unwrap-or (get store :states) {}
-                  cursor $ or
-                    option:unwrap-or (get states :cursor) nil
-                    []
-                  state $ or
-                    option:unwrap-or (get states :data) nil
+                  cursor $ option:unwrap-or (get states :cursor) []
+                  state $ option:unwrap-or (get states :data)
                     {} $ :content |
                   plugin-gen-code $ use-gen-code (>> states :drafter)
                     fn () "|println |demo"
@@ -100,7 +97,7 @@
                 do (js/console.warn "|Aborting prev") (.!abort abort)
               js/setTimeout $ fn ()
                 d! $ :: :states-merge cursor state
-                  {} (:answer nil) (:loading? true)
+                  {} (:answer |) (:loading? true)
               let
                   sdk-result $ js-await
                     .!sendMessageStream @*ai-chat $ js-object (:message prompt-text)
