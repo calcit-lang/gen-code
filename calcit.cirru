@@ -458,13 +458,17 @@
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'Dynamic
+        |StoreData $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defstruct StoreData $ :states 'Map
+          :examples $ []
+          :schema $ :: 'Dynamic
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            def store $ {}
+            def store $ %{} gen-code.schema/StoreData
               :states $ {}
-                :cursor $ []
           :examples $ []
-          :schema $ :: 'Map 'Tag 'Dynamic
+          :schema $ :: 'gen-code.schema/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.schema)
     |gen-code.updater $ %{} 'FileEntry
@@ -479,9 +483,8 @@
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
           :schema $ :: 'Fn
-            {}
-              :args $ [] (:: 'Map 'Tag 'Dynamic) 'gen-code.schema/GenCodeOp 'String 'Number
-              :return $ :: 'Map 'Tag 'Dynamic
+            {} (:return 'gen-code.schema/StoreData)
+              :args $ [] 'gen-code.schema/StoreData 'gen-code.schema/GenCodeOp 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
