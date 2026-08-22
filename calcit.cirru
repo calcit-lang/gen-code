@@ -1,7 +1,8 @@
 
-{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `cr query` to inspect and `cr edit`/`cr tree` to modify. Run `cr docs agents --full` first. Manual edits must follow format and schema conventions, then run `cr edit format`.") (:package |gen-code) (:version |0.0.7)
+{} (:about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --full` first. Manual edits must follow format and schema conventions, then run `calcit edit format`.") (:package |gen-code)
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :native) (:reload-fn 'gen-code.main/reload!)
+      :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
@@ -68,7 +69,7 @@
                   :plugin r cursor state
                   d! cursor initial-state
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Impl
         |*abort-control $ %{} 'CodeEntry (:doc |)
           :code $ quote (defatom *abort-control nil)
           :examples $ []
@@ -81,12 +82,12 @@
           :code $ quote
             deftrait GenCodeActions (:render :fn) (:reset-state :fn)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Trait
         |GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defenum GenCodePluginData $ :plugin 'Fn 'List 'Map
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'EnumDef
         |call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn call-genai-msg! (variant cursor state prompt-text d! *text)
@@ -449,12 +450,12 @@
           :code $ quote
             defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'EnumDef
         |GenCodeState $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'StructDef
         |store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} gen-code.types/StoreData
@@ -469,7 +470,7 @@
           :code $ quote
             defstruct StoreData $ :states 'Map
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'StructDef
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.types)
     |gen-code.updater $ %{} 'FileEntry
