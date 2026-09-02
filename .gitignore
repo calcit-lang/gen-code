@@ -9,5 +9,8 @@ dist/
 .DS_Store
 
 .yarn/*.gz
+.yarn/cache/
+.yarn/unplugged/
+.yarn/__virtual__/
 
 .calcit
