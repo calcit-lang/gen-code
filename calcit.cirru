@@ -6,9 +6,9 @@
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
       :type-slots $ {}
   :files $ {}
-    |gen-code.comp.container $ %{} 'FileEntry
+    'gen-code.comp.container $ %{} 'FileEntry
       :defs $ {}
-        |comp-container $ %{} 'CodeEntry (:doc |)
+        'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defcomp comp-container (reel)
               let
@@ -40,24 +40,24 @@
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
             gen-code.core :refer $ use-gen-code
-    |gen-code.config $ %{} 'FileEntry
+    'gen-code.config $ %{} 'FileEntry
       :defs $ {}
-        |dev? $ %{} 'CodeEntry (:doc |)
+        'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def dev? $ = |dev
               option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
-        |site $ %{} 'CodeEntry (:doc |)
+        'site $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def site $ {} (:storage-key |workflow)
           :examples $ []
           :schema $ :: 'Map 'Tag 'String
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.config)
-    |gen-code.core $ %{} 'FileEntry
+    'gen-code.core $ %{} 'FileEntry
       :defs $ {}
-        |%gen-code-actions $ %{} 'CodeEntry (:doc |)
+        '%gen-code-actions $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defimpl %gen-code-actions GenCodeActions
               .render $ fn (self)
@@ -70,47 +70,62 @@
                   d! cursor initial-state
           :examples $ []
           :schema $ :: 'Impl
-        |*abort-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *abort-control nil)
+        '*abort-control $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defatom *abort-control $ %none
           :examples $ []
-          :schema $ :: 'Ref 'JsObject
-        |*ai-chat $ %{} 'CodeEntry (:doc |)
-          :code $ quote (defatom *ai-chat nil)
+          :schema $ :: 'Ref (:: 'Option 'JsObject)
+        '*ai-chat $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defatom *ai-chat $ %none
           :examples $ []
-          :schema $ :: 'Ref 'JsObject
-        |GenCodeActions $ %{} 'CodeEntry (:doc |)
+          :schema $ :: 'Ref (:: 'Option 'JsObject)
+        'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait GenCodeActions (:render :fn) (:reset-state :fn)
           :examples $ []
           :schema $ :: 'Trait
-        |GenCodePluginData $ %{} 'CodeEntry (:doc |)
+        'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defenum GenCodePluginData $ :plugin 'Fn 'List 'Map
           :examples $ []
           :schema $ :: 'EnumDef
-        |call-genai-msg! $ %{} 'CodeEntry (:doc |)
+        'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait KeyboardEventHost
+              :metaKey $ :: 'JsNullish 'Bool
+              :keyCode $ :: 'JsNullish 'Number
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn call-genai-msg! (variant cursor state prompt-text d! *text)
               hint-fn $ {} (:async true)
-              if (nil? @*ai-chat) (initialize-chat! variant)
-              if-let
-                abort $ deref *abort-control
-                do (js/console.warn "|Aborting prev") (.!abort abort)
+              when
+                option:none? $ deref *ai-chat
+                initialize-chat! variant
+              tag-match (deref *abort-control)
+                (:some abort)
+                  do (js/console.warn "|Aborting prev") (.!abort abort)
+                (:none) &unit
               js/setTimeout $ fn ()
                 d! $ :: :states-merge cursor state
                   {} (:answer |) (:loading? true)
               let
                   sdk-result $ js-await
-                    .!sendMessageStream @*ai-chat $ js-object (:message prompt-text)
-                      :config $ js-object
-                        ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
-                        :httpOptions $ js-object
-                          :baseUrl $ option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
-                        :abortSignal $ let
-                            abort $ new js/AbortController
-                          reset! *abort-control abort
-                          .-signal abort
-                        :responseMimeType |application/json
+                    .!sendMessageStream
+                      option:unwrap $ deref *ai-chat
+                      js-object (:message prompt-text)
+                        :config $ js-object
+                          ; :thinkingConfig $ js-object (:thinkingBudget 400) (:includeThoughts false)
+                          :httpOptions $ js-object
+                            :baseUrl $ option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
+                          :abortSignal $ let
+                              abort $ new js/AbortController
+                            reset! *abort-control $ %some abort
+                            .-signal abort
+                          :responseMimeType |application/json
                 js-await $ js-for-await sdk-result
                   fn (? chunk)
                     if (some? chunk)
@@ -132,12 +147,12 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic
               :features $ #{} :js-ffi
-        |gen-code-actions-plugin $ %{} 'CodeEntry (:doc |)
+        'gen-code-actions-plugin $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def gen-code-actions-plugin $ impl-traits GenCodePluginData %gen-code-actions
           :examples $ []
           :schema $ :: 'gen-code.core/GenCodePluginData
-        |get-gemini-key! $ %{} 'CodeEntry (:doc |)
+        'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
                 key $ unsafe-coerce (js/localStorage.getItem |gemini-key) String
@@ -156,7 +171,7 @@
             {} (:return 'String)
               :args $ []
               :features $ #{} :js-ffi
-        |include-file! $ %{} 'CodeEntry (:doc |)
+        'include-file! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defmacro include-file! (filepath)
               read-file $ str
@@ -164,39 +179,42 @@
                 , |/prompts/ filepath
           :examples $ []
           :schema $ :: 'Macro
-            {} (:return 'String)
-              :args $ [] 'String
-        |initial-state $ %{} 'CodeEntry (:doc |)
+            {}
+              :capabilities $ #{} :fs-read
+              :expansion $ :: 'Expr 'String
+              :required $ [] (:: 'Expr 'String)
+        'initial-state $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def initial-state $ %{} schema/GenCodeState (:answer |) (:loading? false) (:done? false) (:query |) (:code |)
           :examples $ []
           :schema $ :: 'gen-code.schema/GenCodeState
-        |initialize-chat! $ %{} 'CodeEntry (:doc |)
+        'initialize-chat! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn initialize-chat! (variant)
-              reset! *ai-chat $ let
-                  model $ pick-model variant
-                  doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep (include-file! |respo.md)
-                  ai $ new GoogleGenAI
-                    js-object $ :apiKey (get-gemini-key!)
-                .!create
-                  unsafe-coerce (.-chats ai) JsObject
-                  js-object (:model model)
-                    :config $ js/Object.assign
-                      js-object
-                        :httpOptions $ js-object
-                          :baseUrl $ option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
-                        :responseMimeType |application/json
-                    :history $ js-array
-                      js-object (:role |model)
-                        :parts $ js-array
-                          js-object $ :text doc-content
+              reset! *ai-chat $ %some
+                let
+                    model $ pick-model variant
+                    doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep (include-file! |respo.md)
+                    ai $ new GoogleGenAI
+                      js-object $ :apiKey (get-gemini-key!)
+                  .!create
+                    unsafe-coerce (.-chats ai) JsObject
+                    js-object (:model model)
+                      :config $ js/Object.assign
+                        js-object
+                          :httpOptions $ js-object
+                            :baseUrl $ option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
+                          :responseMimeType |application/json
+                      :history $ js-array
+                        js-object (:role |model)
+                          :parts $ js-array
+                            js-object $ :text doc-content
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic
               :features $ #{} :js-ffi
-        |pick-model $ %{} 'CodeEntry (:doc |)
+        'pick-model $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
               case-default variant |gemini-2.5-flash (:gemini |gemini-2.5-flash) (:gemini-pro |gemini-2.5-pro-preview-06-05) (:gemini-pro-1.5 |gemini-1.5-pro) (:gemini-flash-lite |gemini-2.0-flash-lite) (:gemma |gemma-3-27b-it)
@@ -204,12 +222,12 @@
           :schema $ :: 'Fn
             {} (:return 'String)
               :args $ [] 'Tag
-        |sep $ %{} 'CodeEntry (:doc |)
+        'sep $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def sep $ str &newline &newline |----------- &newline &newline
           :examples $ []
           :schema $ :: 'String
-        |style-codebox $ %{} 'CodeEntry (:doc |)
+        'style-codebox $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle style-codebox $ {}
               |& $ {} (:margin 0) (:max-height 600) (:overflow :auto) (:padding |8px)
@@ -220,13 +238,13 @@
                 :line-height |16px
           :examples $ []
           :schema $ :: 'String
-        |style-snippet $ %{} 'CodeEntry (:doc |)
+        'style-snippet $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstyle style-snippet $ {}
               |& $ {} (:margin 0) (:line-height |20px) (:overflow :auto) (; :padding |8px) (:border-radius |6px) (:width |100%) (:max-height 600) (:padding-right 0)
           :examples $ []
           :schema $ :: 'String
-        |use-gen-code $ %{} 'CodeEntry (:doc "|this component can be used to integrate")
+        'use-gen-code $ %{} 'CodeEntry (:doc "|this component can be used to integrate")
           :code $ quote
             defn use-gen-code (states get-hint-code on-submit)
               let
@@ -252,27 +270,30 @@
                               option:unwrap-or (get e :value) |
                           :on-keydown $ fn (e d!)
                             hint-fn $ {} (:async true)
-                            if
-                              and
-                                .-metaKey $ unsafe-coerce
+                            let
+                                event $ unsafe-coerce
                                   option:unwrap-or (get e :event) {}
-                                  , JsObject
-                                = 13 $ .-keyCode
-                                  unsafe-coerce
-                                    option:unwrap-or (get e :event) {}
-                                    , JsObject
-                              let
-                                  *text $ atom |
-                                try
-                                  js-await $ call-genai-msg! |gemini cursor state
-                                    option:unwrap-or (get state :query) |
-                                    , d! *text
-                                  fn (e)
-                                    d! $ :: :states-merge cursor state
-                                      {}
-                                        :answer $ str @*text &newline &newline (str "|Failed to load: " e)
-                                        :loading? false
-                                        :done? true
+                                  , KeyboardEventHost
+                                meta? $ option:unwrap-or
+                                  js-nullish->option $ .-metaKey event
+                                  , false
+                                key-code $ option:unwrap-or
+                                  js-nullish->option $ .-keyCode event
+                                  , -1
+                              if
+                                and meta? $ = 13 key-code
+                                let
+                                    *text $ atom |
+                                  try
+                                    js-await $ call-genai-msg! |gemini cursor state
+                                      option:unwrap-or (get state :query) |
+                                      , d! *text
+                                    fn (e)
+                                      d! $ :: :states-merge cursor state
+                                        {}
+                                          :answer $ str @*text &newline &newline (str "|Failed to load: " e)
+                                          :loading? false
+                                          :done? true
                         div
                           {} $ :class-name css/row-parted
                           a $ {} (:class-name css/link) (:inner-text |Take)
@@ -290,9 +311,10 @@
                               button $ {} (:class-name css/button) (:inner-text |Abort)
                                 :style $ {} (:border-color :red) (:color :red)
                                 :on-click $ fn (e d!)
-                                  if-let
-                                    abort $ deref *abort-control
-                                    do (js/console.warn "|Aborting prev") (.!abort abort)
+                                  tag-match (deref *abort-control)
+                                    (:some abort)
+                                      do (js/console.warn "|Aborting prev") (.!abort abort)
+                                    (:none) &unit
                               button $ {} (:class-name css/button) (:inner-text |Run)
                                 :on-click $ fn (e d!)
                                   hint-fn $ {} (:async true)
@@ -308,27 +330,27 @@
                                             :answer $ str @*text &newline &newline (str "|Failed to load: " e)
                                             :loading? false
                                             :done? true
-                        if loading?
-                          pre $ {}
-                            :class-name $ str-spaced css/font-code! style-codebox
-                            :inner-text $ option:unwrap-or (get state :answer) |
-                          if
-                            not $ blank?
+                      if loading?
+                        pre $ {}
+                          :class-name $ str-spaced css/font-code! style-codebox
+                          :inner-text $ option:unwrap-or (get state :answer) |
+                        if
+                          not $ blank?
+                            option:unwrap-or (get state :code) |
+                          div
+                            {} $ :class-name css/column
+                            comp-cirru-snippet
                               option:unwrap-or (get state :code) |
+                              {} $ :class-name style-snippet
+                            =< 0 8
                             div
-                              {} $ :class-name css/column
-                              comp-cirru-snippet
-                                option:unwrap-or (get state :code) |
-                                {} $ :class-name style-snippet
-                              =< nil 8
-                              div
-                                {} $ :class-name css/row-parted
-                                span $ {}
-                                button $ {} (:class-name css/button) (:inner-text |Accept)
-                                  :on-click $ fn (e d!)
-                                    on-submit
-                                      option:unwrap-or (get state :code) |
-                                      , d!
+                              {} $ :class-name css/row-parted
+                              span $ {}
+                              button $ {} (:class-name css/button) (:inner-text |Accept)
+                                :on-click $ fn (e d!)
+                                  on-submit
+                                    option:unwrap-or (get state :code) |
+                                    , d!
                 %:: gen-code-actions-plugin :plugin render-node cursor state
           :examples $ []
           :schema $ :: 'Fn
@@ -348,14 +370,20 @@
             respo.comp.space :refer $ =<
             gen-code.$meta :refer $ calcit-dirname
             gen-code.schema :as schema
-    |gen-code.main $ %{} 'FileEntry
+    'gen-code.main $ %{} 'FileEntry
       :defs $ {}
-        |*reel $ %{} 'CodeEntry (:doc |)
+        '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
           :examples $ []
           :schema $ :: 'Ref (:: 'Map 'Tag 'Dynamic)
-        |dispatch! $ %{} 'CodeEntry (:doc |)
+        'DocumentHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait DocumentHost $ :visibilityState (:: 'JsNullish 'String)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
               when
@@ -367,7 +395,7 @@
             {} (:return 'Unit)
               :args $ [] 'Dynamic
               :features $ #{} :js-ffi
-        |main! $ %{} 'CodeEntry (:doc |)
+        'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn main! ()
               println "|Running mode:" $ if config/dev? |dev |release
@@ -377,7 +405,12 @@
               listen-devtools! |k dispatch!
               js/window.addEventListener |beforeunload $ fn (event) (persist-storage!)
               js/window.addEventListener |visibilitychange $ fn (event)
-                if (= |hidden js/document.visibilityState) (persist-storage!)
+                let
+                    document $ unsafe-coerce js/document DocumentHost
+                    visibility-state $ option:unwrap-or
+                      js-nullish->option $ .-visibilityState document
+                      , |
+                  if (= |hidden visibility-state) (persist-storage!)
               flipped js/setInterval 60000 persist-storage!
               let
                   raw $ js/localStorage.getItem
@@ -391,12 +424,12 @@
             {} (:return 'Unit)
               :args $ []
               :features $ #{} :js-ffi
-        |mount-target $ %{} 'CodeEntry (:doc |)
+        'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def mount-target $ js/document.querySelector |.app
           :examples $ []
           :schema $ :: 'JsObject
-        |persist-storage! $ %{} 'CodeEntry (:doc |)
+        'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! ()
               println "|Saved at" $ .!toISOString (new js/Date)
@@ -404,13 +437,13 @@
                 js/localStorage.setItem
                   option:unwrap-or (get config/site :storage-key) |workflow
                   format-cirru-edn $ option:unwrap-or (get @*reel :store) {}
-                , nil
+                , &unit
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
               :args $ []
               :features $ #{} :js-ffi
-        |reload! $ %{} 'CodeEntry (:doc |)
+        'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn reload! () $ if (nil? build-errors)
               do (remove-watch *reel :changes) (clear-cache!)
@@ -423,7 +456,7 @@
             {} (:return 'Unit)
               :args $ []
               :features $ #{} :js-ffi
-        |render-app! $ %{} 'CodeEntry (:doc |)
+        'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
           :examples $ []
@@ -444,19 +477,19 @@
             gen-code.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
-    |gen-code.schema $ %{} 'FileEntry
+    'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
-        |GenCodeOp $ %{} 'CodeEntry (:doc |)
+        'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'Dynamic)
           :examples $ []
           :schema $ :: 'EnumDef
-        |GenCodeState $ %{} 'CodeEntry (:doc |)
+        'GenCodeState $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'StructDef
-        |store $ %{} 'CodeEntry (:doc |)
+        'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} gen-code.types/StoreData
               :states $ {}
@@ -464,23 +497,27 @@
           :schema $ :: 'gen-code.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.schema)
-    |gen-code.types $ %{} 'FileEntry
+    'gen-code.types $ %{} 'FileEntry
       :defs $ {}
-        |StoreData $ %{} 'CodeEntry (:doc |)
+        'StoreData $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defstruct StoreData $ :states 'Map
           :examples $ []
           :schema $ :: 'StructDef
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote (ns gen-code.types)
-    |gen-code.updater $ %{} 'FileEntry
+    'gen-code.updater $ %{} 'FileEntry
       :defs $ {}
-        |updater $ %{} 'CodeEntry (:doc |)
+        'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id op-time)
               tag-match op
-                (:states cursor s) (update-states store cursor s)
-                (:states-merge cursor s0 changes) (update-states-merge store cursor s0 changes)
+                (:states cursor s)
+                  struct-with store $ :states
+                    update-state-tree (:states store) cursor s
+                (:states-merge cursor s0 changes)
+                  struct-with store $ :states
+                    update-state-tree-merge (:states store) cursor s0 changes
                 (:hydrate-storage data) data
                 _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
@@ -490,4 +527,4 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.updater $ :require
-            respo.cursor :refer $ update-states update-states-merge
+            respo.cursor :refer $ update-state-tree update-state-tree-merge
