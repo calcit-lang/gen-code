@@ -5,3 +5,4 @@
 - Typed browser keyboard/document fields with external-object traits, changed Struct state updates to `struct-with` plus required field access, and returned `&unit` from the storage effect.
 - Replaced the layout sentinel `nil` with numeric zero and upgraded Calcit/Respo dependencies for the strict compiler.
 - Verified current-compiler preprocessing and JavaScript codegen against the local Respo fix; remaining unresolved Dynamic positions are the heterogeneous Reel/framework maps.
+- Review follow-up keeps Yarn's PnP manifest portable by resolving packages from the project-local ignored `.yarn/cache` instead of a developer-specific global cache path.
