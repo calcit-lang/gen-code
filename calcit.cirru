@@ -275,7 +275,7 @@
                             hint-fn $ {} (:async true)
                             let
                                 event $ unsafe-coerce
-                                  option:unwrap-or (get e :event) {}
+                                  option:unwrap-or (get e :event) ({})
                                   , KeyboardEventHost
                                 meta? $ option:unwrap-or
                                   js-nullish->option $ .-metaKey event
@@ -383,7 +383,7 @@
             defn dispatch! (op)
               when
                 and config/dev? $ match op
-                  (:states _ _) false
+                  (:states ignored-cursor ignored-state) false
                   _ true
                 js/console.log |Dispatch: op
               reset! *reel $ reel-updater updater @*reel op
@@ -414,7 +414,7 @@
                     option:unwrap-or (get config/site :storage-key) |workflow
                 when (js-present? raw)
                   dispatch! $ :: :hydrate-storage
-                    parse-cirru-edn $ unsafe-coerce raw 'String
+                    schema/normalize-store-data $ parse-cirru-edn (unsafe-coerce raw 'String)
               println "|App started."
           :examples $ []
           :schema $ :: 'Fn
@@ -433,7 +433,7 @@
               do
                 js/localStorage.setItem
                   option:unwrap-or (get config/site :storage-key) |workflow
-                  format-cirru-edn $ option:unwrap-or (get @*reel :store) {}
+                  format-cirru-edn $ option:unwrap-or (get @*reel :store) schema/store
                 , &unit
           :examples $ []
           :schema $ :: 'Fn
@@ -478,7 +478,7 @@
       :defs $ {}
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'Dynamic)
+            defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'gen-code.types/StoreData)
           :examples $ []
           :schema $ :: 'EnumDef
         'GenCodeState $ %{} 'CodeEntry (:doc |)
@@ -486,6 +486,38 @@
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'StructDef
+        'normalize-store-data $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn normalize-store-data (data)
+              hint-fn $ {}
+                :args $ [] 'Dynamic
+                :return 'gen-code.types/StoreData
+              if (struct? data)
+                if (&struct:matches? data gen-code.types/StoreData) (assert-type data 'gen-code.types/StoreData) store
+                if (map? data)
+                  let
+                      empty-map $ {}
+                      states $
+                        get data :states
+                        , .unwrap-or empty-map
+                    if (map? states)
+                      %{} gen-code.types/StoreData $ :states states
+                      , store
+                  , store
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'gen-code.types/StoreData)
+              :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
+          :tests $ []
+            %{} 'TestEntry (:name |legacy-and-nominal-hydration)
+              :code $ quote
+                let
+                    empty-map $ {}
+                    legacy $ {} (:states empty-map)
+                  do
+                    assert= store $ normalize-store-data legacy
+                    assert= store $ normalize-store-data store
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} gen-code.types/StoreData
