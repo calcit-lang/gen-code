@@ -12,3 +12,5 @@
 - 将裸 map 构造函数 fallback 改为显式空 map 值或 nominal `schema/store`；production bundling 不再报告缺失 `_$M_` export。
 - The remaining unresolved schema Dynamic count drops from 3 to 2; the deserialized input Dynamic is documented as the JS/localStorage FFI boundary.
 - 剩余 unresolved schema Dynamic 从 3 降到 2；反序列化输入的 Dynamic 被明确标注为 JS/localStorage FFI 边界。
+- Pin setup-calcit v1.4.0 to its verified commit and restrict the workflow token to read-only repository contents.
+- 将 setup-calcit v1.4.0 固定到已核对的 commit，并把 workflow token 权限限制为只读仓库内容。
