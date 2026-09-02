@@ -12,8 +12,10 @@
           :code $ quote
             defcomp comp-container (reel)
               let
-                  store $ option:unwrap-or (get reel :store) {}
-                  states $ option:unwrap-or (get store :states) {}
+                  store $ assert-type
+                    option:unwrap-or (get reel :store) schema/store
+                    , 'gen-code.types/StoreData
+                  states $ :states store
                   cursor $ option:unwrap-or (get states :cursor) []
                   state $ option:unwrap-or (get states :data)
                     {} $ :content |
@@ -40,6 +42,7 @@
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
             gen-code.core :refer $ use-gen-code
+            gen-code.schema :as schema
     'gen-code.config $ %{} 'FileEntry
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
@@ -87,7 +90,7 @@
           :schema $ :: 'Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defenum GenCodePluginData $ :plugin 'Fn 'List 'Map
+            defenum GenCodePluginData $ :plugin 'Fn 'List 'gen-code.schema/GenCodeState
           :examples $ []
           :schema $ :: 'EnumDef
         'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
@@ -252,7 +255,7 @@
                   state $ either
                     option:unwrap-or (get states :data) initial-state
                     , initial-state
-                  loading? $ option:unwrap-or (get state :loading?) false
+                  loading? $ :loading? state
                   render-node $ fn ()
                     div
                       {}
@@ -264,7 +267,7 @@
                           :class-name $ str-spaced css/textarea css/font-code!
                           :style $ {} (:width |100%) (:height 120)
                           :placeholder "|prompts about the task...\n\n<code example>"
-                          :value $ option:unwrap-or (get state :query) |
+                          :value $ :query state
                           :on-input $ fn (e d!)
                             d! cursor $ assoc state :query
                               option:unwrap-or (get e :value) |
@@ -285,9 +288,7 @@
                                 let
                                     *text $ atom |
                                   try
-                                    js-await $ call-genai-msg! |gemini cursor state
-                                      option:unwrap-or (get state :query) |
-                                      , d! *text
+                                    js-await $ call-genai-msg! |gemini cursor state (:query state) d! *text
                                     fn (e)
                                       d! $ :: :states-merge cursor state
                                         {}
@@ -321,9 +322,7 @@
                                   let
                                       *text $ atom |
                                     try
-                                      js-await $ call-genai-msg! :gemini cursor (assoc state :code |)
-                                        option:unwrap-or (get state :query) |
-                                        , d! *text
+                                      js-await $ call-genai-msg! :gemini cursor (assoc state :code |) (:query state) d! *text
                                       fn (e)
                                         d! $ :: :states-merge cursor state
                                           {}
@@ -333,14 +332,12 @@
                       if loading?
                         pre $ {}
                           :class-name $ str-spaced css/font-code! style-codebox
-                          :inner-text $ option:unwrap-or (get state :answer) |
+                          :inner-text $ :answer state
                         if
-                          not $ blank?
-                            option:unwrap-or (get state :code) |
+                          not $ blank? (:code state)
                           div
                             {} $ :class-name css/column
-                            comp-cirru-snippet
-                              option:unwrap-or (get state :code) |
+                            comp-cirru-snippet (:code state)
                               {} $ :class-name style-snippet
                             =< 0 8
                             div
@@ -348,9 +345,7 @@
                               span $ {}
                               button $ {} (:class-name css/button) (:inner-text |Accept)
                                 :on-click $ fn (e d!)
-                                  on-submit
-                                    option:unwrap-or (get state :code) |
-                                    , d!
+                                  on-submit (:code state) d!
                 %:: gen-code-actions-plugin :plugin render-node cursor state
           :examples $ []
           :schema $ :: 'Fn
@@ -387,13 +382,15 @@
           :code $ quote
             defn dispatch! (op)
               when
-                and config/dev? $ not= (nth op 0) :states
+                and config/dev? $ match op
+                  (:states _ _) false
+                  _ true
                 js/console.log |Dispatch: op
               reset! *reel $ reel-updater updater @*reel op
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
-              :args $ [] 'Dynamic
+              :args $ [] 'Enum
               :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote
