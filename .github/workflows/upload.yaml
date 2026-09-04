@@ -29,10 +29,18 @@ jobs:
         with:
           tools: calcit,caps
 
+      - name: Install dependencies
+        run: |
+          caps --strict --ci
+          yarn install --immutable
+
+      - name: Verify Calcit runtime toolchain
+        run: caps verify --toolchain
+
       - name: "compiles to js"
-        run: >
-          caps --ci && calcit calcit.cirru js
-          && yarn && yarn vite build --base=./
+        run: |
+          calcit calcit.cirru js
+          yarn vite build --base=./
 
       - name: Deploy to server
         id: deploy
