@@ -12,16 +12,13 @@
           :code $ quote
             defcomp comp-container (reel)
               let
-                  store $ assert-type
-                    option:unwrap-or (get reel :store) schema/store
-                    , 'gen-code.types/StoreData
+                  store $ assert-type (schema/read-open-field-or reel :store schema/store) 'gen-code.types/StoreData
                   states $ :states store
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ option:unwrap-or (get states :data)
-                    {} $ :content |
-                  plugin-gen-code $ use-gen-code (>> states :drafter)
-                    fn () "|println |demo"
-                    fn (code d!) (println "|submit code" code)
+                  plugin-gen-code $ assert-traits
+                    use-gen-code (>> states :drafter)
+                      fn () "|println |demo"
+                      fn (code d!) (println "|submit code" code)
+                    , GenCodeActions
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
                   div
@@ -41,7 +38,7 @@
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-reel
             gen-code.config :refer $ dev?
-            gen-code.core :refer $ use-gen-code
+            gen-code.core :refer $ use-gen-code GenCodeActions
             gen-code.schema :as schema
     'gen-code.config $ %{} 'FileEntry
       :defs $ {}
@@ -77,12 +74,46 @@
           :code $ quote
             defatom *abort-control $ %none
           :examples $ []
-          :schema $ :: 'Ref (:: 'Option 'JsObject)
+          :schema $ :: 'Ref (:: 'Option 'gen-code.core/AbortControllerHost)
         '*ai-chat $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defatom *ai-chat $ %none
           :examples $ []
-          :schema $ :: 'Ref (:: 'Option 'JsObject)
+          :schema $ :: 'Ref (:: 'Option 'gen-code.core/GenAIChatHost)
+        'AbortControllerHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait AbortControllerHost (:signal 'JsObject)
+              .abort $ :: 'Fn
+                {}
+                  :args $ []
+                  :return 'Unit
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'GenAIChatHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenAIChatHost $ .sendMessageStream
+              :: 'Fn $ {}
+                :args $ [] 'JsObject
+                :return 'JsObject
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'GenAIChatsHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenAIChatsHost $ .create
+              :: 'Fn $ {}
+                :args $ [] 'JsObject
+                :return 'GenAIChatHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'GenAIClientHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenAIClientHost $ :chats 'GenAIChatsHost
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
         'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote
             deftrait GenCodeActions (:render :fn) (:reset-state :fn)
@@ -113,6 +144,10 @@
                   do (js/console.warn "|Aborting prev") (.!abort abort)
                 (:none) &unit
               js/setTimeout $ fn ()
+                hint-fn $ {}
+                  :args $ []
+                  :return 'Dynamic
+                  :features $ #{} :js-ffi
                 d! $ :: :states-merge cursor state
                   {} (:answer |) (:loading? true)
               let
@@ -125,7 +160,7 @@
                           :httpOptions $ js-object
                             :baseUrl $ option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
                           :abortSignal $ let
-                              abort $ new js/AbortController
+                              abort $ new-abort-controller!
                             reset! *abort-control $ %some abort
                             .-signal abort
                           :responseMimeType |application/json
@@ -198,10 +233,11 @@
                 let
                     model $ pick-model variant
                     doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep (include-file! |respo.md)
-                    ai $ new GoogleGenAI
-                      js-object $ :apiKey (get-gemini-key!)
-                  .!create
-                    unsafe-coerce (.-chats ai) JsObject
+                    ai $ unsafe-coerce
+                      new GoogleGenAI $ js-object
+                        :apiKey $ get-gemini-key!
+                      , GenAIClientHost
+                  .!create (.-chats ai)
                     js-object (:model model)
                       :config $ js/Object.assign
                         js-object
@@ -217,6 +253,14 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic
               :features $ #{} :js-ffi
+        'new-abort-controller! $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn new-abort-controller! () $ unsafe-coerce (new js/AbortController) AbortControllerHost
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'gen-code.core/AbortControllerHost)
+              :args $ []
+              :features $ #{} :js-ffi
         'pick-model $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn pick-model (variant)
@@ -225,6 +269,17 @@
           :schema $ :: 'Fn
             {} (:return 'String)
               :args $ [] 'Tag
+        'read-keyboard-event $ %{} 'CodeEntry (:doc "|Narrow the open Respo event payload to the browser keyboard host boundary.")
+          :code $ quote
+            defn read-keyboard-event (event-data)
+              unsafe-coerce
+                schema/read-open-field-or event-data :event $ {}
+                , KeyboardEventHost
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'gen-code.core/KeyboardEventHost)
+              :args $ [] 'Dynamic
+              :features $ #{} :js-ffi
         'sep $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def sep $ str &newline &newline |----------- &newline &newline
@@ -251,12 +306,15 @@
           :code $ quote
             defn use-gen-code (states get-hint-code on-submit)
               let
-                  cursor $ option:unwrap-or (get states :cursor) []
-                  state $ either
-                    option:unwrap-or (get states :data) initial-state
-                    , initial-state
+                  cursor $ assert-type
+                    schema/read-open-field-or states :cursor $ []
+                    :: 'List 'Tag
+                  state $ assert-type (schema/read-open-field-or states :data initial-state) 'gen-code.schema/GenCodeState
                   loading? $ :loading? state
                   render-node $ fn ()
+                    hint-fn $ {}
+                      :args $ []
+                      :return 'respo.schema/Element
                     div
                       {}
                         :style $ {} (:padding 16)
@@ -269,14 +327,18 @@
                           :placeholder "|prompts about the task...\n\n<code example>"
                           :value $ :query state
                           :on-input $ fn (e d!)
+                            hint-fn $ {}
+                              :args $ [] 'Dynamic 'Dynamic
+                              :return 'Dynamic
                             d! cursor $ assoc state :query
-                              option:unwrap-or (get e :value) |
+                              assert-type (schema/read-open-field-or e :value |) 'String
                           :on-keydown $ fn (e d!)
-                            hint-fn $ {} (:async true)
+                            hint-fn $ {}
+                              :args $ [] 'Dynamic 'Dynamic
+                              :return 'Dynamic
+                              :async true
                             let
-                                event $ unsafe-coerce
-                                  option:unwrap-or (get e :event) ({})
-                                  , KeyboardEventHost
+                                event $ read-keyboard-event e
                                 meta? $ option:unwrap-or
                                   js-nullish->option $ .-metaKey event
                                   , false
@@ -290,6 +352,9 @@
                                   try
                                     js-await $ call-genai-msg! |gemini cursor state (:query state) d! *text
                                     fn (e)
+                                      hint-fn $ {}
+                                        :args $ [] 'Dynamic
+                                        :return 'Dynamic
                                       d! $ :: :states-merge cursor state
                                         {}
                                           :answer $ str @*text &newline &newline (str "|Failed to load: " e)
@@ -299,31 +364,50 @@
                           {} $ :class-name css/row-parted
                           a $ {} (:class-name css/link) (:inner-text |Take)
                             :on-click $ fn (e d!)
+                              hint-fn $ {}
+                                :args $ [] 'Dynamic 'Dynamic
+                                :return 'Dynamic
                               d! cursor $ update state :query
                                 fn (q)
+                                  hint-fn $ {}
+                                    :args $ [] 'String
+                                    :return 'String
                                   str q &newline &newline $ trim (get-hint-code)
                           div
                             {} $ :class-name (str-spaced css/row-middle css/gap8)
                             a $ {} (:class-name css/link) (:inner-text |Refresh)
-                              :on-click $ fn (e d!) (initialize-chat! :gemini)
+                              :on-click $ fn (e d!)
+                                hint-fn $ {}
+                                  :args $ [] 'Dynamic 'Dynamic
+                                  :return 'Dynamic
+                                initialize-chat! :gemini
                                 d! $ :: :states-merge cursor state
                                   {} $ :loading? false
                             if loading?
                               button $ {} (:class-name css/button) (:inner-text |Abort)
                                 :style $ {} (:border-color :red) (:color :red)
                                 :on-click $ fn (e d!)
+                                  hint-fn $ {}
+                                    :args $ [] 'Dynamic 'Dynamic
+                                    :return 'Dynamic
                                   tag-match (deref *abort-control)
                                     (:some abort)
                                       do (js/console.warn "|Aborting prev") (.!abort abort)
                                     (:none) &unit
                               button $ {} (:class-name css/button) (:inner-text |Run)
                                 :on-click $ fn (e d!)
-                                  hint-fn $ {} (:async true)
+                                  hint-fn $ {}
+                                    :args $ [] 'Dynamic 'Dynamic
+                                    :return 'Dynamic
+                                    :async true
                                   let
                                       *text $ atom |
                                     try
                                       js-await $ call-genai-msg! :gemini cursor (assoc state :code |) (:query state) d! *text
                                       fn (e)
+                                        hint-fn $ {}
+                                          :args $ [] 'Dynamic
+                                          :return 'Dynamic
                                         d! $ :: :states-merge cursor state
                                           {}
                                             :answer $ str @*text &newline &newline (str "|Failed to load: " e)
@@ -345,6 +429,9 @@
                               span $ {}
                               button $ {} (:class-name css/button) (:inner-text |Accept)
                                 :on-click $ fn (e d!)
+                                  hint-fn $ {}
+                                    :args $ [] 'Dynamic 'Dynamic
+                                    :return 'Dynamic
                                   on-submit (:code state) d!
                 %:: gen-code-actions-plugin :plugin render-node cursor state
           :examples $ []
@@ -518,6 +605,33 @@
                   do
                     assert= store $ normalize-store-data legacy
                     assert= store $ normalize-store-data store
+        'read-open-field-or $ %{} 'CodeEntry (:doc "|Read an intentionally open Reel/state field without introducing an Option<T> relation over Dynamic values.")
+          :code $ quote
+            defn read-open-field-or (value field fallback)
+              let
+                  found $ reel-schema/read-field value field
+                if (nil? found) fallback found
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Dynamic)
+              :args $ [] 'Dynamic 'Tag 'Dynamic
+          :tests $ []
+            %{} 'TestEntry (:name |present-and-missing-store)
+              :code $ quote
+                let
+                    expected store
+                    present $ assert-type
+                      read-open-field-or
+                        {} $ :store expected
+                        , :store expected
+                      , 'gen-code.types/StoreData
+                    missing $ assert-type
+                      read-open-field-or ({}) :store expected
+                      , 'gen-code.types/StoreData
+                  assert= expected present
+                  assert= expected missing
+                  , &unit
+              :tags $ #{} :boundary
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} gen-code.types/StoreData
@@ -525,7 +639,8 @@
           :examples $ []
           :schema $ :: 'gen-code.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
-        :code $ quote (ns gen-code.schema)
+        :code $ quote
+          ns gen-code.schema $ :require (reel.schema :as reel-schema)
     'gen-code.types $ %{} 'FileEntry
       :defs $ {}
         'StoreData $ %{} 'CodeEntry (:doc |)
