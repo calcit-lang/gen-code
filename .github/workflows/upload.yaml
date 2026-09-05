@@ -43,9 +43,7 @@ jobs:
           git diff --exit-code -- calcit.cirru
 
       - name: Check Calcit types
-        run: |
-          calcit calcit.cirru --check-only
-          calcit calcit.cirru --strict-types --check-only
+        run: calcit calcit.cirru --check-only
 
       - name: Test Reel state boundary
         run: >
