@@ -14,8 +14,10 @@ member access to every `JsObject`.
 `call-genai-msg!` no longer declares `fn (? chunk)`. Normal chunks and nullish
 yields preserve the existing dispatch path; successful completion returns Unit.
 Generated-JavaScript tests cover ordinary/nullish chunks, normal completion,
-stream failure, callback failure and iterator cleanup. CI runs them after fresh
-code generation. Application version and dependency versions are unchanged.
+textless chunks, stream failure, callback failure and iterator cleanup. The
+no-text diagnostic uses a fixed message instead of dereferencing optional host
+candidate data. CI runs the suite after fresh code generation. Application
+version and dependency versions are unchanged.
 
 Calcit 0.13.77 strict checking clears the optional callback and untyped chunk
 field sites, then stops at the already split `E_ERASED_GENERIC_RELATION`: the
