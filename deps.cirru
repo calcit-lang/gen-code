@@ -1,6 +1,6 @@
 
 {} (:calcit-version |0.13.77)
   :version |0.0.11
-  :dependencies $ {} (|Respo/reel.calcit |0.6.14)
-    |Respo/respo-ui.calcit |0.7.17
-    |Respo/respo.calcit |0.16.93
+  :dependencies $ {} (|Respo/reel.calcit |0.6.19)
+    |Respo/respo-ui.calcit |0.7.19
+    |Respo/respo.calcit |0.16.95

@@ -12,39 +12,38 @@
           :code $ quote
             defcomp comp-container (reel)
               let
-                  store $ assert-type (schema/read-open-field-or reel :store schema/store) 'gen-code.types/StoreData
+                  store $ :store reel
                   states $ :states store
-                  plugin-gen-code $ assert-traits
-                    use-gen-code (>> states :drafter)
-                      fn ()
-                        hint-fn $ {}
-                          :args $ []
-                          :return 'String
-                        , "|println |demo"
-                      fn (code d!)
-                        hint-fn $ {}
-                          :args $ [] 'String 'Dynamic
-                          :return 'Unit
-                        println "|submit code" code
-                    , GenCodeActions
+                  plugin-gen-code $ use-gen-code (>> states :drafter)
+                    fn ()
+                      hint-fn $ {}
+                        :args $ []
+                        :return 'String
+                      , "|println |demo"
+                    fn (code d!)
+                      hint-fn $ {}
+                        :args $ [] 'String 'Dynamic
+                        :return 'Unit
+                      println "|submit code" code
+                assert-traits plugin-gen-code GenCodeActions
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
                   div
                     {} $ :style
                       {} $ :width 800
                     .render plugin-gen-code
-                  when dev? $ comp-reel (>> states :reel) reel ({})
+                  when dev? $ comp-typed-reel (>> states :reel) reel ({})
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'respo.schema/Component)
-              :args $ [] (:: 'Map 'Tag 'Dynamic)
+              :args $ [] (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.comp.container $ :require (respo-ui.css :as css)
             respo.css :refer $ defstyle
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
-            reel.comp.reel :refer $ comp-reel
+            reel.comp.reel :refer $ comp-typed-reel
             gen-code.config :refer $ dev?
             gen-code.core :refer $ use-gen-code GenCodeActions
             gen-code.schema :as schema
@@ -143,7 +142,12 @@
           :schema $ :: 'Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defenum GenCodePluginData $ :plugin 'Fn 'List 'gen-code.schema/GenCodeState
+            def GenCodePluginData $ impl-traits GenCodePluginData0 %gen-code-actions
+          :examples $ []
+          :schema $ :: 'EnumDef
+        'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defenum GenCodePluginData0 $ :plugin 'Fn 'List 'gen-code.schema/GenCodeState
           :examples $ []
           :schema $ :: 'EnumDef
         'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
@@ -223,11 +227,6 @@
             {} (:return 'Dynamic)
               :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic (:: 'Ref 'String)
               :features $ #{} :js-ffi
-        'gen-code-actions-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            def gen-code-actions-plugin $ impl-traits GenCodePluginData %gen-code-actions
-          :examples $ []
-          :schema $ :: 'gen-code.core/GenCodePluginData
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn get-gemini-key! () $ let
@@ -471,10 +470,10 @@
                                     :args $ [] 'Dynamic 'Dynamic
                                     :return 'Dynamic
                                   on-submit (:code state) d!
-                %:: gen-code-actions-plugin :plugin render-node cursor state
+                assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'Dynamic)
+            {} (:return 'gen-code.core/GenCodePluginData)
               :args $ [] 'Dynamic
                 :: 'Fn $ {} (:return 'String)
                   :args $ []
@@ -499,15 +498,9 @@
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
+            defatom *reel $ typed/new-reel schema/store
           :examples $ []
-          :schema $ :: 'Ref (:: 'Map 'Tag 'Dynamic)
-        'DocumentHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote
-            deftrait DocumentHost $ :visibilityState (:: 'JsNullish 'String)
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-          :schema $ :: 'Trait
+          :schema $ :: 'Ref (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn dispatch! (op)
@@ -516,7 +509,15 @@
                   (:states ignored-cursor ignored-state) false
                   _ true
                 js/console.log |Dispatch: op
-              reset! *reel $ reel-updater updater @*reel op
+              match (typed/decode-control op)
+                (:some control)
+                  reset! *reel $ typed/apply-control updater @*reel control
+                (:none)
+                  match (schema/decode-gen-code-op op)
+                    (:some app-op)
+                      reset! *reel $ typed/record-op updater @*reel app-op (generate-id!)
+                        :timestamp $ host/date-now-snapshot
+                    (:none) (eprintln "|Unknown operation:" op)
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Unit)
@@ -528,16 +529,26 @@
               println "|Running mode:" $ if config/dev? |dev |release
               if config/dev? $ load-console-formatter!
               render-app!
-              add-watch *reel :changes $ fn (reel prev) (render-app!)
+              add-watch *reel :changes $ fn (reel prev)
+                hint-fn $ {}
+                  :args $ [] (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData) (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
+                  :return 'Unit
+                render-app!
               listen-devtools! |k dispatch!
-              js/window.addEventListener |beforeunload $ fn (event) (persist-storage!)
-              js/window.addEventListener |visibilitychange $ fn (event)
-                let
-                    document $ unsafe-coerce js/document DocumentHost
-                    visibility-state $ option:unwrap-or
-                      js-nullish->option $ .-visibilityState document
-                      , |
-                  if (= |hidden visibility-state) (persist-storage!)
+              browser/add-event-listener! |beforeunload $ fn (event)
+                hint-fn $ {}
+                  :args $ [] 'js-ffi.browser/EventHost
+                  :return 'Unit
+                  :features $ #{} :js-ffi
+                persist-storage!
+              browser/add-event-listener! |visibilitychange $ fn (event)
+                hint-fn $ {}
+                  :args $ [] 'js-ffi.browser/EventHost
+                  :return 'Unit
+                  :features $ #{} :js-ffi
+                match (browser/visibility-state)
+                  (:hidden) (persist-storage!)
+                  _ &unit
               flipped js/setInterval 60000 persist-storage!
               let
                   raw $ js/localStorage.getItem
@@ -559,11 +570,11 @@
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn persist-storage! ()
-              println "|Saved at" $ .!toISOString (new js/Date)
+              println "|Saved at" $ :iso (host/date-now-snapshot)
               do
                 js/localStorage.setItem
                   option:unwrap-or (get config/site :storage-key) |workflow
-                  format-cirru-edn $ option:unwrap-or (get @*reel :store) schema/store
+                  format-cirru-edn $ :store @*reel
                 , &unit
           :examples $ []
           :schema $ :: 'Fn
@@ -574,8 +585,12 @@
           :code $ quote
             defn reload! () $ if (nil? build-errors)
               do (remove-watch *reel :changes) (clear-cache!)
-                add-watch *reel :changes $ fn (reel prev) (render-app!)
-                reset! *reel $ refresh-reel @*reel schema/store updater
+                add-watch *reel :changes $ fn (reel prev)
+                  hint-fn $ {}
+                    :args $ [] (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData) (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
+                    :return 'Unit
+                  render-app!
+                reset! *reel $ typed/refresh updater @*reel schema/store
                 hud! |ok~ |Ok
               hud! |error build-errors
           :examples $ []
@@ -599,11 +614,12 @@
             gen-code.updater :refer $ updater
             gen-code.schema :as schema
             reel.util :refer $ listen-devtools!
-            reel.core :refer $ reel-updater refresh-reel
-            reel.schema :as reel-schema
             gen-code.config :as config
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
+            reel.typed :as typed
+            js-ffi.shared :as host
+            js-ffi.browser :as browser
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
@@ -616,6 +632,39 @@
             defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'StructDef
+        'decode-gen-code-op $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn decode-gen-code-op (op)
+              match op
+                (:states cursor state)
+                  %some $ GenCodeOp :states cursor state
+                (:states-merge cursor state changes)
+                  %some $ GenCodeOp :states-merge cursor state changes
+                (:hydrate-storage data)
+                  if
+                    and (struct? data) (&struct:matches? data gen-code.types/StoreData)
+                    %some $ GenCodeOp :hydrate-storage (assert-type data 'gen-code.types/StoreData)
+                    %none
+                _ $ %none
+          :examples $ []
+          :schema $ :: 'Fn
+            {}
+              :args $ [] 'Enum
+              :return $ :: 'Option 'gen-code.schema/GenCodeOp
+          :tests $ []
+            %{} 'TestEntry (:name |decodes-hydration)
+              :code $ quote
+                assert=
+                  %some $ GenCodeOp :hydrate-storage store
+                  decode-gen-code-op $ :: :hydrate-storage store
+            %{} 'TestEntry (:name |rejects-reel-control)
+              :code $ quote
+                assert= (%none)
+                  decode-gen-code-op $ :: :reel/toggle
+            %{} 'TestEntry (:name |rejects-invalid-hydration)
+              :code $ quote
+                assert= (%none)
+                  decode-gen-code-op $ :: :hydrate-storage ({})
         'normalize-store-data $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn normalize-store-data (data)
@@ -627,9 +676,7 @@
                 if (map? data)
                   let
                       empty-map $ {}
-                      states $
-                        get data :states
-                        , .unwrap-or empty-map
+                      states $ read-open-field-or data :states empty-map
                     if (map? states)
                       %{} gen-code.types/StoreData $ :states states
                       , store
@@ -648,7 +695,7 @@
                   do
                     assert= store $ normalize-store-data legacy
                     assert= store $ normalize-store-data store
-        'read-open-field-or $ %{} 'CodeEntry (:doc "|Read an intentionally open Reel/state field without introducing an Option<T> relation over Dynamic values.")
+        'read-open-field-or $ %{} 'CodeEntry (:doc "|Read an intentionally open Respo state field without introducing an Option<T> relation over Dynamic values.")
           :code $ quote
             defn read-open-field-or (value field fallback)
               let
@@ -674,7 +721,6 @@
                   assert= expected present
                   assert= expected missing
                   , &unit
-              :tags $ #{} :boundary
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote
             def store $ %{} gen-code.types/StoreData
