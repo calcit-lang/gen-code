@@ -21,5 +21,5 @@ dependency or release metadata changed.
 本改动不接管另一路 Reel 迁移，只补齐 gen-code 自有的 `Ref<String>`、JSON
 异常回调、`use-gen-code` 回调和 `GenCodeActions` 方法契约。Calcit 0.13.77
 严格预检已越过原先的 `*text` 泛型擦除与匿名函数 schema 错误，当前准确停在
-#867 已登记的 `.render` 动态方法分派。普通类型检查、聚焦状态测试、生成 JS
+`#867` 已登记的 `.render` 动态方法分派。普通类型检查、聚焦状态测试、生成 JS
 流契约测试和 Node 24.4.1/Vite 构建均通过，依赖与版本未变。
