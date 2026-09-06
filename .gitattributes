@@ -1,6 +1,7 @@
-
 yarn.lock -diff linguist-generated
 
 .pnp* -diff linguist-generated
 .yarn/* -diff linguist-generated
 .yarnrc.yml -diff linguist-generated
+
+config/*-quality.cirru text linguist-generated=true
