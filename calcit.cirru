@@ -550,12 +550,12 @@
                   (:hidden) (persist-storage!)
                   _ &unit
               flipped js/setInterval 60000 persist-storage!
-              let
-                  raw $ js/localStorage.getItem
-                    option:unwrap-or (get config/site :storage-key) |workflow
-                when (js-present? raw)
+              match
+                browser/storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
+                (:some raw)
                   dispatch! $ :: :hydrate-storage
-                    schema/normalize-store-data $ parse-cirru-edn (unsafe-coerce raw 'String)
+                    schema/normalize-store-data $ parse-cirru-edn raw
+                (:none) &unit
               println "|App started."
           :examples $ []
           :schema $ :: 'Fn
@@ -703,8 +703,10 @@
                 if (nil? found) fallback found
           :examples $ []
           :schema $ :: 'Fn
-            {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Tag 'Dynamic
+            {} (:return 'T)
+              :args $ [] 'Dynamic 'Tag 'T
+              :features $ #{} :js-ffi
+              :generics $ [] 'T
           :tests $ []
             %{} 'TestEntry (:name |present-and-missing-store)
               :code $ quote
