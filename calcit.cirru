@@ -71,14 +71,14 @@
                 hint-fn $ {}
                   :args $ [] 'Dynamic
                   :return 'Dynamic
-                tag-match self $
+                match self $
                   :plugin render-node cursor state
                   render-node
               .reset-state $ fn (self d!)
                 hint-fn $ {}
                   :args $ [] 'Dynamic 'Dynamic
                   :return 'Dynamic
-                tag-match self $
+                match self $
                   :plugin r cursor state
                   d! cursor initial-state
           :examples $ []
@@ -165,7 +165,7 @@
               when
                 option:none? $ deref *ai-chat
                 initialize-chat! variant
-              tag-match (deref *abort-control)
+              match (deref *abort-control)
                 (:some abort)
                   do (js/console.warn "|Aborting prev") (.!abort abort)
                 (:none) &unit
@@ -427,7 +427,7 @@
                                   hint-fn $ {}
                                     :args $ [] 'Dynamic 'Dynamic
                                     :return 'Dynamic
-                                  tag-match (deref *abort-control)
+                                  match (deref *abort-control)
                                     (:some abort)
                                       do (js/console.warn "|Aborting prev") (.!abort abort)
                                     (:none) &unit
@@ -790,7 +790,7 @@
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote
             defn updater (store op op-id op-time)
-              tag-match op
+              match op
                 (:states cursor s)
                   struct-with store $ :states
                     update-state-tree (:states store) cursor s
