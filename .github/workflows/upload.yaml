@@ -53,6 +53,7 @@ jobs:
       - name: Build
         run: |
           calcit calcit.cirru js
+          yarn test:stream
           yarn vite build --base=./
 
       - name: Deploy to server

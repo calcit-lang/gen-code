@@ -164,17 +164,27 @@
                             reset! *abort-control $ %some abort
                             .-signal abort
                           :responseMimeType |application/json
-                js-await $ js-for-await sdk-result
-                  fn (? chunk)
-                    if (some? chunk)
-                      if-let
-                        t $ js-nullish->option (.-text chunk)
-                        do (swap! *text str t)
-                          d! $ :: :states-merge cursor state
-                            {} (:answer @*text) (:loading? true) (:done? false)
-                        do $ js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text
+                js-await $ consume-genai-stream! sdk-result
+                  fn (chunk-option)
+                    hint-fn $ {}
+                      :args $ [] (:: 'Option 'GenAIChunkHost)
+                      :return 'Unit
+                      :features $ #{} :js-ffi
+                    match chunk-option
+                      (:some chunk)
+                        match
+                          js-nullish->option $ .-text chunk
+                          (:some t)
+                            do (swap! *text str t)
+                              d! $ :: :states-merge cursor state
+                                {} (:answer @*text) (:loading? true) (:done? false)
+                              , &unit
+                          (:none)
+                            do (js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text) &unit
+                      (:none) &unit
                     d! $ :: :states-merge cursor state
                       {} (:answer @*text) (:loading? true) (:done? false)
+                    , &unit
                 d! $ :: :states-merge cursor state
                   {} (:answer @*text) (:loading? false) (:done? true)
                     :code $ try
@@ -452,6 +462,7 @@
             respo.comp.space :refer $ =<
             gen-code.$meta :refer $ calcit-dirname
             gen-code.schema :as schema
+            gen-code.stream :refer $ consume-genai-stream! GenAIChunkHost
     'gen-code.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
@@ -641,6 +652,52 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
           ns gen-code.schema $ :require (reel.schema :as reel-schema)
+    'gen-code.stream $ %{} 'FileEntry
+      :defs $ {}
+        'GenAIChunkHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            deftrait GenAIChunkHost $ :text (:: 'JsNullish 'String)
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
+        'consume-genai-stream! $ %{} 'CodeEntry (:doc "|Consume a host async iterator and normalize each nullish yield into Option before invoking application code.")
+          :code $ quote
+            defn consume-genai-stream! (stream on-chunk!)
+              hint-fn $ {} (:async true)
+                :args $ [] 'JsObject
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] (:: 'Option 'GenAIChunkHost)
+                :return 'Unit
+                :features $ #{} :js-ffi
+              js-await $ js-for-await stream
+                fn (chunk)
+                  hint-fn $ {}
+                    :args $ [] (:: 'JsNullish 'JsObject)
+                    :return 'Unit
+                    :features $ #{} :js-ffi
+                  match (js-nullish->option chunk)
+                    (:some value)
+                      on-chunk! $ %some (read-genai-chunk value)
+                    (:none)
+                      on-chunk! $ %none
+              , &unit
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'JsObject
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] (:: 'Option 'GenAIChunkHost)
+              :features $ #{} :js-ffi
+        'read-genai-chunk $ %{} 'CodeEntry (:doc |)
+          :code $ quote
+            defn read-genai-chunk (value) (unsafe-coerce value GenAIChunkHost)
+          :examples $ []
+          :schema $ :: 'Fn
+            {} (:return 'GenAIChunkHost)
+              :args $ [] 'JsObject
+              :features $ #{} :js-ffi
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote (ns gen-code.stream)
     'gen-code.types $ %{} 'FileEntry
       :defs $ {}
         'StoreData $ %{} 'CodeEntry (:doc |)

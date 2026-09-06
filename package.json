@@ -11,6 +11,9 @@
     "bottom-tip": "^0.1.5",
     "vite": "^6.3.5"
   },
+  "scripts": {
+    "test:stream": "node --import=./.pnp.loader.mjs tests/stream-contract.mjs"
+  },
   "version": "0.0.11",
   "packageManager": "yarn@4.12.0"
 }
