@@ -46,9 +46,10 @@ jobs:
         run: calcit calcit.cirru --check-only
 
       - name: Test Reel state boundary
-        run: >
-          calcit test gen-code.schema/read-open-field-or
-          --name present-and-missing-store --require-match
+        run: |
+          calcit test gen-code.schema/read-open-field-or \
+            --name present-and-missing-store --require-match
+          calcit test gen-code.schema/decode-gen-code-op --require-match
 
       - name: Build
         run: |
