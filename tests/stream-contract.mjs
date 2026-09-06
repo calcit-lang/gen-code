@@ -14,6 +14,7 @@ async function* completedStream() {
   try {
     yield { text: "first" };
     yield null;
+    yield {};
     yield { text: "second" };
   } finally {
     completedCleanupCount += 1;
@@ -31,6 +32,7 @@ const completedResult = await consume_genai_stream_$x_(
 assert.deepEqual(completedChunks, [
   { text: "first" },
   null,
+  {},
   { text: "second" },
 ]);
 assert.equal(completedResult, undefined);

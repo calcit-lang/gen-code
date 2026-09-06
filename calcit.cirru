@@ -180,7 +180,7 @@
                                 {} (:answer @*text) (:loading? true) (:done? false)
                               , &unit
                           (:none)
-                            do (js/console.log js/chunk.candidates[0].content?.parts?.[0]?.text) &unit
+                            do (js/console.log "|GenAI chunk has no text") &unit
                       (:none) &unit
                     d! $ :: :states-merge cursor state
                       {} (:answer @*text) (:loading? true) (:done? false)
