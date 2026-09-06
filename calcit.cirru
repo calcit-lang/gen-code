@@ -16,8 +16,16 @@
                   states $ :states store
                   plugin-gen-code $ assert-traits
                     use-gen-code (>> states :drafter)
-                      fn () "|println |demo"
-                      fn (code d!) (println "|submit code" code)
+                      fn ()
+                        hint-fn $ {}
+                          :args $ []
+                          :return 'String
+                        , "|println |demo"
+                      fn (code d!)
+                        hint-fn $ {}
+                          :args $ [] 'String 'Dynamic
+                          :return 'Unit
+                        println "|submit code" code
                     , GenCodeActions
                 div
                   {} $ :class-name (str-spaced css/preset css/global css/row)
@@ -61,10 +69,16 @@
           :code $ quote
             defimpl %gen-code-actions GenCodeActions
               .render $ fn (self)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
                 tag-match self $
                   :plugin render-node cursor state
                   render-node
               .reset-state $ fn (self d!)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic 'Dynamic
+                  :return 'Dynamic
                 tag-match self $
                   :plugin r cursor state
                   d! cursor initial-state
@@ -116,7 +130,15 @@
           :schema $ :: 'Trait
         'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote
-            deftrait GenCodeActions (:render :fn) (:reset-state :fn)
+            deftrait GenCodeActions
+              :render $ :: 'Fn
+                {}
+                  :args $ []
+                  :return 'Dynamic
+              :reset-state $ :: 'Fn
+                {}
+                  :args $ [] 'Dynamic
+                  :return 'Dynamic
           :examples $ []
           :schema $ :: 'Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
@@ -189,11 +211,17 @@
                   {} (:answer @*text) (:loading? false) (:done? true)
                     :code $ try
                       writeCirruCode $ js-array (js/JSON.parse @*text)
-                      fn (err) (js/console.error err) (str err)
+                      fn (err)
+                        hint-fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'String
+                          :features $ #{} :js-ffi
+                        js/console.error err
+                        str err
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic
+              :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic (:: 'Ref 'String)
               :features $ #{} :js-ffi
         'gen-code-actions-plugin $ %{} 'CodeEntry (:doc |)
           :code $ quote
@@ -447,7 +475,11 @@
           :examples $ []
           :schema $ :: 'Fn
             {} (:return 'Dynamic)
-              :args $ [] 'Dynamic 'Dynamic 'Dynamic
+              :args $ [] 'Dynamic
+                :: 'Fn $ {} (:return 'String)
+                  :args $ []
+                :: 'Fn $ {} (:return 'Unit)
+                  :args $ [] 'String 'Dynamic
               :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote
