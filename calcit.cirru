@@ -310,13 +310,13 @@
               :features $ #{} :js-ffi
             let
                 abort $ new-abort-controller!
+                result $ send-genai-request! chat prompt-text abort
               reset! *abort-control $ %some abort
-              send-genai-request! chat prompt-text abort
+              if (js-nullish? result) (raise "|GenAI stream response is nullish") result
           :examples $ []
-          :schema $ :: 'Fn $ {}
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
             :args $ [] 'gen-code.core/GenAIChatHost 'String
             :features $ #{} :js-ffi
-            :return $ :: 'JsNullish 'JsObject
         'sep $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def sep (str &newline &newline |----------- &newline &newline)
           :examples $ []
