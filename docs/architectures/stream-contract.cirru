@@ -1,7 +1,7 @@
 {}
   :schema-version 1
   :feature 'explicit-genai-stream-contract
-  :doc "|Adapt the JavaScript async iterator's JsNullish chunk boundary once, attach the minimal GenAIChunkHost capability, then expose Option<GenAIChunkHost> while preserving completion and failure propagation."
+  :doc "|Reject a nullish JavaScript async iterator before consumption, expose yielded chunks as Option<JsObject>, and use read-genai-chunk to read the caller-facing JsNullish text field."
   :roots $ #{} 'gen-code.core/call-genai-msg!
   :definitions $ {}
     'gen-code.stream/consume-genai-stream! $ {}
@@ -12,7 +12,15 @@
       :schema $ :: 'Fn $ {} (:return 'Unit)
         :args $ [] 'JsObject
           :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'Option 'GenAIChunkHost)
+            :args $ [] (:: 'Option 'JsObject)
+        :features $ #{} :js-ffi
+    'gen-code.stream/read-genai-chunk $ {}
+      :mode :ensure
+      :kind :fn
+      :doc "|Read the stream text from its typed host boundary."
+      :params $ [] 'value
+      :schema $ :: 'Fn $ {} (:return $ :: 'JsNullish 'String)
+        :args $ [] 'JsObject
         :features $ #{} :js-ffi
     'gen-code.core/call-genai-msg! $ {}
       :mode :external
