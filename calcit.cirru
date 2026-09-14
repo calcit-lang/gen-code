@@ -171,7 +171,7 @@
                 match chunk-option
                   (:some chunk)
                     match
-                      js-nullish->option $ read-genai-text chunk
+                      js-nullish->option $ read-genai-chunk chunk
                       (:some t)
                         do (swap! *text str t)
                           d! $ :: :states-merge cursor state $ {}
@@ -246,7 +246,7 @@
                 ai $ unsafe-coerce
                   new GoogleGenAI $ js-object $ :apiKey (get-gemini-key!)
                   , GenAIClientHost
-              unsafe-coerce
+              assert-type
                 .!create (.-chats ai)
                   js-object (:model model)
                     :config $ js/Object.assign $ js-object
@@ -485,7 +485,7 @@
             respo.comp.space :refer $ =<
             gen-code.$meta :refer $ calcit-dirname
             gen-code.schema :as schema
-            gen-code.stream :refer $ consume-genai-stream! read-genai-text
+            gen-code.stream :refer $ consume-genai-stream! read-genai-chunk
     'gen-code.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
@@ -732,9 +732,9 @@
               {} (:return 'Unit)
                 :args $ [] $ :: 'Option 'JsObject
             :features $ #{} :js-ffi
-        'read-genai-text $ %{} 'CodeEntry
+        'read-genai-chunk $ %{} 'CodeEntry
           :doc "|Read the stream text from its typed host boundary."
-          :code $ quote $ defn read-genai-text (value)
+          :code $ quote $ defn read-genai-chunk (value)
             .-text $ unsafe-coerce value GenAIChunkHost
           :examples $ []
           :schema $ :: 'Fn $ {}
