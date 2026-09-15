@@ -83,11 +83,11 @@
         '*abort-control $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *abort-control (%none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Option 'gen-code.core/AbortControllerHost
+          :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/AbortControllerHost
         '*ai-chat $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *ai-chat (%none)
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Option 'gen-code.core/GenAIChatHost
+          :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/GenAIChatHost
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait AbortControllerHost (:signal 'JsObject)
             .abort $ :: 'Fn $ {}
@@ -235,7 +235,7 @@
             :required $ [] $ :: 'Expr 'String
         'initial-state $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def initial-state
-            %{} schema/GenCodeState (:answer |) (:loading? false) (:done? false) (:query |) (:code |)
+            schema/GenCodeState :answer | :loading? false :done? false :query | :code |
           :examples $ []
           :schema $ :: 'gen-code.schema/GenCodeState
         'initialize-chat! $ %{} 'CodeEntry (:doc |)
@@ -555,11 +555,10 @@
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
-            do
-              js/localStorage.setItem
-                option:unwrap-or (get config/site :storage-key) |workflow
-                format-cirru-edn $ :store @*reel
-              , &unit
+            js/localStorage.setItem
+              option:unwrap-or (get config/site :storage-key) |workflow
+              format-cirru-edn $ :store @*reel
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -627,7 +626,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Enum
-            :return $ :: 'Option 'gen-code.schema/GenCodeOp
+            :return $ :: 'calcit.core/Option 'gen-code.schema/GenCodeOp
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
@@ -650,9 +649,7 @@
                 let
                     empty-map $ {}
                     states $ read-open-field-or data :states empty-map
-                  if (map? states)
-                    %{} gen-code.types/StoreData $ :states states
-                    , store
+                  if (map? states) (gen-code.types/StoreData :states states) store
                 , store
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'gen-code.types/StoreData)
@@ -692,7 +689,7 @@
               , &unit
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            %{} gen-code.types/StoreData $ :states $ {}
+            gen-code.types/StoreData :states $ {}
           :examples $ []
           :schema $ :: 'gen-code.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
@@ -730,7 +727,7 @@
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'JsObject $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] $ :: 'Option 'JsObject
+                :args $ [] $ :: 'calcit.core/Option 'JsObject
             :features $ #{} :js-ffi
         'read-genai-chunk $ %{} 'CodeEntry
           :doc "|Read the stream text from its typed host boundary."
