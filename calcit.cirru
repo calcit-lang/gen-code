@@ -119,10 +119,10 @@
           :schema $ :: 'Trait
         'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenCodeActions
-            :render $ :: 'Fn $ {}
+            .render $ :: 'Fn $ {}
               :args $ []
               :return 'Dynamic
-            :reset-state $ :: 'Fn $ {}
+            .reset-state $ :: 'Fn $ {}
               :args $ [] 'Dynamic
               :return 'Dynamic
           :examples $ []
