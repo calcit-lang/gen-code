@@ -12,5 +12,7 @@ dist/
 .yarn/cache/
 .yarn/unplugged/
 .yarn/__virtual__/
+.yarn/releases/
+.pnp.*
 
 .calcit
