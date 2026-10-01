@@ -25,6 +25,32 @@ let
 
 ### Workflow
 
+Local Vite builds use relative asset URLs. `VITE_BASE_URL` selects the frontend
+CDN base. CI uses the same prefix for the build, COS upload and public verification:
+the repository directory on main, or `pr/<number>/<run-id>/` for each PR run.
+cos-upload-action v1.1.1 verifies the uploaded files itself; no extra CDN checker
+is needed. The server deployment source `dist/*`, destination and main-only
+condition are unchanged. The deployed HTML deliberately changes: its frontend
+asset URLs now point to COS rather than relative server paths.
+
+This migration targets stable Calcit/procs 0.27.0 and Yarn 4.18.0, with canonical
+`calcit.cirru` / `deps.cirru`. Fourteen deprecated Option constructors are migrated.
+Application operation cursors are typed Lists; states-merge carries GenCodeState
+and Map<Tag, Dynamic> changes. The GenAI call declares its async contract with
+Tag model, List<Tag> cursor, typed state, String prompt and Ref<String> output.
+Run and keyboard submission both pass the same model Tag.
+
+CI retains strict dependency/toolchain, entry/all-public checks, the unchanged
+quality baseline and existing Reel/stream business tests. No new test suite or
+CDN checker is added; repeated diagnostic reports are removed. Production runs
+are serialized, PR uploads retain their run-isolated prefix, and an upload or
+built-in verification failure prevents server deployment.
+
+Local macOS tools still report upstream Respo ToString warnings
+(Respo/respo.calcit#198); current-commit official Linux CI is the acceptance
+criterion. Actual browser interaction and production deployment require separate
+verification, not merely a build result.
+
 https://github.com/calcit-lang/respo-calcit-workflow
 
 ### License

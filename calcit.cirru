@@ -3,9 +3,9 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |gen-code
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :native) (:reload-fn 'gen-code.main/reload!)
+    {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :js) (:reload-fn 'gen-code.main/reload!) (:target :browser)
       :feature-policy $ {} $ :js-ffi :allow
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
       :type-slots $ {}
   :files $ {}
     'gen-code.comp.container $ %{} 'FileEntry
@@ -81,11 +81,11 @@
           :examples $ []
           :schema $ :: 'Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *abort-control (%none)
+          :code $ quote $ defatom *abort-control (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/AbortControllerHost
         '*ai-chat $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *ai-chat (%none)
+          :code $ quote $ defatom *ai-chat (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/GenAIChatHost
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
@@ -201,9 +201,10 @@
                       :features $ #{} :js-ffi
                     js/console.error err
                     str err
+            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic $ :: 'Ref 'String
+          :schema $ :: 'Fn $ {} (:async true) (:return 'Unit)
+            :args $ [] 'Tag (:: 'List 'Tag) 'gen-code.schema/GenCodeState 'String 'Dynamic $ :: 'Ref 'String
             :features $ #{} :js-ffi
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
@@ -240,7 +241,7 @@
           :schema $ :: 'gen-code.schema/GenCodeState
         'initialize-chat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn initialize-chat! (variant)
-            reset! *ai-chat $ %some $ let
+            reset! *ai-chat $ Option :some $ let
                 model $ pick-model variant
                 doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep $ include-file! |respo.md
                 ai $ unsafe-coerce
@@ -256,9 +257,10 @@
                     :history $ js-array $ js-object (:role |model)
                       :parts $ js-array $ js-object (:text doc-content)
                 , GenAIChatHost
+            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Tag
             :features $ #{} :js-ffi
         'new-abort-controller! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-abort-controller! ()
@@ -311,7 +313,7 @@
             let
                 abort $ new-abort-controller!
                 result $ send-genai-request! chat prompt-text abort
-              reset! *abort-control $ %some abort
+              reset! *abort-control $ Option :some abort
               if (js-nullish? result) (raise "|GenAI stream response is nullish") result
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'JsObject)
@@ -382,7 +384,7 @@
                               let
                                   *text $ atom |
                                 try
-                                  js-await $ call-genai-msg! |gemini cursor state (:query state) d! *text
+                                  js-await $ call-genai-msg! :gemini cursor state (:query state) d! *text
                                   fn (e)
                                     hint-fn $ {}
                                       :args $ [] 'Dynamic
@@ -450,9 +452,9 @@
                         div
                           {} $ :class-name css/column
                           comp-cirru-snippet (:code state)
-                            %some $ %{} respo-ui.schema/PresentationOptions
-                              :class-name $ %some style-snippet
-                              :style $ %none
+                            Option :some $ %{} respo-ui.schema/PresentationOptions
+                              :class-name $ Option :some style-snippet
+                              :style $ Option :none
                           =< 0 8
                           div
                             {} $ :class-name css/row-parted
@@ -549,9 +551,10 @@
             :args $ []
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def mount-target (js/document.querySelector |.app)
+          :code $ quote $ def mount-target
+            .unwrap $ browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'JsObject
+          :schema $ :: 'js-ffi.browser/DomElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -603,7 +606,10 @@
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'gen-code.types/StoreData)
+          :code $ quote $ defenum GenCodeOp
+            :states (:: 'List 'Dynamic) 'Dynamic
+            :states-merge (:: 'List 'Tag) 'gen-code.schema/GenCodeState $ :: 'Map 'Tag 'Dynamic
+            :hydrate-storage 'gen-code.types/StoreData
           :examples $ []
           :schema $ :: 'EnumDef
         'GenCodeState $ %{} 'CodeEntry (:doc |)
@@ -612,17 +618,27 @@
           :schema $ :: 'StructDef
         'decode-gen-code-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-gen-code-op (op)
-            match op
-              (:states cursor state)
-                %some $ GenCodeOp :states cursor state
-              (:states-merge cursor state changes)
-                %some $ GenCodeOp :states-merge cursor state changes
-              (:hydrate-storage data)
-                if
-                  and (struct? data) (&struct:matches? data gen-code.types/StoreData)
-                  %some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
-                  %none
-              _ $ %none
+            try
+              match op
+                (:states cursor state)
+                  Option :some $ GenCodeOp :states
+                    decode-map-as cursor $ :: 'List 'Dynamic
+                    , state
+                (:states-merge cursor state changes)
+                  if
+                    and (struct? state) (&struct:matches? state GenCodeState)
+                    Option :some $ GenCodeOp :states-merge
+                      decode-map-as cursor $ :: 'List 'Tag
+                      assert-type state 'gen-code.schema/GenCodeState
+                      decode-map-as changes $ :: 'Map 'Tag 'Dynamic
+                    Option :none
+                (:hydrate-storage data)
+                  if
+                    and (struct? data) (&struct:matches? data gen-code.types/StoreData)
+                    Option :some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
+                    Option :none
+                _ $ Option :none
+              fn (_) (Option :none)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Enum
@@ -719,9 +735,9 @@
                 :features $ #{} :js-ffi
               match (js-nullish->option chunk)
                 (:some value)
-                  on-chunk! $ %some value
+                  on-chunk! $ Option :some value
                 (:none)
-                  on-chunk! $ %none
+                  on-chunk! $ Option :none
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
