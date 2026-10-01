@@ -201,9 +201,10 @@
                       :features $ #{} :js-ffi
                     js/console.error err
                     str err
+            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic 'Dynamic 'Dynamic 'Dynamic 'Dynamic $ :: 'Ref 'String
+          :schema $ :: 'Fn $ {} (:async true) (:return 'Unit)
+            :args $ [] 'Tag (:: 'List 'Tag) 'gen-code.schema/GenCodeState 'String 'Dynamic $ :: 'Ref 'String
             :features $ #{} :js-ffi
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
@@ -256,9 +257,10 @@
                     :history $ js-array $ js-object (:role |model)
                       :parts $ js-array $ js-object (:text doc-content)
                 , GenAIChatHost
+            , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Dynamic)
-            :args $ [] 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Tag
             :features $ #{} :js-ffi
         'new-abort-controller! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-abort-controller! ()
@@ -382,7 +384,7 @@
                               let
                                   *text $ atom |
                                 try
-                                  js-await $ call-genai-msg! |gemini cursor state (:query state) d! *text
+                                  js-await $ call-genai-msg! :gemini cursor state (:query state) d! *text
                                   fn (e)
                                     hint-fn $ {}
                                       :args $ [] 'Dynamic
@@ -604,7 +606,10 @@
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum GenCodeOp (:states 'Dynamic 'Dynamic) (:states-merge 'Dynamic 'Dynamic 'Dynamic) (:hydrate-storage 'gen-code.types/StoreData)
+          :code $ quote $ defenum GenCodeOp
+            :states (:: 'List 'Dynamic) 'Dynamic
+            :states-merge (:: 'List 'Tag) 'gen-code.schema/GenCodeState $ :: 'Map 'Tag 'Dynamic
+            :hydrate-storage 'gen-code.types/StoreData
           :examples $ []
           :schema $ :: 'EnumDef
         'GenCodeState $ %{} 'CodeEntry (:doc |)
@@ -613,17 +618,27 @@
           :schema $ :: 'StructDef
         'decode-gen-code-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-gen-code-op (op)
-            match op
-              (:states cursor state)
-                Option :some $ GenCodeOp :states cursor state
-              (:states-merge cursor state changes)
-                Option :some $ GenCodeOp :states-merge cursor state changes
-              (:hydrate-storage data)
-                if
-                  and (struct? data) (&struct:matches? data gen-code.types/StoreData)
-                  Option :some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
-                  Option :none
-              _ $ Option :none
+            try
+              match op
+                (:states cursor state)
+                  Option :some $ GenCodeOp :states
+                    decode-map-as cursor $ :: 'List 'Dynamic
+                    , state
+                (:states-merge cursor state changes)
+                  if
+                    and (struct? state) (&struct:matches? state GenCodeState)
+                    Option :some $ GenCodeOp :states-merge
+                      decode-map-as cursor $ :: 'List 'Tag
+                      assert-type state 'gen-code.schema/GenCodeState
+                      decode-map-as changes $ :: 'Map 'Tag 'Dynamic
+                    Option :none
+                (:hydrate-storage data)
+                  if
+                    and (struct? data) (&struct:matches? data gen-code.types/StoreData)
+                    Option :some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
+                    Option :none
+                _ $ Option :none
+              fn (_) (Option :none)
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Enum

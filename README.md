@@ -33,14 +33,23 @@ is needed. The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
 asset URLs now point to COS rather than relative server paths.
 
-This local migration branch targets Calcit/procs 0.27.0. Strict dependency and
-toolchain checks, the unchanged quality baseline and all four existing Calcit
-tests pass. Fourteen deprecated Option constructors have been migrated.
-The official compiler still rejects six ToString-bound warnings in published
-Respo 0.16.114-alpha.5 (tracked in Respo/respo.calcit#198), so JS generation,
-the stream contract test and browser acceptance remain incomplete. Do not deploy
-this branch as a completed Calcit upgrade. The separate COS-only PR keeps its
-existing 0.24.3 toolchain until these upgrade checks pass.
+This migration targets stable Calcit/procs 0.27.0 and Yarn 4.18.0, with canonical
+`calcit.cirru` / `deps.cirru`. Fourteen deprecated Option constructors are migrated.
+Application operation cursors are typed Lists; states-merge carries GenCodeState
+and Map<Tag, Dynamic> changes. The GenAI call declares its async contract with
+Tag model, List<Tag> cursor, typed state, String prompt and Ref<String> output.
+Run and keyboard submission both pass the same model Tag.
+
+CI retains strict dependency/toolchain, entry/all-public checks, the unchanged
+quality baseline and existing Reel/stream business tests. No new test suite or
+CDN checker is added; repeated diagnostic reports are removed. Production runs
+are serialized, PR uploads retain their run-isolated prefix, and an upload or
+built-in verification failure prevents server deployment.
+
+Local macOS tools still report upstream Respo ToString warnings
+(Respo/respo.calcit#198); current-commit official Linux CI is the acceptance
+criterion. Actual browser interaction and production deployment require separate
+verification, not merely a build result.
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
