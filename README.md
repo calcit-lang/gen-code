@@ -25,9 +25,13 @@ let
 
 ### Workflow
 
+Use `yarn dev` to compile once, then run Calcit `js -w` and Vite together;
+either process exiting stops the other. `yarn build` compiles and builds once.
+The existing Reel boundary and stream business tests remain in CI.
+
 Local Vite builds use relative asset URLs. `VITE_BASE_URL` selects the frontend
 CDN base. CI uses the same prefix for the build, COS upload and public verification:
-the repository directory on main, or `pr/<number>/<run-id>/` for each PR run.
+the repository directory on main, or `pr/<number>/<run-id>/<attempt>/` for each PR run.
 cos-upload-action v1.1.1 verifies the uploaded files itself; no extra CDN checker
 is needed. The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
