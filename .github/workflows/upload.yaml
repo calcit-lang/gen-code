@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: frontend-${{ github.repository }}-${{ github.event_name == 'pull_request' && format('pr-{0}-{1}', github.event.pull_request.number, github.run_id) || 'production' }}
+  group: frontend-${{ github.repository }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
   cancel-in-progress: false
 
 jobs:
@@ -75,7 +75,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            echo "prefix=${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/" >> "$GITHUB_OUTPUT"
+            echo "prefix=${GITHUB_REPOSITORY}/pr/${PR_NUMBER}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/" >> "$GITHUB_OUTPUT"
           else
             echo "prefix=${GITHUB_REPOSITORY}/" >> "$GITHUB_OUTPUT"
           fi
