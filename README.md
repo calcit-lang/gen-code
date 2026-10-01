@@ -33,9 +33,14 @@ is needed. The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
 asset URLs now point to COS rather than relative server paths.
 
-The current published toolchain remains Calcit/procs 0.24.3. A separate 0.27
-upgrade must pass official compiler and browser checks before replacing it;
-this deployment change alone does not establish that language upgrade.
+This local migration branch targets Calcit/procs 0.27.0. Strict dependency and
+toolchain checks, the unchanged quality baseline and all four existing Calcit
+tests pass. Fourteen deprecated Option constructors have been migrated.
+The official compiler still rejects six ToString-bound warnings in published
+Respo 0.16.114-alpha.5 (tracked in Respo/respo.calcit#198), so JS generation,
+the stream contract test and browser acceptance remain incomplete. Do not deploy
+this branch as a completed Calcit upgrade. The separate COS-only PR keeps its
+existing 0.24.3 toolchain until these upgrade checks pass.
 
 https://github.com/calcit-lang/respo-calcit-workflow
 

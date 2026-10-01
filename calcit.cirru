@@ -3,9 +3,9 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |gen-code
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :native) (:reload-fn 'gen-code.main/reload!)
+    {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :js) (:reload-fn 'gen-code.main/reload!) (:target :browser)
       :feature-policy $ {} $ :js-ffi :allow
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
       :type-slots $ {}
   :files $ {}
     'gen-code.comp.container $ %{} 'FileEntry
@@ -81,11 +81,11 @@
           :examples $ []
           :schema $ :: 'Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *abort-control (%none)
+          :code $ quote $ defatom *abort-control (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/AbortControllerHost
         '*ai-chat $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *ai-chat (%none)
+          :code $ quote $ defatom *ai-chat (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/GenAIChatHost
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
@@ -240,7 +240,7 @@
           :schema $ :: 'gen-code.schema/GenCodeState
         'initialize-chat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn initialize-chat! (variant)
-            reset! *ai-chat $ %some $ let
+            reset! *ai-chat $ Option :some $ let
                 model $ pick-model variant
                 doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep $ include-file! |respo.md
                 ai $ unsafe-coerce
@@ -311,7 +311,7 @@
             let
                 abort $ new-abort-controller!
                 result $ send-genai-request! chat prompt-text abort
-              reset! *abort-control $ %some abort
+              reset! *abort-control $ Option :some abort
               if (js-nullish? result) (raise "|GenAI stream response is nullish") result
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'JsObject)
@@ -450,9 +450,9 @@
                         div
                           {} $ :class-name css/column
                           comp-cirru-snippet (:code state)
-                            %some $ %{} respo-ui.schema/PresentationOptions
-                              :class-name $ %some style-snippet
-                              :style $ %none
+                            Option :some $ %{} respo-ui.schema/PresentationOptions
+                              :class-name $ Option :some style-snippet
+                              :style $ Option :none
                           =< 0 8
                           div
                             {} $ :class-name css/row-parted
@@ -549,9 +549,10 @@
             :args $ []
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def mount-target (js/document.querySelector |.app)
+          :code $ quote $ def mount-target
+            .unwrap $ browser/query-selector |.app
           :examples $ []
-          :schema $ :: 'JsObject
+          :schema $ :: 'js-ffi.browser/DomElementHost
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -614,15 +615,15 @@
           :code $ quote $ defn decode-gen-code-op (op)
             match op
               (:states cursor state)
-                %some $ GenCodeOp :states cursor state
+                Option :some $ GenCodeOp :states cursor state
               (:states-merge cursor state changes)
-                %some $ GenCodeOp :states-merge cursor state changes
+                Option :some $ GenCodeOp :states-merge cursor state changes
               (:hydrate-storage data)
                 if
                   and (struct? data) (&struct:matches? data gen-code.types/StoreData)
-                  %some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
-                  %none
-              _ $ %none
+                  Option :some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
+                  Option :none
+              _ $ Option :none
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Enum
@@ -719,9 +720,9 @@
                 :features $ #{} :js-ffi
               match (js-nullish->option chunk)
                 (:some value)
-                  on-chunk! $ %some value
+                  on-chunk! $ Option :some value
                 (:none)
-                  on-chunk! $ %none
+                  on-chunk! $ Option :none
             , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
