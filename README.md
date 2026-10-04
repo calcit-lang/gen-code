@@ -25,15 +25,18 @@ let
 
 ### Workflow
 
-Use `yarn dev` to compile once, then run Calcit `js -w` and Vite together;
-either process exiting stops the other. `yarn build` compiles and builds once.
+`yarn dev` 编译一次后启动 Vite；另开终端运行 `yarn watch` 监听 Calcit 源码。
+不需要 concurrently 或其他进程管理依赖，关闭时分别停止两个终端。
+`yarn build` 仍只编译和构建一次。
 The existing Reel boundary and stream business tests remain in CI.
 
 Local Vite builds use relative asset URLs. `VITE_BASE_URL` selects the frontend
 CDN base. CI uses the same prefix for the build, COS upload and public verification:
 the repository directory on main, or `pr/<number>/<run-id>/<attempt>/` for each PR run.
-cos-upload-action v1.1.1 verifies the uploaded files itself; no extra CDN checker
-is needed. The server deployment source `dist/*`, destination and main-only
+COS Action v1.2.0 通过原有 public-base-url 校验上传内容及 HTML 同域脚本/样式引用，
+不增加额外 CDN 校验脚本；Action 固定到已发布版本的不可变提交。
+同组上传队列使用 queue: max，避免待运行任务被新任务替换。
+The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
 asset URLs now point to COS rather than relative server paths.
 
