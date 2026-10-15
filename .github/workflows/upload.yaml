@@ -70,6 +70,7 @@ jobs:
           calcit test gen-code.schema/read-open-field-or \
             --name present-and-missing-store --require-match
           calcit test gen-code.schema/decode-gen-code-op --require-match
+          calcit test gen-code.core/GenCodePluginData --require-match
 
       - name: Select COS prefix
         id: cos-path

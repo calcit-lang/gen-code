@@ -50,7 +50,8 @@ Tag model, List<Tag> cursor, typed state, String prompt and Ref<String> output.
 Run and keyboard submission both pass the same model Tag.
 
 CI retains strict dependency/toolchain, all-definition/public checks, the unchanged
-quality baseline and existing Reel/stream business tests. No new test suite or
+quality baseline and existing Reel/stream business tests. One definition-attached
+plugin render/reset regression checks the actual method contract. No new test framework or
 CDN checker is added; repeated diagnostic reports are removed. Production runs
 are serialized, PR uploads retain their run-isolated prefix, and an upload or
 built-in verification failure prevents server deployment.
@@ -62,9 +63,11 @@ a missing stored key prompts, and cancellation or blank input raises the existin
 Plugin render/reset-state contracts describe the actual Element, Tag cursor and state callback.
 The mount target uses Respo's own DOM adapter rather than treating two nominal DOM traits as equal.
 
-迁移尚在进行，暂不可合并：完整 `calcit fix --workflow strict --verify` 仍报告
-`call-genai-msg!` 内 `Ref<String>` 参数缺少独立输入证明。全定义、原质量预算、
-原边界/stream 测试及构建通过不替代完整 strict。不得通过伪造类型或放宽预算规避。
+暂不可合并：完整 `calcit fix --workflow strict --verify` 仍被正式 Reel 0.6.36
+的 `reel.comp.records/comp-records` List 参数证明阻塞。此前项目自身的问题已经修复：
+补齐正确的函数 hint 结构，删除两处重复 decoder，直接读取和更新已知 String 字段。
+全定义、原质量预算、原边界/stream 测试及构建通过不替代完整 strict。
+不得通过伪造类型或放宽预算规避。
 实际浏览器已验证渲染、输入与 Take；未调用外部 GenAI 服务、未验证付费 API、
 未部署。COS action 的内建校验及原路径保持不变。
 

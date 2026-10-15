@@ -139,6 +139,31 @@
           :code $ quote $ def GenCodePluginData (impl-traits GenCodePluginData0 %gen-code-actions)
           :examples $ []
           :schema $ :: 'EnumDef
+          :tests $ [] $ %{} 'TestEntry (:name |render-and-reset-contract)
+            :code $ quote $ let
+                *renders $ ref 0
+                *reset $ ref $ [] ([] :initial) initial-state
+                render-node $ fn ()
+                  hint-fn $ {}
+                    :args $ []
+                    :return 'respo.schema/Element
+                  swap! *renders inc
+                  div $ {}
+                plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
+                node $ .render plugin
+              assert=
+                div $ {}
+                , node
+              .reset-state plugin $ fn (cursor state)
+                hint-fn $ {}
+                  :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                  :return 'Unit
+                reset! *reset $ [] cursor state
+                , &unit
+              assert= 1 @*renders
+              assert=
+                [] ([] :drafter) initial-state
+                , @*reset
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodePluginData0
             :plugin
@@ -159,12 +184,12 @@
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant cursor state prompt-text d! *text)
             hint-fn $ {} (:async true)
-              (:args ([] 'Tag (:: 'List 'Tag) 'gen-code.schema/GenCodeState 'String 'Dynamic (:: 'Ref 'String)))
-                :return 'Unit
-                :features $ #{} :js-ffi
+              :args $ [] 'Tag (:: 'List 'Tag) 'gen-code.schema/GenCodeState 'String 'Dynamic $ :: 'Ref 'String
+              :return 'Unit
+              :features $ #{} :js-ffi
             when
               option:none? $ deref *ai-chat
-              initialize-chat! $ decode-map-as variant 'Tag
+              initialize-chat! variant
             match (deref *abort-control)
               (:some abort)
                 do (js/console.warn "|Aborting prev") (.!abort abort)
@@ -178,7 +203,7 @@
             let
                 sdk-result $ js-await $ send-genai-stream!
                   option:unwrap $ deref *ai-chat
-                  decode-map-as prompt-text 'String
+                  , prompt-text
               js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
                 hint-fn $ {}
                   :args $ [] $ :: 'Option 'JsObject
@@ -417,11 +442,8 @@
                             hint-fn $ {}
                               :args $ [] 'Dynamic 'Dynamic
                               :return 'Dynamic
-                            d! cursor $ update state :query $ fn (q)
-                              hint-fn $ {}
-                                :args $ [] 'String
-                                :return 'String
-                              str q &newline &newline $ trim $ get-hint-code
+                            d! cursor $ assoc state :query $ str (:query state) &newline &newline
+                              trim $ get-hint-code
                         div
                           {} $ :class-name $ str-spaced css/row-middle css/gap8
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
