@@ -36,6 +36,7 @@ jobs:
         with:
           tools: calcit,caps
           caps-version: "0.1.1"
+          deps-file: deps.cirru
 
       - name: Install dependencies
         run: |
@@ -47,7 +48,7 @@ jobs:
 
       - name: Check canonical snapshot
         run: |
-          test "$(calcit --version)" = "0.27.0"
+          test "$(calcit --version)" = "0.30.0"
           test -f calcit.cirru
           test -f deps.cirru
           test ! -e compact.cirru
@@ -57,8 +58,8 @@ jobs:
 
       - name: Check Calcit types
         run: |
-          calcit calcit.cirru --check-only
-          calcit calcit.cirru analyze check-public \
+          calcit calcit.cirru --check-only --all-defs
+          calcit calcit.cirru --check-only \
             --ns gen-code.comp.container --ns gen-code.config --ns gen-code.core \
             --ns gen-code.main --ns gen-code.schema --ns gen-code.stream \
             --ns gen-code.types --ns gen-code.updater --summary-only
