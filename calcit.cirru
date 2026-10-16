@@ -66,26 +66,29 @@
           :code $ quote $ defimpl %gen-code-actions GenCodeActions
             .render $ fn (self)
               hint-fn $ {}
-                :args $ [] 'Dynamic
-                :return 'Dynamic
+                :args $ [] 'GenCodePluginData0
+                :return 'respo.schema/Element
               match self $
                 :plugin render-node cursor state
                 render-node
             .reset-state $ fn (self d!)
               hint-fn $ {}
-                :args $ [] 'Dynamic 'Dynamic
-                :return 'Dynamic
+                :args $ [] 'GenCodePluginData0 $ :: 'Fn
+                  {}
+                    :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                    :return 'Unit
+                :return 'Unit
               match self $
                 :plugin r cursor state
                 d! cursor initial-state
           :examples $ []
           :schema $ :: 'Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *abort-control (Option :none)
+          :code $ quote $ defref *abort-control (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/AbortControllerHost
         '*ai-chat $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *ai-chat (Option :none)
+          :code $ quote $ defref *ai-chat (Option :none)
           :examples $ []
           :schema $ :: 'Ref $ :: 'calcit.core/Option 'gen-code.core/GenAIChatHost
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
@@ -99,7 +102,7 @@
         'GenAIChatHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenAIChatHost
             .sendMessageStream $ :: 'Fn $ {}
-              :args $ [] 'JsObject
+              :args $ [] 'GenAIChatHost 'JsObject
               :return $ :: 'JsNullish 'JsObject
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
@@ -120,19 +123,55 @@
         'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenCodeActions
             .render $ :: 'Fn $ {}
-              :args $ []
-              :return 'Dynamic
+              :generics $ [] 'T
+              :args $ [] 'T
+              :return 'respo.schema/Element
             .reset-state $ :: 'Fn $ {}
-              :args $ [] 'Dynamic
-              :return 'Dynamic
+              :generics $ [] 'T
+              :args $ [] 'T $ :: 'Fn
+                {}
+                  :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                  :return 'Unit
+              :return 'Unit
           :examples $ []
           :schema $ :: 'Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def GenCodePluginData (impl-traits GenCodePluginData0 %gen-code-actions)
           :examples $ []
           :schema $ :: 'EnumDef
+          :tests $ [] $ %{} 'TestEntry (:name |render-and-reset-contract)
+            :code $ quote $ let
+                *renders $ ref 0
+                *reset $ ref $ [] ([] :initial) initial-state
+                render-node $ fn ()
+                  hint-fn $ {}
+                    :args $ []
+                    :return 'respo.schema/Element
+                  swap! *renders inc
+                  div $ {}
+                plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
+                node $ .render plugin
+              assert=
+                div $ {}
+                , node
+              .reset-state plugin $ fn (cursor state)
+                hint-fn $ {}
+                  :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                  :return 'Unit
+                reset! *reset $ [] cursor state
+                , &unit
+              assert= 1 @*renders
+              assert=
+                [] ([] :drafter) initial-state
+                , @*reset
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum GenCodePluginData0 (:plugin 'Fn 'List 'gen-code.schema/GenCodeState)
+          :code $ quote $ defenum GenCodePluginData0
+            :plugin
+              :: 'Fn $ {}
+                :args $ []
+                :return 'respo.schema/Element
+              :: 'List 'Tag
+              , 'gen-code.schema/GenCodeState
           :examples $ []
           :schema $ :: 'EnumDef
         'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
@@ -145,6 +184,8 @@
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant cursor state prompt-text d! *text)
             hint-fn $ {} (:async true)
+              :args $ [] 'Tag (:: 'List 'Tag) 'gen-code.schema/GenCodeState 'String 'Dynamic $ :: 'Ref 'String
+              :return 'Unit
               :features $ #{} :js-ffi
             when
               option:none? $ deref *ai-chat
@@ -209,15 +250,15 @@
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
             let
-                key $ unsafe-coerce (js/localStorage.getItem |gemini-key) String
+                key $ option:unwrap-or (browser/storage-get |gemini-key) |
               if (blank? key)
                 let
-                    v $ unsafe-coerce
-                      js/prompt $ str |Required |gemini-key |in |localStorage
-                      , String
+                    v $ option:unwrap-or
+                      browser/prompt! $ str |Required |gemini-key |in |localStorage
+                      , |
                   if (blank? v)
                     raise $ new js/Error "|key is empty"
-                  js/localStorage.setItem |gemini-key v
+                  browser/storage-set! |gemini-key v
                   , v
                 , key
           :examples $ []
@@ -247,7 +288,7 @@
                 ai $ unsafe-coerce
                   new GoogleGenAI $ js-object $ :apiKey (get-gemini-key!)
                   , GenAIClientHost
-              assert-type
+              js-cast
                 .!create (.-chats ai)
                   js-object (:model model)
                     :config $ js/Object.assign $ js-object
@@ -271,7 +312,7 @@
             :features $ #{} :js-ffi
         'pick-model $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-model (variant)
-            case-default variant |gemini-2.5-flash (:gemini |gemini-2.5-flash) (:gemini-pro |gemini-2.5-pro-preview-06-05) (:gemini-pro-1.5 |gemini-1.5-pro) (:gemini-flash-lite |gemini-2.0-flash-lite) (:gemma |gemma-3-27b-it)
+            match variant (:gemini |gemini-2.5-flash) (:gemini-pro |gemini-2.5-pro-preview-06-05) (:gemini-pro-1.5 |gemini-1.5-pro) (:gemini-flash-lite |gemini-2.0-flash-lite) (:gemma |gemma-3-27b-it) (_ |gemini-2.5-flash)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'String)
             :args $ [] 'Tag
@@ -306,17 +347,18 @@
         'send-genai-stream! $ %{} 'CodeEntry
           :doc "|Keep the Gemini SDK method call and browser abort signal in one typed JS adapter."
           :code $ quote $ defn send-genai-stream! (chat prompt-text)
-            hint-fn $ {}
+            hint-fn $ {} (:async true)
               :args $ [] 'GenAIChatHost 'String
-              :return 'JsObject
+              :return 'GenAIStreamHost
               :features $ #{} :js-ffi
             let
                 abort $ new-abort-controller!
-                result $ send-genai-request! chat prompt-text abort
+                pending $ send-genai-request! chat prompt-text abort
               reset! *abort-control $ Option :some abort
-              if (js-nullish? result) (raise "|GenAI stream response is nullish") result
+              if (js-nullish? pending) (raise "|GenAI stream response is nullish")
+                js-cast (js-await pending) GenAIStreamHost
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
+          :schema $ :: 'Fn $ {} (:async true) (:return 'gen-code.stream/GenAIStreamHost)
             :args $ [] 'gen-code.core/GenAIChatHost 'String
             :features $ #{} :js-ffi
         'sep $ %{} 'CodeEntry (:doc |)
@@ -341,7 +383,7 @@
         'use-gen-code $ %{} 'CodeEntry (:doc "|this component can be used to integrate")
           :code $ quote $ defn use-gen-code (states get-hint-code on-submit)
             let
-                cursor $ assert-type
+                cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
                   :: 'List 'Tag
                 state $ assert-type (schema/read-open-field-or states :data initial-state) 'gen-code.schema/GenCodeState
@@ -365,7 +407,7 @@
                           hint-fn $ {}
                             :args $ [] 'Dynamic 'Dynamic
                             :return 'Dynamic
-                          d! cursor $ assoc state :query $ assert-type (schema/read-open-field-or e :value |) 'String
+                          d! cursor $ assoc state :query $ decode-map-as (schema/read-open-field-or e :value |) 'String
                         :on-keydown $ fn (e d!)
                           hint-fn $ {}
                             :args $ [] 'Dynamic 'Dynamic
@@ -382,7 +424,7 @@
                             if
                               and meta? $ = 13 key-code
                               let
-                                  *text $ atom |
+                                  *text $ ref |
                                 try
                                   js-await $ call-genai-msg! :gemini cursor state (:query state) d! *text
                                   fn (e)
@@ -400,11 +442,8 @@
                             hint-fn $ {}
                               :args $ [] 'Dynamic 'Dynamic
                               :return 'Dynamic
-                            d! cursor $ update state :query $ fn (q)
-                              hint-fn $ {}
-                                :args $ [] 'String
-                                :return 'String
-                              str q &newline &newline $ trim $ get-hint-code
+                            d! cursor $ assoc state :query $ str (:query state) &newline &newline
+                              trim $ get-hint-code
                         div
                           {} $ :class-name $ str-spaced css/row-middle css/gap8
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
@@ -432,7 +471,7 @@
                                   :return 'Dynamic
                                   :async true
                                 let
-                                    *text $ atom |
+                                    *text $ ref |
                                   try
                                     js-await $ call-genai-msg! :gemini cursor (assoc state :code |) (:query state) d! *text
                                     fn (e)
@@ -487,11 +526,12 @@
             respo.comp.space :refer $ =<
             gen-code.$meta :refer $ calcit-dirname
             gen-code.schema :as schema
-            gen-code.stream :refer $ consume-genai-stream! read-genai-chunk
+            gen-code.stream :refer $ consume-genai-stream! read-genai-chunk GenAIStreamHost
+            js-ffi.browser :as browser
     'gen-code.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel (typed/new-reel schema/store)
+          :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
           :schema $ :: 'Ref $ :: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData
         'dispatch! $ %{} 'CodeEntry (:doc |)
@@ -510,6 +550,7 @@
                     reset! *reel $ typed/record-op updater @*reel app-op (generate-id!)
                       :timestamp $ host/date-now-snapshot
                   (:none) (eprintln "|Unknown operation:" op)
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Enum
@@ -519,7 +560,7 @@
             println "|Running mode:" $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
-            add-watch *reel :changes $ fn (reel prev)
+            add-watch! *reel :changes $ fn (reel prev)
               hint-fn $ {}
                 :args $ [] (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData) (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
                 :return 'Unit
@@ -539,7 +580,7 @@
               match (browser/visibility-state)
                 (:hidden) (persist-storage!)
                 _ &unit
-            flipped js/setInterval 60000 persist-storage!
+            js/setInterval persist-storage! 60000
             match
               browser/storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
@@ -552,9 +593,9 @@
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
-            .unwrap $ browser/query-selector |.app
+            .unwrap $ dom/query-selector |.app
           :examples $ []
-          :schema $ :: 'js-ffi.browser/DomElementHost
+          :schema $ :: 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -569,8 +610,8 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (remove-watch *reel :changes) (clear-cache!)
-                add-watch *reel :changes $ fn (reel prev)
+              do (remove-watch! *reel :changes) (clear-cache!)
+                add-watch! *reel :changes $ fn (reel prev)
                   hint-fn $ {}
                     :args $ [] (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData) (:: 'reel.typed/State 'gen-code.schema/GenCodeOp 'gen-code.types/StoreData)
                     :return 'Unit
@@ -603,6 +644,7 @@
             reel.typed :as typed
             js-ffi.shared :as host
             js-ffi.browser :as browser
+            respo.ffi.browser :as dom
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
@@ -719,11 +761,19 @@
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ :: 'Trait
+        'GenAIStreamHost $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ deftrait GenAIStreamHost
+            .next $ :: 'Fn $ {}
+              :args $ [] 'GenAIStreamHost
+              :return 'JsObject
+          :examples $ []
+          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
+          :schema $ :: 'Trait
         'consume-genai-stream! $ %{} 'CodeEntry
           :doc "|Consume a host async iterator and normalize each nullish yield into Option before invoking application code."
           :code $ quote $ defn consume-genai-stream! (stream on-chunk!)
             hint-fn $ {} (:async true)
-              :args $ [] 'JsObject $ :: 'Fn
+              :args $ [] 'GenAIStreamHost $ :: 'Fn
                 {} (:return 'Unit)
                   :args $ [] $ :: 'Option 'JsObject
               :return 'Unit
@@ -740,10 +790,10 @@
                   on-chunk! $ Option :none
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'JsObject $ :: 'Fn
+          :schema $ :: 'Fn $ {} (:async true) (:return 'Unit)
+            :args $ [] 'gen-code.stream/GenAIStreamHost $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] $ :: 'calcit.core/Option 'JsObject
+                :args $ [] $ :: 'Option 'JsObject
             :features $ #{} :js-ffi
         'read-genai-chunk $ %{} 'CodeEntry
           :doc "|Read the stream text from its typed host boundary."
@@ -770,9 +820,13 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor s)
-                struct-with store $ :states $ update-state-tree (:states store) cursor s
+                struct-with store $ :states $ decode-map-as
+                  update-state-tree (:states store) cursor s
+                  :: 'Map 'Tag 'Dynamic
               (:states-merge cursor s0 changes)
-                struct-with store $ :states $ update-state-tree-merge (:states store) cursor s0 changes
+                struct-with store $ :states $ decode-map-as
+                  update-state-tree-merge (:states store) cursor s0 changes
+                  :: 'Map 'Tag 'Dynamic
               (:hydrate-storage data) data
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
