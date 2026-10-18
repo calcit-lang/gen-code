@@ -9,7 +9,7 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 Import code:
 
 ```cirru.no-check
-:dependencies $ {} $ |calcit-lang/gen-code |0.0.14
+:dependencies $ {} $ |calcit-lang/gen-code |0.0.16
 ```
 
 ```cirru.no-check
@@ -40,9 +40,9 @@ The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
 asset URLs now point to COS rather than relative server paths.
 
-This migration targets stable Calcit/procs 0.30.0 and Yarn 4.18.0, with canonical
-`calcit.cirru` / `deps.cirru`. Direct modules use formal Reel 0.6.36, UI 0.7.39,
-Respo 0.16.120 and js-ffi 0.2.3 instead of alpha tags. No 0.30.1 acceptance is claimed.
+This patch targets published Calcit/procs 0.30.1-alpha.5 (prerelease toolchain)
+and Yarn 4.18.0, with canonical `calcit.cirru` / `deps.cirru`. Direct modules use
+formal Reel 0.6.39, UI 0.7.41, Respo 0.16.122 and js-ffi 0.2.3; no module alpha or hash refs.
 Ref declarations and watch APIs use the current names; model selections are unchanged.
 Application operation cursors are typed Lists; states-merge carries GenCodeState
 and Map<Tag, Dynamic> changes. The GenAI call declares its async contract with
@@ -63,13 +63,21 @@ a missing stored key prompts, and cancellation or blank input raises the existin
 Plugin render/reset-state contracts describe the actual Element, Tag cursor and state callback.
 The mount target uses Respo's own DOM adapter rather than treating two nominal DOM traits as equal.
 
-暂不可合并：完整 `calcit fix --workflow strict --verify` 仍被正式 Reel 0.6.36
-的 `reel.comp.records/comp-records` List 参数证明阻塞。此前项目自身的问题已经修复：
-补齐正确的函数 hint 结构，删除两处重复 decoder，直接读取和更新已知 String 字段。
-全定义、原质量预算、原边界/stream 测试及构建通过不替代完整 strict。
-不得通过伪造类型或放宽预算规避。
-实际浏览器已验证渲染、输入与 Take；未调用外部 GenAI 服务、未验证付费 API、
-未部署。COS action 的内建校验及原路径保持不变。
+0.0.16 是待验收发版的 patch 候选；消费者在正式 tag 发布后再安装，不引用 main、
+hash 或本地候选。Reel 更新解除旧 0.6.36 的完整 strict 阻断。Demo 的 render
+动态回调先检查 Enum 再交给原 dispatch，仍接受原匿名/名义 Enum；非法非 Enum
+输入更早报错。热更新保留原 HUD 副作用，返回值明确为 Unit。插件公开签名、
+模型选择、存储 key 与数据格式不变，没有新增 GenAI 请求、权限或 unsafe。
+
+CI 使用现有完整 `calcit fix --workflow strict --verify`，并以一次 `calcit test --require-match`
+运行所有六项原附着测试，保留原 stream 回归、全定义/public、原质量预算及构建。
+不新增检查脚本、测试框架、concurrently 或校验重复项；COS 继续仅使用 action
+内置 verify。未调用外部 GenAI 服务或验证付费 API，Demo 部署须另获维护者授权。
+
+本地已通过完整 strict、235/235 全定义、47/47 public、原六项附着测试、原 stream
+回归、原质量预算、immutable Yarn 与 CDN 构建。隔离回环 Demo 的实际挂载、输入和
+Take 更新通过，浏览器 warn/error 为空；没有点击 Run/Refresh 或调用外部模型。
+SDK 既有可选 peer 提示和 Vite 大块体积 warning 保留，不冒称全无 warning。
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
