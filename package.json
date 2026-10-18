@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@calcit/procs": "0.30.0",
+    "@calcit/procs": "0.30.1-alpha.5",
     "@cirru/writer.ts": "^0.1.7",
     "@google/genai": "^1.4.0",
     "cirru-color": "^0.2.4",
@@ -18,6 +18,6 @@
     "watch": "calcit calcit.cirru js -w",
     "test:stream": "node tests/stream-contract.mjs"
   },
-  "version": "0.0.15",
+  "version": "0.0.16",
   "packageManager": "yarn@4.18.0"
 }
