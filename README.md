@@ -9,7 +9,10 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 本候选配对精确正式 Calcit / `@calcit/procs` 0.30.1，模块更新至 Reel 0.6.41、
 UI 0.8.0、Respo 0.16.124、js-ffi 0.2.5，传递 Router 0.8.37。
 升级后重启开发服务并完整刷新。插件公开签名、输入/Take/stream 合同、模型选择、
-key 存储与数据格式不变；Snapshot 不改，不增加外部 GenAI 请求或权限。
+key 存储与数据格式不变，不增加外部 GenAI 请求或权限。
+Demo 先完成原有存档恢复再渲染和注册持久化，避免解析抛错后继续保存初始值覆盖原数据。
+`normalize-store-data` 对可解析但结构不符数据的旧回退合同保留；不能把顺序修复理解成
+所有坏存档都已拒绝，详见 [#38](https://github.com/calcit-lang/gen-code/issues/38)。
 0.0.17 正式 tag 发布前，消费者仍使用已发布的 0.0.16，不引用 main/hash 候选。
 旧 0.0.16 使用 alpha.5，不能把它的发布说明误作正式编译器的验收。
 生产和 PR 的 COS 前缀、原服务器路径不变；COS 仅使用 Action 自带 verify。
