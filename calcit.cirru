@@ -559,6 +559,11 @@
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
+            match
+              browser/storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
+              (:some raw)
+                dispatch! $ :: :hydrate-storage $ schema/normalize-store-data (parse-cirru-edn raw)
+              (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev)
               hint-fn $ {}
@@ -581,11 +586,6 @@
                 (:hidden) (persist-storage!)
                 _ &unit
             js/setInterval persist-storage! 60000
-            match
-              browser/storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
-              (:some raw)
-                dispatch! $ :: :hydrate-storage $ schema/normalize-store-data (parse-cirru-edn raw)
-              (:none) &unit
             println "|App started."
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
