@@ -4,6 +4,26 @@ Gen Code Component for Calcit
 
 Demo https://repo.calcit-lang.org/gen-code/ .
 
+### 本轮公开 API 与类型边界清理
+
+使用者影响：继续配对正式 CLI / `@calcit/procs` **0.30.1**，正式模块图更新为
+Reel 0.6.42、UI 0.8.1、Respo 0.16.126、js-ffi 0.2.6，传递 Router 0.8.38。
+更新后重新生成 JS、重启开发服务并完整刷新；SDK、公开签名、模型/请求地址、key 和存档格式不变。
+0.0.17 仍是未发版候选。已发布 0.0.16 的实际 tag 配对 alpha.5，而不是正式 0.30.1；
+Release 标题的歧义已报告到 [#39](https://github.com/calcit-lang/gen-code/issues/39)，不移动旧 tag。
+
+源码 11 处 `option:` helper 改为同实现接收者方法；原附带测试的 3 处 `%some` / `%none`
+改为名义 Option 构造，原六项测试名、标签、断言与预期不变。JS stream 回归也不再直接导入旧 core helper，
+改用配对 runtime 导出的接收者方法调度，原正常/nullish/结束/异常/清理断言全部保留。
+
+AbortController 构造改用现有 external-object trait 的 `js-cast` 检查实际 `signal` 和 `abort` 能力，
+不是添加断言冒充验证；这仍是浅形状检查，不证明所有深层字段或浏览器平台能力。
+同一原 stream 测试入口直接调用真实构造函数，验证 signal 初始未取消、abort 后已取消；不增加测试框架或脚本。
+source unsafe 4→3，旧预算上限 6→3（包含清理 get-gemini-key! 已为零的旧余量），其余预算不放宽。
+SDK client、可缺失 keyboard 字段和流 chunk 的三个真实宿主边界仍保留，不能为清零而要求可选字段必然存在。
+两处 `hud!`、启动恢复顺序、原 CI/COS 内置校验、npm/lock 和部署路径均保留；不调用外部模型服务。
+以下为前轮候选说明及历史证据，不代替本轮最新 HEAD 的 CI、页面和评审验收。
+
 ### 0.0.17 使用者影响
 
 本候选配对精确正式 Calcit / `@calcit/procs` 0.30.1，模块更新至 Reel 0.6.41、

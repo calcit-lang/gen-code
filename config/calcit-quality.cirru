@@ -17,7 +17,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 2
+      :unsafeCoerce 0
     |gen-code.core/initialize-chat! $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -35,7 +35,7 @@
       :typeNone 0
       :typeNotFull 0
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |gen-code.core/read-keyboard-event $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -89,7 +89,7 @@
     :typeNone 0
     :typeNotFull 6
     :unresolved 0
-    :unsafeCoerce 6
+    :unsafeCoerce 3
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil
