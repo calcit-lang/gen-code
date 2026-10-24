@@ -1,0 +1,5218 @@
+[
+  {
+    "code": [
+      "def",
+      "calcit-dirname",
+      "|"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.$meta/calcit-dirname",
+    "js_ffi": null,
+    "schema": null,
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "calcit-filename",
+      "|calcit.cirru"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.$meta/calcit-filename",
+    "js_ffi": null,
+    "schema": null,
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defcomp",
+      "comp-container",
+      [
+        "reel"
+      ],
+      [
+        "let",
+        [
+          [
+            "store",
+            [
+              ":store",
+              "reel"
+            ]
+          ],
+          [
+            "states",
+            [
+              ":states",
+              "store"
+            ]
+          ],
+          [
+            "plugin-gen-code",
+            [
+              "use-gen-code",
+              [
+                ">>",
+                "states",
+                ":drafter"
+              ],
+              [
+                "fn",
+                [],
+                [
+                  "hint-fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      "'String"
+                    ]
+                  ]
+                ],
+                "|println |demo"
+              ],
+              [
+                "fn",
+                [
+                  "code",
+                  "d!"
+                ],
+                [
+                  "hint-fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]",
+                        "'String",
+                        "'Dynamic"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      "'Unit"
+                    ]
+                  ]
+                ],
+                [
+                  "println",
+                  "|submit code",
+                  "code"
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          "assert-traits",
+          "plugin-gen-code",
+          "GenCodeActions"
+        ],
+        [
+          "div",
+          [
+            "{}",
+            [
+              ":class-name",
+              [
+                "str-spaced",
+                "css/preset",
+                "css/global",
+                "css/row"
+              ]
+            ]
+          ],
+          [
+            "div",
+            [
+              "{}",
+              [
+                ":style",
+                [
+                  "{}",
+                  [
+                    ":width",
+                    "800"
+                  ]
+                ]
+              ]
+            ],
+            [
+              ".render",
+              "plugin-gen-code"
+            ]
+          ],
+          [
+            "when",
+            "dev?",
+            [
+              "comp-typed-reel",
+              [
+                ">>",
+                "states",
+                ":reel"
+              ],
+              "reel",
+              [
+                "{}"
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.comp.container/comp-container",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'respo.schema/Component"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          [
+            "::",
+            "'reel.typed/State",
+            "'gen-code.schema/GenCodeOp",
+            "'gen-code.types/StoreData"
+          ]
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "dev?",
+      [
+        "=",
+        "|dev",
+        [
+          "option:unwrap-or",
+          [
+            "get-env",
+            "|mode"
+          ],
+          "|release"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.config/dev?",
+    "js_ffi": null,
+    "schema": "'Bool",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "site",
+      [
+        "{}",
+        [
+          ":storage-key",
+          "|workflow"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.config/site",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Map",
+      "'Tag",
+      "'String"
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defimpl",
+      "%gen-code-actions",
+      "GenCodeActions",
+      [
+        ".render",
+        [
+          "fn",
+          [
+            "self"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  "'GenCodePluginData0"
+                ]
+              ],
+              [
+                ":return",
+                "'respo.schema/Element"
+              ]
+            ]
+          ],
+          [
+            "match",
+            "self",
+            [
+              [
+                ":plugin",
+                "render-node",
+                "cursor",
+                "state"
+              ],
+              [
+                "render-node"
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        ".reset-state",
+        [
+          "fn",
+          [
+            "self",
+            "d!"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  "'GenCodePluginData0",
+                  [
+                    "::",
+                    "'Fn",
+                    [
+                      "{}",
+                      [
+                        ":args",
+                        [
+                          "[]",
+                          [
+                            "::",
+                            "'List",
+                            "'Tag"
+                          ],
+                          "'gen-code.schema/GenCodeState"
+                        ]
+                      ],
+                      [
+                        ":return",
+                        "'Unit"
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                ":return",
+                "'Unit"
+              ]
+            ]
+          ],
+          [
+            "match",
+            "self",
+            [
+              [
+                ":plugin",
+                "r",
+                "cursor",
+                "state"
+              ],
+              [
+                "d!",
+                "cursor",
+                "initial-state"
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/%gen-code-actions",
+    "js_ffi": null,
+    "schema": "'Impl",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defref",
+      "*abort-control",
+      [
+        "Option",
+        ":none"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/*abort-control",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Ref",
+      [
+        "::",
+        "'calcit.core/Option",
+        "'gen-code.core/AbortControllerHost"
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defref",
+      "*ai-chat",
+      [
+        "Option",
+        ":none"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/*ai-chat",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Ref",
+      [
+        "::",
+        "'calcit.core/Option",
+        "'gen-code.core/GenAIChatHost"
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "AbortControllerHost",
+      [
+        ":signal",
+        "'JsObject"
+      ],
+      [
+        ".abort",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]"
+              ]
+            ],
+            [
+              ":return",
+              "'Unit"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.core/AbortControllerHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenAIChatHost",
+      [
+        ".sendMessageStream",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                "'GenAIChatHost",
+                "'JsObject"
+              ]
+            ],
+            [
+              ":return",
+              [
+                "::",
+                "'JsNullish",
+                "'JsObject"
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.core/GenAIChatHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenAIChatsHost",
+      [
+        ".create",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                "'JsObject"
+              ]
+            ],
+            [
+              ":return",
+              "'GenAIChatHost"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.core/GenAIChatsHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenAIClientHost",
+      [
+        ":chats",
+        "'GenAIChatsHost"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.core/GenAIClientHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenCodeActions",
+      [
+        ".render",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":generics",
+              [
+                "[]",
+                "'T"
+              ]
+            ],
+            [
+              ":args",
+              [
+                "[]",
+                "'T"
+              ]
+            ],
+            [
+              ":return",
+              "'respo.schema/Element"
+            ]
+          ]
+        ]
+      ],
+      [
+        ".reset-state",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":generics",
+              [
+                "[]",
+                "'T"
+              ]
+            ],
+            [
+              ":args",
+              [
+                "[]",
+                "'T",
+                [
+                  "::",
+                  "'Fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]",
+                        [
+                          "::",
+                          "'List",
+                          "'Tag"
+                        ],
+                        "'gen-code.schema/GenCodeState"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      "'Unit"
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              ":return",
+              "'Unit"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/GenCodeActions",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "GenCodePluginData",
+      [
+        "impl-traits",
+        "GenCodePluginData0",
+        "%gen-code-actions"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/GenCodePluginData",
+    "js_ffi": null,
+    "schema": "'EnumDef",
+    "tags": [],
+    "tests": [
+      {
+        "code": [
+          "let",
+          [
+            [
+              "*renders",
+              [
+                "ref",
+                "0"
+              ]
+            ],
+            [
+              "*reset",
+              [
+                "ref",
+                [
+                  "[]",
+                  [
+                    "[]",
+                    ":initial"
+                  ],
+                  "initial-state"
+                ]
+              ]
+            ],
+            [
+              "render-node",
+              [
+                "fn",
+                [],
+                [
+                  "hint-fn",
+                  [
+                    "{}",
+                    [
+                      ":args",
+                      [
+                        "[]"
+                      ]
+                    ],
+                    [
+                      ":return",
+                      "'respo.schema/Element"
+                    ]
+                  ]
+                ],
+                [
+                  "swap!",
+                  "*renders",
+                  "inc"
+                ],
+                [
+                  "div",
+                  [
+                    "{}"
+                  ]
+                ]
+              ]
+            ],
+            [
+              "plugin",
+              [
+                "%::",
+                "GenCodePluginData",
+                ":plugin",
+                "render-node",
+                [
+                  "[]",
+                  ":drafter"
+                ],
+                "initial-state"
+              ]
+            ],
+            [
+              "node",
+              [
+                ".render",
+                "plugin"
+              ]
+            ]
+          ],
+          [
+            "assert=",
+            [
+              "div",
+              [
+                "{}"
+              ]
+            ],
+            "node"
+          ],
+          [
+            ".reset-state",
+            "plugin",
+            [
+              "fn",
+              [
+                "cursor",
+                "state"
+              ],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      [
+                        "::",
+                        "'List",
+                        "'Tag"
+                      ],
+                      "'gen-code.schema/GenCodeState"
+                    ]
+                  ],
+                  [
+                    ":return",
+                    "'Unit"
+                  ]
+                ]
+              ],
+              [
+                "reset!",
+                "*reset",
+                [
+                  "[]",
+                  "cursor",
+                  "state"
+                ]
+              ],
+              "&unit"
+            ]
+          ],
+          [
+            "assert=",
+            "1",
+            "@*renders"
+          ],
+          [
+            "assert=",
+            [
+              "[]",
+              [
+                "[]",
+                ":drafter"
+              ],
+              "initial-state"
+            ],
+            "@*reset"
+          ]
+        ],
+        "name": "render-and-reset-contract",
+        "tags": []
+      }
+    ]
+  },
+  {
+    "code": [
+      "defenum",
+      "GenCodePluginData0",
+      [
+        ":plugin",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]"
+              ]
+            ],
+            [
+              ":return",
+              "'respo.schema/Element"
+            ]
+          ]
+        ],
+        [
+          "::",
+          "'List",
+          "'Tag"
+        ],
+        "'gen-code.schema/GenCodeState"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/GenCodePluginData0",
+    "js_ffi": null,
+    "schema": "'EnumDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "KeyboardEventHost",
+      [
+        ":metaKey",
+        [
+          "::",
+          "'JsNullish",
+          "'Bool"
+        ]
+      ],
+      [
+        ":keyCode",
+        [
+          "::",
+          "'JsNullish",
+          "'Number"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.core/KeyboardEventHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "call-genai-msg!",
+      [
+        "variant",
+        "cursor",
+        "state",
+        "prompt-text",
+        "d!",
+        "*text"
+      ],
+      [
+        "hint-fn",
+        [
+          "{}",
+          [
+            ":async",
+            "true"
+          ],
+          [
+            ":args",
+            [
+              "[]",
+              "'Tag",
+              [
+                "::",
+                "'List",
+                "'Tag"
+              ],
+              "'gen-code.schema/GenCodeState",
+              "'String",
+              "'Dynamic",
+              [
+                "::",
+                "'Ref",
+                "'String"
+              ]
+            ]
+          ],
+          [
+            ":return",
+            "'Unit"
+          ],
+          [
+            ":features",
+            [
+              "#{}",
+              ":js-ffi"
+            ]
+          ]
+        ]
+      ],
+      [
+        "when",
+        [
+          "option:none?",
+          [
+            "deref",
+            "*ai-chat"
+          ]
+        ],
+        [
+          "initialize-chat!",
+          "variant"
+        ]
+      ],
+      [
+        "match",
+        [
+          "deref",
+          "*abort-control"
+        ],
+        [
+          [
+            ":some",
+            "abort"
+          ],
+          [
+            "do",
+            [
+              "js/console.warn",
+              "|Aborting prev"
+            ],
+            [
+              ".!abort",
+              "abort"
+            ]
+          ]
+        ],
+        [
+          [
+            ":none"
+          ],
+          "&unit"
+        ]
+      ],
+      [
+        "js/setTimeout",
+        [
+          "fn",
+          [],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]"
+                ]
+              ],
+              [
+                ":return",
+                "'Dynamic"
+              ],
+              [
+                ":features",
+                [
+                  "#{}",
+                  ":js-ffi"
+                ]
+              ]
+            ]
+          ],
+          [
+            "d!",
+            [
+              "::",
+              ":states-merge",
+              "cursor",
+              "state",
+              [
+                "{}",
+                [
+                  ":answer",
+                  "|"
+                ],
+                [
+                  ":loading?",
+                  "true"
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        "let",
+        [
+          [
+            "sdk-result",
+            [
+              "js-await",
+              [
+                "send-genai-stream!",
+                [
+                  "option:unwrap",
+                  [
+                    "deref",
+                    "*ai-chat"
+                  ]
+                ],
+                "prompt-text"
+              ]
+            ]
+          ]
+        ],
+        [
+          "js-await",
+          [
+            "consume-genai-stream!",
+            "sdk-result",
+            [
+              "fn",
+              [
+                "chunk-option"
+              ],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      [
+                        "::",
+                        "'Option",
+                        "'JsObject"
+                      ]
+                    ]
+                  ],
+                  [
+                    ":return",
+                    "'Unit"
+                  ],
+                  [
+                    ":features",
+                    [
+                      "#{}",
+                      ":js-ffi"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "match",
+                "chunk-option",
+                [
+                  [
+                    ":some",
+                    "chunk"
+                  ],
+                  [
+                    "match",
+                    [
+                      "js-nullish->option",
+                      [
+                        "read-genai-chunk",
+                        "chunk"
+                      ]
+                    ],
+                    [
+                      [
+                        ":some",
+                        "t"
+                      ],
+                      [
+                        "do",
+                        [
+                          "swap!",
+                          "*text",
+                          "str",
+                          "t"
+                        ],
+                        [
+                          "d!",
+                          [
+                            "::",
+                            ":states-merge",
+                            "cursor",
+                            "state",
+                            [
+                              "{}",
+                              [
+                                ":answer",
+                                [
+                                  "deref",
+                                  [
+                                    "assert-type",
+                                    "*text",
+                                    [
+                                      "::",
+                                      "'Ref",
+                                      "'String"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                ":loading?",
+                                "true"
+                              ],
+                              [
+                                ":done?",
+                                "false"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "&unit"
+                      ]
+                    ],
+                    [
+                      [
+                        ":none"
+                      ],
+                      [
+                        "do",
+                        [
+                          "js/console.log",
+                          "|GenAI chunk has no text"
+                        ],
+                        "&unit"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  [
+                    ":none"
+                  ],
+                  "&unit"
+                ]
+              ],
+              [
+                "d!",
+                [
+                  "::",
+                  ":states-merge",
+                  "cursor",
+                  "state",
+                  [
+                    "{}",
+                    [
+                      ":answer",
+                      [
+                        "deref",
+                        [
+                          "assert-type",
+                          "*text",
+                          [
+                            "::",
+                            "'Ref",
+                            "'String"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      ":loading?",
+                      "true"
+                    ],
+                    [
+                      ":done?",
+                      "false"
+                    ]
+                  ]
+                ]
+              ],
+              "&unit"
+            ]
+          ]
+        ],
+        [
+          "d!",
+          [
+            "::",
+            ":states-merge",
+            "cursor",
+            "state",
+            [
+              "{}",
+              [
+                ":answer",
+                [
+                  "deref",
+                  [
+                    "assert-type",
+                    "*text",
+                    [
+                      "::",
+                      "'Ref",
+                      "'String"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                ":loading?",
+                "false"
+              ],
+              [
+                ":done?",
+                "true"
+              ],
+              [
+                ":code",
+                [
+                  "try",
+                  [
+                    "writeCirruCode",
+                    [
+                      "js-array",
+                      [
+                        "js/JSON.parse",
+                        [
+                          "deref",
+                          [
+                            "assert-type",
+                            "*text",
+                            [
+                              "::",
+                              "'Ref",
+                              "'String"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "fn",
+                    [
+                      "err"
+                    ],
+                    [
+                      "hint-fn",
+                      [
+                        "{}",
+                        [
+                          ":args",
+                          [
+                            "[]",
+                            "'Dynamic"
+                          ]
+                        ],
+                        [
+                          ":return",
+                          "'String"
+                        ],
+                        [
+                          ":features",
+                          [
+                            "#{}",
+                            ":js-ffi"
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "js/console.error",
+                      "err"
+                    ],
+                    [
+                      "str",
+                      "err"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/call-genai-msg!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":async",
+        "true"
+      ],
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Tag",
+          [
+            "::",
+            "'List",
+            "'Tag"
+          ],
+          "'gen-code.schema/GenCodeState",
+          "'String",
+          "'Dynamic",
+          [
+            "::",
+            "'Ref",
+            "'String"
+          ]
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "get-gemini-key!",
+      [],
+      [
+        "let",
+        [
+          [
+            "key",
+            [
+              "option:unwrap-or",
+              [
+                "browser/storage-get",
+                "|gemini-key"
+              ],
+              "|"
+            ]
+          ]
+        ],
+        [
+          "if",
+          [
+            "blank?",
+            "key"
+          ],
+          [
+            "let",
+            [
+              [
+                "v",
+                [
+                  "option:unwrap-or",
+                  [
+                    "browser/prompt!",
+                    [
+                      "str",
+                      "|Required",
+                      "|gemini-key",
+                      "|in",
+                      "|localStorage"
+                    ]
+                  ],
+                  "|"
+                ]
+              ]
+            ],
+            [
+              "if",
+              [
+                "blank?",
+                "v"
+              ],
+              [
+                "raise",
+                [
+                  "new",
+                  "js/Error",
+                  "|key is empty"
+                ]
+              ]
+            ],
+            [
+              "browser/storage-set!",
+              "|gemini-key",
+              "v"
+            ],
+            "v"
+          ],
+          "key"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/get-gemini-key!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'String"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defmacro",
+      "include-file!",
+      [
+        "filepath"
+      ],
+      [
+        "read-file",
+        [
+          "str",
+          [
+            "if",
+            [
+              "empty?",
+              "calcit-dirname"
+            ],
+            "|.",
+            "calcit-dirname"
+          ],
+          "|/prompts/",
+          "filepath"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/include-file!",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Macro",
+      [
+        "{}",
+        [
+          ":capabilities",
+          [
+            "#{}",
+            ":fs-read"
+          ]
+        ],
+        [
+          ":expansion",
+          [
+            "::",
+            "'Expr",
+            "'String"
+          ]
+        ],
+        [
+          ":required",
+          [
+            "[]",
+            [
+              "::",
+              "'Expr",
+              "'String"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "initial-state",
+      [
+        "schema/GenCodeState",
+        ":answer",
+        "|",
+        ":loading?",
+        "false",
+        ":done?",
+        "false",
+        ":query",
+        "|",
+        ":code",
+        "|"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/initial-state",
+    "js_ffi": null,
+    "schema": "'gen-code.schema/GenCodeState",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "initialize-chat!",
+      [
+        "variant"
+      ],
+      [
+        "reset!",
+        "*ai-chat",
+        [
+          "Option",
+          ":some",
+          [
+            "let",
+            [
+              [
+                "model",
+                [
+                  "pick-model",
+                  "variant"
+                ]
+              ],
+              [
+                "doc-content",
+                [
+                  "str",
+                  [
+                    "include-file!",
+                    "|declare-task.md"
+                  ],
+                  "sep",
+                  [
+                    "include-file!",
+                    "|format-guide.md"
+                  ],
+                  "sep",
+                  [
+                    "include-file!",
+                    "|calcit-lang.md"
+                  ],
+                  "sep",
+                  [
+                    "include-file!",
+                    "|respo.md"
+                  ]
+                ]
+              ],
+              [
+                "ai",
+                [
+                  "unsafe-coerce",
+                  [
+                    "new",
+                    "GoogleGenAI",
+                    [
+                      "js-object",
+                      [
+                        ":apiKey",
+                        [
+                          "get-gemini-key!"
+                        ]
+                      ]
+                    ]
+                  ],
+                  "GenAIClientHost"
+                ]
+              ]
+            ],
+            [
+              "js-cast",
+              [
+                ".!create",
+                [
+                  ".-chats",
+                  "ai"
+                ],
+                [
+                  "js-object",
+                  [
+                    ":model",
+                    "model"
+                  ],
+                  [
+                    ":config",
+                    [
+                      "js/Object.assign",
+                      [
+                        "js-object",
+                        [
+                          ":httpOptions",
+                          [
+                            "js-object",
+                            [
+                              ":baseUrl",
+                              [
+                                "option:unwrap-or",
+                                [
+                                  "get-env",
+                                  "|gemini-host"
+                                ],
+                                "|https://ja.chenyong.life"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          ":responseMimeType",
+                          "|application/json"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    ":history",
+                    [
+                      "js-array",
+                      [
+                        "js-object",
+                        [
+                          ":role",
+                          "|model"
+                        ],
+                        [
+                          ":parts",
+                          [
+                            "js-array",
+                            [
+                              "js-object",
+                              [
+                                ":text",
+                                "doc-content"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "GenAIChatHost"
+            ]
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/initialize-chat!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Tag"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "new-abort-controller!",
+      [],
+      [
+        "unsafe-coerce",
+        [
+          "new",
+          "js/AbortController"
+        ],
+        "AbortControllerHost"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/new-abort-controller!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.core/AbortControllerHost"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "pick-model",
+      [
+        "variant"
+      ],
+      [
+        "match",
+        "variant",
+        [
+          ":gemini",
+          "|gemini-2.5-flash"
+        ],
+        [
+          ":gemini-pro",
+          "|gemini-2.5-pro-preview-06-05"
+        ],
+        [
+          ":gemini-pro-1.5",
+          "|gemini-1.5-pro"
+        ],
+        [
+          ":gemini-flash-lite",
+          "|gemini-2.0-flash-lite"
+        ],
+        [
+          ":gemma",
+          "|gemma-3-27b-it"
+        ],
+        [
+          "_",
+          "|gemini-2.5-flash"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/pick-model",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'String"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Tag"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "read-keyboard-event",
+      [
+        "event-data"
+      ],
+      [
+        "unsafe-coerce",
+        [
+          "schema/read-open-field-or",
+          "event-data",
+          ":event",
+          [
+            "{}"
+          ]
+        ],
+        "KeyboardEventHost"
+      ]
+    ],
+    "doc": "Narrow the open Respo event payload to the browser keyboard host boundary.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/read-keyboard-event",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.core/KeyboardEventHost"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "send-genai-request!",
+      [
+        "chat",
+        "prompt-text",
+        "abort"
+      ],
+      [
+        "hint-fn",
+        [
+          "{}",
+          [
+            ":args",
+            [
+              "[]",
+              "'GenAIChatHost",
+              "'String",
+              "'AbortControllerHost"
+            ]
+          ],
+          [
+            ":return",
+            [
+              "::",
+              "'JsNullish",
+              "'JsObject"
+            ]
+          ],
+          [
+            ":features",
+            [
+              "#{}",
+              ":js-ffi"
+            ]
+          ]
+        ]
+      ],
+      [
+        ".!sendMessageStream",
+        "chat",
+        [
+          "js-object",
+          [
+            ":message",
+            "prompt-text"
+          ],
+          [
+            ":config",
+            [
+              "js-object",
+              [
+                ":httpOptions",
+                [
+                  "js-object",
+                  [
+                    ":baseUrl",
+                    [
+                      "option:unwrap-or",
+                      [
+                        "get-env",
+                        "|gemini-host"
+                      ],
+                      "|https://ja.chenyong.life"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                ":abortSignal",
+                [
+                  ".-signal",
+                  "abort"
+                ]
+              ],
+              [
+                ":responseMimeType",
+                "|application/json"
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "The raw Gemini SDK call is kept as a leaf FFI adapter so its capability is lexical.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/send-genai-request!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'gen-code.core/GenAIChatHost",
+          "'String",
+          "'gen-code.core/AbortControllerHost"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'JsNullish",
+          "'JsObject"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "send-genai-stream!",
+      [
+        "chat",
+        "prompt-text"
+      ],
+      [
+        "hint-fn",
+        [
+          "{}",
+          [
+            ":async",
+            "true"
+          ],
+          [
+            ":args",
+            [
+              "[]",
+              "'GenAIChatHost",
+              "'String"
+            ]
+          ],
+          [
+            ":return",
+            "'GenAIStreamHost"
+          ],
+          [
+            ":features",
+            [
+              "#{}",
+              ":js-ffi"
+            ]
+          ]
+        ]
+      ],
+      [
+        "let",
+        [
+          [
+            "abort",
+            [
+              "new-abort-controller!"
+            ]
+          ],
+          [
+            "pending",
+            [
+              "send-genai-request!",
+              "chat",
+              "prompt-text",
+              "abort"
+            ]
+          ]
+        ],
+        [
+          "reset!",
+          "*abort-control",
+          [
+            "Option",
+            ":some",
+            "abort"
+          ]
+        ],
+        [
+          "if",
+          [
+            "js-nullish?",
+            "pending"
+          ],
+          [
+            "raise",
+            "|GenAI stream response is nullish"
+          ],
+          [
+            "js-cast",
+            [
+              "js-await",
+              "pending"
+            ],
+            "GenAIStreamHost"
+          ]
+        ]
+      ]
+    ],
+    "doc": "Keep the Gemini SDK method call and browser abort signal in one typed JS adapter.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/send-genai-stream!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":async",
+        "true"
+      ],
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.stream/GenAIStreamHost"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'gen-code.core/GenAIChatHost",
+          "'String"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "sep",
+      [
+        "str",
+        "&newline",
+        "&newline",
+        "|-----------",
+        "&newline",
+        "&newline"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/sep",
+    "js_ffi": null,
+    "schema": "'String",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstyle",
+      "style-codebox",
+      [
+        "{}",
+        [
+          "|&",
+          [
+            "{}",
+            [
+              ":margin",
+              "0"
+            ],
+            [
+              ":max-height",
+              "600"
+            ],
+            [
+              ":overflow",
+              ":auto"
+            ],
+            [
+              ":padding",
+              "|8px"
+            ],
+            [
+              ":border",
+              [
+                "str",
+                "|1px solid ",
+                [
+                  "hsl",
+                  "0",
+                  "0",
+                  "90"
+                ]
+              ]
+            ],
+            [
+              ":border-radius",
+              "|6px"
+            ],
+            [
+              ":overflow",
+              ":auto"
+            ],
+            [
+              ":font-size",
+              "12"
+            ],
+            [
+              ":line-height",
+              "|16px"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/style-codebox",
+    "js_ffi": null,
+    "schema": "'String",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstyle",
+      "style-snippet",
+      [
+        "{}",
+        [
+          "|&",
+          [
+            "{}",
+            [
+              ":margin",
+              "0"
+            ],
+            [
+              ":line-height",
+              "|20px"
+            ],
+            [
+              ":overflow",
+              ":auto"
+            ],
+            [
+              ";",
+              ":padding",
+              "|8px"
+            ],
+            [
+              ":border-radius",
+              "|6px"
+            ],
+            [
+              ":width",
+              "|100%"
+            ],
+            [
+              ":max-height",
+              "600"
+            ],
+            [
+              ":padding-right",
+              "0"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/style-snippet",
+    "js_ffi": null,
+    "schema": "'String",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "use-gen-code",
+      [
+        "states",
+        "get-hint-code",
+        "on-submit"
+      ],
+      [
+        "let",
+        [
+          [
+            "cursor",
+            [
+              "decode-map-as",
+              [
+                "schema/read-open-field-or",
+                "states",
+                ":cursor",
+                [
+                  "[]"
+                ]
+              ],
+              [
+                "::",
+                "'List",
+                "'Tag"
+              ]
+            ]
+          ],
+          [
+            "state",
+            [
+              "assert-type",
+              [
+                "schema/read-open-field-or",
+                "states",
+                ":data",
+                "initial-state"
+              ],
+              "'gen-code.schema/GenCodeState"
+            ]
+          ],
+          [
+            "loading?",
+            [
+              ":loading?",
+              "state"
+            ]
+          ],
+          [
+            "render-node",
+            [
+              "fn",
+              [],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]"
+                    ]
+                  ],
+                  [
+                    ":return",
+                    "'respo.schema/Element"
+                  ]
+                ]
+              ],
+              [
+                "div",
+                [
+                  "{}",
+                  [
+                    ":style",
+                    [
+                      "{}",
+                      [
+                        ":padding",
+                        "16"
+                      ]
+                    ]
+                  ],
+                  [
+                    ":class-name",
+                    "css/column"
+                  ]
+                ],
+                [
+                  "div",
+                  [
+                    "{}",
+                    [
+                      ":class-name",
+                      [
+                        "str-spaced",
+                        "css/column",
+                        "css/gap8"
+                      ]
+                    ]
+                  ],
+                  [
+                    "textarea",
+                    [
+                      "{}",
+                      [
+                        ":class-name",
+                        [
+                          "str-spaced",
+                          "css/textarea",
+                          "css/font-code!"
+                        ]
+                      ],
+                      [
+                        ":style",
+                        [
+                          "{}",
+                          [
+                            ":width",
+                            "|100%"
+                          ],
+                          [
+                            ":height",
+                            "120"
+                          ]
+                        ]
+                      ],
+                      [
+                        ":placeholder",
+                        "|prompts about the task...\n\n<code example>"
+                      ],
+                      [
+                        ":value",
+                        [
+                          ":query",
+                          "state"
+                        ]
+                      ],
+                      [
+                        ":on-input",
+                        [
+                          "fn",
+                          [
+                            "e",
+                            "d!"
+                          ],
+                          [
+                            "hint-fn",
+                            [
+                              "{}",
+                              [
+                                ":args",
+                                [
+                                  "[]",
+                                  "'Dynamic",
+                                  "'Dynamic"
+                                ]
+                              ],
+                              [
+                                ":return",
+                                "'Dynamic"
+                              ]
+                            ]
+                          ],
+                          [
+                            "d!",
+                            "cursor",
+                            [
+                              "assoc",
+                              "state",
+                              ":query",
+                              [
+                                "decode-map-as",
+                                [
+                                  "schema/read-open-field-or",
+                                  "e",
+                                  ":value",
+                                  "|"
+                                ],
+                                "'String"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        ":on-keydown",
+                        [
+                          "fn",
+                          [
+                            "e",
+                            "d!"
+                          ],
+                          [
+                            "hint-fn",
+                            [
+                              "{}",
+                              [
+                                ":args",
+                                [
+                                  "[]",
+                                  "'Dynamic",
+                                  "'Dynamic"
+                                ]
+                              ],
+                              [
+                                ":return",
+                                "'Dynamic"
+                              ],
+                              [
+                                ":async",
+                                "true"
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "event",
+                                [
+                                  "read-keyboard-event",
+                                  "e"
+                                ]
+                              ],
+                              [
+                                "meta?",
+                                [
+                                  "option:unwrap-or",
+                                  [
+                                    "js-nullish->option",
+                                    [
+                                      ".-metaKey",
+                                      "event"
+                                    ]
+                                  ],
+                                  "false"
+                                ]
+                              ],
+                              [
+                                "key-code",
+                                [
+                                  "option:unwrap-or",
+                                  [
+                                    "js-nullish->option",
+                                    [
+                                      ".-keyCode",
+                                      "event"
+                                    ]
+                                  ],
+                                  "-1"
+                                ]
+                              ]
+                            ],
+                            [
+                              "if",
+                              [
+                                "and",
+                                "meta?",
+                                [
+                                  "=",
+                                  "13",
+                                  "key-code"
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "*text",
+                                    [
+                                      "ref",
+                                      "|"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "try",
+                                  [
+                                    "js-await",
+                                    [
+                                      "call-genai-msg!",
+                                      ":gemini",
+                                      "cursor",
+                                      "state",
+                                      [
+                                        ":query",
+                                        "state"
+                                      ],
+                                      "d!",
+                                      "*text"
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    [
+                                      "e"
+                                    ],
+                                    [
+                                      "hint-fn",
+                                      [
+                                        "{}",
+                                        [
+                                          ":args",
+                                          [
+                                            "[]",
+                                            "'Dynamic"
+                                          ]
+                                        ],
+                                        [
+                                          ":return",
+                                          "'Dynamic"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "d!",
+                                      [
+                                        "::",
+                                        ":states-merge",
+                                        "cursor",
+                                        "state",
+                                        [
+                                          "{}",
+                                          [
+                                            ":answer",
+                                            [
+                                              "str",
+                                              "@*text",
+                                              "&newline",
+                                              "&newline",
+                                              [
+                                                "str",
+                                                "|Failed to load: ",
+                                                "e"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            ":loading?",
+                                            "false"
+                                          ],
+                                          [
+                                            ":done?",
+                                            "true"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "div",
+                    [
+                      "{}",
+                      [
+                        ":class-name",
+                        "css/row-parted"
+                      ]
+                    ],
+                    [
+                      "a",
+                      [
+                        "{}",
+                        [
+                          ":class-name",
+                          "css/link"
+                        ],
+                        [
+                          ":inner-text",
+                          "|Take"
+                        ],
+                        [
+                          ":on-click",
+                          [
+                            "fn",
+                            [
+                              "e",
+                              "d!"
+                            ],
+                            [
+                              "hint-fn",
+                              [
+                                "{}",
+                                [
+                                  ":args",
+                                  [
+                                    "[]",
+                                    "'Dynamic",
+                                    "'Dynamic"
+                                  ]
+                                ],
+                                [
+                                  ":return",
+                                  "'Dynamic"
+                                ]
+                              ]
+                            ],
+                            [
+                              "d!",
+                              "cursor",
+                              [
+                                "assoc",
+                                "state",
+                                ":query",
+                                [
+                                  "str",
+                                  [
+                                    ":query",
+                                    "state"
+                                  ],
+                                  "&newline",
+                                  "&newline",
+                                  [
+                                    "trim",
+                                    [
+                                      "get-hint-code"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "div",
+                      [
+                        "{}",
+                        [
+                          ":class-name",
+                          [
+                            "str-spaced",
+                            "css/row-middle",
+                            "css/gap8"
+                          ]
+                        ]
+                      ],
+                      [
+                        "a",
+                        [
+                          "{}",
+                          [
+                            ":class-name",
+                            "css/link"
+                          ],
+                          [
+                            ":inner-text",
+                            "|Refresh"
+                          ],
+                          [
+                            ":on-click",
+                            [
+                              "fn",
+                              [
+                                "e",
+                                "d!"
+                              ],
+                              [
+                                "hint-fn",
+                                [
+                                  "{}",
+                                  [
+                                    ":args",
+                                    [
+                                      "[]",
+                                      "'Dynamic",
+                                      "'Dynamic"
+                                    ]
+                                  ],
+                                  [
+                                    ":return",
+                                    "'Dynamic"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "initialize-chat!",
+                                ":gemini"
+                              ],
+                              [
+                                "d!",
+                                [
+                                  "::",
+                                  ":states-merge",
+                                  "cursor",
+                                  "state",
+                                  [
+                                    "{}",
+                                    [
+                                      ":loading?",
+                                      "false"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        "loading?",
+                        [
+                          "button",
+                          [
+                            "{}",
+                            [
+                              ":class-name",
+                              "css/button"
+                            ],
+                            [
+                              ":inner-text",
+                              "|Abort"
+                            ],
+                            [
+                              ":style",
+                              [
+                                "{}",
+                                [
+                                  ":border-color",
+                                  ":red"
+                                ],
+                                [
+                                  ":color",
+                                  ":red"
+                                ]
+                              ]
+                            ],
+                            [
+                              ":on-click",
+                              [
+                                "fn",
+                                [
+                                  "e",
+                                  "d!"
+                                ],
+                                [
+                                  "hint-fn",
+                                  [
+                                    "{}",
+                                    [
+                                      ":args",
+                                      [
+                                        "[]",
+                                        "'Dynamic",
+                                        "'Dynamic"
+                                      ]
+                                    ],
+                                    [
+                                      ":return",
+                                      "'Dynamic"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "match",
+                                  [
+                                    "deref",
+                                    "*abort-control"
+                                  ],
+                                  [
+                                    [
+                                      ":some",
+                                      "abort"
+                                    ],
+                                    [
+                                      "do",
+                                      [
+                                        "js/console.warn",
+                                        "|Aborting prev"
+                                      ],
+                                      [
+                                        ".!abort",
+                                        "abort"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    [
+                                      ":none"
+                                    ],
+                                    "&unit"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "button",
+                          [
+                            "{}",
+                            [
+                              ":class-name",
+                              "css/button"
+                            ],
+                            [
+                              ":inner-text",
+                              "|Run"
+                            ],
+                            [
+                              ":on-click",
+                              [
+                                "fn",
+                                [
+                                  "e",
+                                  "d!"
+                                ],
+                                [
+                                  "hint-fn",
+                                  [
+                                    "{}",
+                                    [
+                                      ":args",
+                                      [
+                                        "[]",
+                                        "'Dynamic",
+                                        "'Dynamic"
+                                      ]
+                                    ],
+                                    [
+                                      ":return",
+                                      "'Dynamic"
+                                    ],
+                                    [
+                                      ":async",
+                                      "true"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "*text",
+                                      [
+                                        "ref",
+                                        "|"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "try",
+                                    [
+                                      "js-await",
+                                      [
+                                        "call-genai-msg!",
+                                        ":gemini",
+                                        "cursor",
+                                        [
+                                          "assoc",
+                                          "state",
+                                          ":code",
+                                          "|"
+                                        ],
+                                        [
+                                          ":query",
+                                          "state"
+                                        ],
+                                        "d!",
+                                        "*text"
+                                      ]
+                                    ],
+                                    [
+                                      "fn",
+                                      [
+                                        "e"
+                                      ],
+                                      [
+                                        "hint-fn",
+                                        [
+                                          "{}",
+                                          [
+                                            ":args",
+                                            [
+                                              "[]",
+                                              "'Dynamic"
+                                            ]
+                                          ],
+                                          [
+                                            ":return",
+                                            "'Dynamic"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "d!",
+                                        [
+                                          "::",
+                                          ":states-merge",
+                                          "cursor",
+                                          "state",
+                                          [
+                                            "{}",
+                                            [
+                                              ":answer",
+                                              [
+                                                "str",
+                                                "@*text",
+                                                "&newline",
+                                                "&newline",
+                                                [
+                                                  "str",
+                                                  "|Failed to load: ",
+                                                  "e"
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              ":loading?",
+                                              "false"
+                                            ],
+                                            [
+                                              ":done?",
+                                              "true"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "if",
+                  "loading?",
+                  [
+                    "pre",
+                    [
+                      "{}",
+                      [
+                        ":class-name",
+                        [
+                          "str-spaced",
+                          "css/font-code!",
+                          "style-codebox"
+                        ]
+                      ],
+                      [
+                        ":inner-text",
+                        [
+                          ":answer",
+                          "state"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "not",
+                      [
+                        "blank?",
+                        [
+                          ":code",
+                          "state"
+                        ]
+                      ]
+                    ],
+                    [
+                      "div",
+                      [
+                        "{}",
+                        [
+                          ":class-name",
+                          "css/column"
+                        ]
+                      ],
+                      [
+                        "comp-cirru-snippet",
+                        [
+                          ":code",
+                          "state"
+                        ],
+                        [
+                          "Option",
+                          ":some",
+                          [
+                            "%{}",
+                            "respo-ui.schema/PresentationOptions",
+                            [
+                              ":class-name",
+                              [
+                                "Option",
+                                ":some",
+                                "style-snippet"
+                              ]
+                            ],
+                            [
+                              ":style",
+                              [
+                                "Option",
+                                ":none"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "=<",
+                        "0",
+                        "8"
+                      ],
+                      [
+                        "div",
+                        [
+                          "{}",
+                          [
+                            ":class-name",
+                            "css/row-parted"
+                          ]
+                        ],
+                        [
+                          "span",
+                          [
+                            "{}"
+                          ]
+                        ],
+                        [
+                          "button",
+                          [
+                            "{}",
+                            [
+                              ":class-name",
+                              "css/button"
+                            ],
+                            [
+                              ":inner-text",
+                              "|Accept"
+                            ],
+                            [
+                              ":on-click",
+                              [
+                                "fn",
+                                [
+                                  "e",
+                                  "d!"
+                                ],
+                                [
+                                  "hint-fn",
+                                  [
+                                    "{}",
+                                    [
+                                      ":args",
+                                      [
+                                        "[]",
+                                        "'Dynamic",
+                                        "'Dynamic"
+                                      ]
+                                    ],
+                                    [
+                                      ":return",
+                                      "'Dynamic"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "on-submit",
+                                  [
+                                    ":code",
+                                    "state"
+                                  ],
+                                  "d!"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          "assert-type",
+          [
+            "%::",
+            "GenCodePluginData",
+            ":plugin",
+            "render-node",
+            "cursor",
+            "state"
+          ],
+          "'GenCodePluginData"
+        ]
+      ]
+    ],
+    "doc": "this component can be used to integrate",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.core/use-gen-code",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.core/GenCodePluginData"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic",
+          [
+            "::",
+            "'Fn",
+            [
+              "{}",
+              [
+                ":return",
+                "'String"
+              ],
+              [
+                ":args",
+                [
+                  "[]"
+                ]
+              ]
+            ]
+          ],
+          [
+            "::",
+            "'Fn",
+            [
+              "{}",
+              [
+                ":return",
+                "'Unit"
+              ],
+              [
+                ":args",
+                [
+                  "[]",
+                  "'String",
+                  "'Dynamic"
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defref",
+      "*reel",
+      [
+        "typed/new-reel",
+        "schema/store"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/*reel",
+    "js_ffi": null,
+    "schema": [
+      "::",
+      "'Ref",
+      [
+        "::",
+        "'reel.typed/State",
+        "'gen-code.schema/GenCodeOp",
+        "'gen-code.types/StoreData"
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "dispatch!",
+      [
+        "op"
+      ],
+      [
+        "when",
+        [
+          "and",
+          "config/dev?",
+          [
+            "match",
+            "op",
+            [
+              [
+                ":states",
+                "ignored-cursor",
+                "ignored-state"
+              ],
+              "false"
+            ],
+            [
+              "_",
+              "true"
+            ]
+          ]
+        ],
+        [
+          "js/console.log",
+          "|Dispatch:",
+          "op"
+        ]
+      ],
+      [
+        "match",
+        [
+          "typed/decode-control",
+          "op"
+        ],
+        [
+          [
+            ":some",
+            "control"
+          ],
+          [
+            "reset!",
+            "*reel",
+            [
+              "typed/apply-control",
+              "updater",
+              "@*reel",
+              "control"
+            ]
+          ]
+        ],
+        [
+          [
+            ":none"
+          ],
+          [
+            "match",
+            [
+              "schema/decode-gen-code-op",
+              "op"
+            ],
+            [
+              [
+                ":some",
+                "app-op"
+              ],
+              [
+                "reset!",
+                "*reel",
+                [
+                  "typed/record-op",
+                  "updater",
+                  "@*reel",
+                  "app-op",
+                  [
+                    "generate-id!"
+                  ],
+                  [
+                    ":timestamp",
+                    [
+                      "host/date-now-snapshot"
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              [
+                ":none"
+              ],
+              [
+                "eprintln",
+                "|Unknown operation:",
+                "op"
+              ]
+            ]
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/dispatch!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Enum"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "main!",
+      [],
+      [
+        "println",
+        "|Running mode:",
+        [
+          "if",
+          "config/dev?",
+          "|dev",
+          "|release"
+        ]
+      ],
+      [
+        "if",
+        "config/dev?",
+        [
+          "load-console-formatter!"
+        ]
+      ],
+      [
+        "match",
+        [
+          "browser/storage-get",
+          [
+            "option:unwrap-or",
+            [
+              "get",
+              "config/site",
+              ":storage-key"
+            ],
+            "|workflow"
+          ]
+        ],
+        [
+          [
+            ":some",
+            "raw"
+          ],
+          [
+            "dispatch!",
+            [
+              "::",
+              ":hydrate-storage",
+              [
+                "schema/normalize-store-data",
+                [
+                  "parse-cirru-edn",
+                  "raw"
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            ":none"
+          ],
+          "&unit"
+        ]
+      ],
+      [
+        "render-app!"
+      ],
+      [
+        "add-watch!",
+        "*reel",
+        ":changes",
+        [
+          "fn",
+          [
+            "reel",
+            "prev"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  [
+                    "::",
+                    "'reel.typed/State",
+                    "'gen-code.schema/GenCodeOp",
+                    "'gen-code.types/StoreData"
+                  ],
+                  [
+                    "::",
+                    "'reel.typed/State",
+                    "'gen-code.schema/GenCodeOp",
+                    "'gen-code.types/StoreData"
+                  ]
+                ]
+              ],
+              [
+                ":return",
+                "'Unit"
+              ]
+            ]
+          ],
+          [
+            "render-app!"
+          ]
+        ]
+      ],
+      [
+        "listen-devtools!",
+        "|k",
+        "dispatch!"
+      ],
+      [
+        "browser/add-event-listener!",
+        "|beforeunload",
+        [
+          "fn",
+          [
+            "event"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  "'js-ffi.browser/EventHost"
+                ]
+              ],
+              [
+                ":return",
+                "'Unit"
+              ],
+              [
+                ":features",
+                [
+                  "#{}",
+                  ":js-ffi"
+                ]
+              ]
+            ]
+          ],
+          [
+            "persist-storage!"
+          ]
+        ]
+      ],
+      [
+        "browser/add-event-listener!",
+        "|visibilitychange",
+        [
+          "fn",
+          [
+            "event"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  "'js-ffi.browser/EventHost"
+                ]
+              ],
+              [
+                ":return",
+                "'Unit"
+              ],
+              [
+                ":features",
+                [
+                  "#{}",
+                  ":js-ffi"
+                ]
+              ]
+            ]
+          ],
+          [
+            "match",
+            [
+              "browser/visibility-state"
+            ],
+            [
+              [
+                ":hidden"
+              ],
+              [
+                "persist-storage!"
+              ]
+            ],
+            [
+              "_",
+              "&unit"
+            ]
+          ]
+        ]
+      ],
+      [
+        "js/setInterval",
+        "persist-storage!",
+        "60000"
+      ],
+      [
+        "println",
+        "|App started."
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/main!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "def",
+      "mount-target",
+      [
+        ".unwrap",
+        [
+          "dom/query-selector",
+          "|.app"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/mount-target",
+    "js_ffi": null,
+    "schema": "'respo.dom/DomElement",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "persist-storage!",
+      [],
+      [
+        "println",
+        "|Saved at",
+        [
+          ":iso",
+          [
+            "host/date-now-snapshot"
+          ]
+        ]
+      ],
+      [
+        "js/localStorage.setItem",
+        [
+          "option:unwrap-or",
+          [
+            "get",
+            "config/site",
+            ":storage-key"
+          ],
+          "|workflow"
+        ],
+        [
+          "format-cirru-edn",
+          [
+            ":store",
+            "@*reel"
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/persist-storage!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "reload!",
+      [],
+      [
+        "if",
+        [
+          "nil?",
+          "build-errors"
+        ],
+        [
+          "do",
+          [
+            "remove-watch!",
+            "*reel",
+            ":changes"
+          ],
+          [
+            "clear-cache!"
+          ],
+          [
+            "add-watch!",
+            "*reel",
+            ":changes",
+            [
+              "fn",
+              [
+                "reel",
+                "prev"
+              ],
+              [
+                "hint-fn",
+                [
+                  "{}",
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      [
+                        "::",
+                        "'reel.typed/State",
+                        "'gen-code.schema/GenCodeOp",
+                        "'gen-code.types/StoreData"
+                      ],
+                      [
+                        "::",
+                        "'reel.typed/State",
+                        "'gen-code.schema/GenCodeOp",
+                        "'gen-code.types/StoreData"
+                      ]
+                    ]
+                  ],
+                  [
+                    ":return",
+                    "'Unit"
+                  ]
+                ]
+              ],
+              [
+                "render-app!"
+              ]
+            ]
+          ],
+          [
+            "reset!",
+            "*reel",
+            [
+              "typed/refresh",
+              "updater",
+              "@*reel",
+              "schema/store"
+            ]
+          ],
+          [
+            "hud!",
+            "|ok~",
+            "|Ok"
+          ]
+        ],
+        [
+          "hud!",
+          "|error",
+          "build-errors"
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/reload!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "render-app!",
+      [],
+      [
+        "render!",
+        "mount-target",
+        [
+          "comp-container",
+          "@*reel"
+        ],
+        [
+          "fn",
+          [
+            "op"
+          ],
+          [
+            "hint-fn",
+            [
+              "{}",
+              [
+                ":args",
+                [
+                  "[]",
+                  "'Dynamic"
+                ]
+              ],
+              [
+                ":return",
+                "'Unit"
+              ]
+            ]
+          ],
+          [
+            "if",
+            [
+              "enum?",
+              "op"
+            ],
+            [
+              "dispatch!",
+              "op"
+            ],
+            [
+              "raise",
+              "|[gen-code/render]-expected-Enum-operation"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.main/render-app!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defenum",
+      "GenCodeOp",
+      [
+        ":states",
+        [
+          "::",
+          "'List",
+          "'Dynamic"
+        ],
+        "'Dynamic"
+      ],
+      [
+        ":states-merge",
+        [
+          "::",
+          "'List",
+          "'Tag"
+        ],
+        "'gen-code.schema/GenCodeState",
+        [
+          "::",
+          "'Map",
+          "'Tag",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":hydrate-storage",
+        "'gen-code.types/StoreData"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/GenCodeOp",
+    "js_ffi": null,
+    "schema": "'EnumDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "GenCodeState",
+      [
+        ":answer",
+        "'String"
+      ],
+      [
+        ":loading?",
+        "'Bool"
+      ],
+      [
+        ":done?",
+        "'Bool"
+      ],
+      [
+        ":query",
+        "'String"
+      ],
+      [
+        ":code",
+        "'String"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/GenCodeState",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "decode-gen-code-op",
+      [
+        "op"
+      ],
+      [
+        "try",
+        [
+          "match",
+          "op",
+          [
+            [
+              ":states",
+              "cursor",
+              "state"
+            ],
+            [
+              "Option",
+              ":some",
+              [
+                "GenCodeOp",
+                ":states",
+                [
+                  "decode-map-as",
+                  "cursor",
+                  [
+                    "::",
+                    "'List",
+                    "'Dynamic"
+                  ]
+                ],
+                "state"
+              ]
+            ]
+          ],
+          [
+            [
+              ":states-merge",
+              "cursor",
+              "state",
+              "changes"
+            ],
+            [
+              "if",
+              [
+                "and",
+                [
+                  "struct?",
+                  "state"
+                ],
+                [
+                  "&struct:matches?",
+                  "state",
+                  "GenCodeState"
+                ]
+              ],
+              [
+                "Option",
+                ":some",
+                [
+                  "GenCodeOp",
+                  ":states-merge",
+                  [
+                    "decode-map-as",
+                    "cursor",
+                    [
+                      "::",
+                      "'List",
+                      "'Tag"
+                    ]
+                  ],
+                  [
+                    "assert-type",
+                    "state",
+                    "'gen-code.schema/GenCodeState"
+                  ],
+                  [
+                    "decode-map-as",
+                    "changes",
+                    [
+                      "::",
+                      "'Map",
+                      "'Tag",
+                      "'Dynamic"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "Option",
+                ":none"
+              ]
+            ]
+          ],
+          [
+            [
+              ":hydrate-storage",
+              "data"
+            ],
+            [
+              "if",
+              [
+                "and",
+                [
+                  "struct?",
+                  "data"
+                ],
+                [
+                  "&struct:matches?",
+                  "data",
+                  "gen-code.types/StoreData"
+                ]
+              ],
+              [
+                "Option",
+                ":some",
+                [
+                  "GenCodeOp",
+                  ":hydrate-storage",
+                  [
+                    "assert-type",
+                    "data",
+                    "'gen-code.types/StoreData"
+                  ]
+                ]
+              ],
+              [
+                "Option",
+                ":none"
+              ]
+            ]
+          ],
+          [
+            "_",
+            [
+              "Option",
+              ":none"
+            ]
+          ]
+        ],
+        [
+          "fn",
+          [
+            "_"
+          ],
+          [
+            "Option",
+            ":none"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/decode-gen-code-op",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Enum"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'calcit.core/Option",
+          "'gen-code.schema/GenCodeOp"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": [
+      {
+        "code": [
+          "assert=",
+          [
+            "%some",
+            [
+              "GenCodeOp",
+              ":hydrate-storage",
+              "store"
+            ]
+          ],
+          [
+            "decode-gen-code-op",
+            [
+              "::",
+              ":hydrate-storage",
+              "store"
+            ]
+          ]
+        ],
+        "name": "decodes-hydration",
+        "tags": []
+      },
+      {
+        "code": [
+          "assert=",
+          [
+            "%none"
+          ],
+          [
+            "decode-gen-code-op",
+            [
+              "::",
+              ":reel/toggle"
+            ]
+          ]
+        ],
+        "name": "rejects-reel-control",
+        "tags": []
+      },
+      {
+        "code": [
+          "assert=",
+          [
+            "%none"
+          ],
+          [
+            "decode-gen-code-op",
+            [
+              "::",
+              ":hydrate-storage",
+              [
+                "{}"
+              ]
+            ]
+          ]
+        ],
+        "name": "rejects-invalid-hydration",
+        "tags": []
+      }
+    ]
+  },
+  {
+    "code": [
+      "defn",
+      "normalize-store-data",
+      [
+        "data"
+      ],
+      [
+        "hint-fn",
+        [
+          "{}",
+          [
+            ":args",
+            [
+              "[]",
+              "'Dynamic"
+            ]
+          ],
+          [
+            ":return",
+            "'gen-code.types/StoreData"
+          ]
+        ]
+      ],
+      [
+        "if",
+        [
+          "struct?",
+          "data"
+        ],
+        [
+          "if",
+          [
+            "&struct:matches?",
+            "data",
+            "gen-code.types/StoreData"
+          ],
+          [
+            "assert-type",
+            "data",
+            "'gen-code.types/StoreData"
+          ],
+          "store"
+        ],
+        [
+          "if",
+          [
+            "map?",
+            "data"
+          ],
+          [
+            "let",
+            [
+              [
+                "empty-map",
+                [
+                  "{}"
+                ]
+              ],
+              [
+                "states",
+                [
+                  "read-open-field-or",
+                  "data",
+                  ":states",
+                  "empty-map"
+                ]
+              ]
+            ],
+            [
+              "if",
+              [
+                "map?",
+                "states"
+              ],
+              [
+                "gen-code.types/StoreData",
+                ":states",
+                "states"
+              ],
+              "store"
+            ]
+          ],
+          "store"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/normalize-store-data",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.types/StoreData"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": [
+      {
+        "code": [
+          "let",
+          [
+            [
+              "empty-map",
+              [
+                "{}"
+              ]
+            ],
+            [
+              "legacy",
+              [
+                "{}",
+                [
+                  ":states",
+                  "empty-map"
+                ]
+              ]
+            ]
+          ],
+          [
+            "do",
+            [
+              "assert=",
+              "store",
+              [
+                "normalize-store-data",
+                "legacy"
+              ]
+            ],
+            [
+              "assert=",
+              "store",
+              [
+                "normalize-store-data",
+                "store"
+              ]
+            ]
+          ]
+        ],
+        "name": "legacy-and-nominal-hydration",
+        "tags": []
+      }
+    ]
+  },
+  {
+    "code": [
+      "defn",
+      "read-open-field-or",
+      [
+        "value",
+        "field",
+        "fallback"
+      ],
+      [
+        "let",
+        [
+          [
+            "found",
+            [
+              "reel-schema/read-field",
+              "value",
+              "field"
+            ]
+          ]
+        ],
+        [
+          "if",
+          [
+            "nil?",
+            "found"
+          ],
+          "fallback",
+          "found"
+        ]
+      ]
+    ],
+    "doc": "Read an intentionally open Respo state field without introducing an Option<T> relation over Dynamic values.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/read-open-field-or",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'T"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'Dynamic",
+          "'Tag",
+          "'T"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ],
+      [
+        ":generics",
+        [
+          "[]",
+          "'T"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": [
+      {
+        "code": [
+          "let",
+          [
+            [
+              "expected",
+              "store"
+            ],
+            [
+              "present",
+              [
+                "assert-type",
+                [
+                  "read-open-field-or",
+                  [
+                    "{}",
+                    [
+                      ":store",
+                      "expected"
+                    ]
+                  ],
+                  ":store",
+                  "expected"
+                ],
+                "'gen-code.types/StoreData"
+              ]
+            ],
+            [
+              "missing",
+              [
+                "assert-type",
+                [
+                  "read-open-field-or",
+                  [
+                    "{}"
+                  ],
+                  ":store",
+                  "expected"
+                ],
+                "'gen-code.types/StoreData"
+              ]
+            ]
+          ],
+          [
+            "assert=",
+            "expected",
+            "present"
+          ],
+          [
+            "assert=",
+            "expected",
+            "missing"
+          ],
+          "&unit"
+        ],
+        "name": "present-and-missing-store",
+        "tags": []
+      }
+    ]
+  },
+  {
+    "code": [
+      "def",
+      "store",
+      [
+        "gen-code.types/StoreData",
+        ":states",
+        [
+          "{}"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.schema/store",
+    "js_ffi": null,
+    "schema": "'gen-code.types/StoreData",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenAIChunkHost",
+      [
+        ":text",
+        [
+          "::",
+          "'JsNullish",
+          "'String"
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.stream/GenAIChunkHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "deftrait",
+      "GenAIStreamHost",
+      [
+        ".next",
+        [
+          "::",
+          "'Fn",
+          [
+            "{}",
+            [
+              ":args",
+              [
+                "[]",
+                "'GenAIStreamHost"
+              ]
+            ],
+            [
+              ":return",
+              "'JsObject"
+            ]
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": {
+      ":backend": {
+        "__edn_tag": "js"
+      },
+      ":kind": {
+        "__edn_tag": "external-object"
+      },
+      ":target": {
+        "__edn_tag": "browser"
+      }
+    },
+    "ffi_edn": "{} (:backend :js) (:kind :external-object) (:target :browser)",
+    "id": "gen-code.stream/GenAIStreamHost",
+    "js_ffi": null,
+    "schema": "'Trait",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "consume-genai-stream!",
+      [
+        "stream",
+        "on-chunk!"
+      ],
+      [
+        "hint-fn",
+        [
+          "{}",
+          [
+            ":async",
+            "true"
+          ],
+          [
+            ":args",
+            [
+              "[]",
+              "'GenAIStreamHost",
+              [
+                "::",
+                "'Fn",
+                [
+                  "{}",
+                  [
+                    ":return",
+                    "'Unit"
+                  ],
+                  [
+                    ":args",
+                    [
+                      "[]",
+                      [
+                        "::",
+                        "'Option",
+                        "'JsObject"
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ],
+          [
+            ":return",
+            "'Unit"
+          ],
+          [
+            ":features",
+            [
+              "#{}",
+              ":js-ffi"
+            ]
+          ]
+        ]
+      ],
+      [
+        "js-await",
+        [
+          "js-for-await",
+          "stream",
+          [
+            "fn",
+            [
+              "chunk"
+            ],
+            [
+              "hint-fn",
+              [
+                "{}",
+                [
+                  ":args",
+                  [
+                    "[]",
+                    [
+                      "::",
+                      "'JsNullish",
+                      "'JsObject"
+                    ]
+                  ]
+                ],
+                [
+                  ":return",
+                  "'Unit"
+                ],
+                [
+                  ":features",
+                  [
+                    "#{}",
+                    ":js-ffi"
+                  ]
+                ]
+              ]
+            ],
+            [
+              "match",
+              [
+                "js-nullish->option",
+                "chunk"
+              ],
+              [
+                [
+                  ":some",
+                  "value"
+                ],
+                [
+                  "on-chunk!",
+                  [
+                    "Option",
+                    ":some",
+                    "value"
+                  ]
+                ]
+              ],
+              [
+                [
+                  ":none"
+                ],
+                [
+                  "on-chunk!",
+                  [
+                    "Option",
+                    ":none"
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "&unit"
+    ],
+    "doc": "Consume a host async iterator and normalize each nullish yield into Option before invoking application code.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.stream/consume-genai-stream!",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":async",
+        "true"
+      ],
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'Unit"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'gen-code.stream/GenAIStreamHost",
+          [
+            "::",
+            "'Fn",
+            [
+              "{}",
+              [
+                ":return",
+                "'Unit"
+              ],
+              [
+                ":args",
+                [
+                  "[]",
+                  [
+                    "::",
+                    "'Option",
+                    "'JsObject"
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "read-genai-chunk",
+      [
+        "value"
+      ],
+      [
+        ".-text",
+        [
+          "unsafe-coerce",
+          "value",
+          "GenAIChunkHost"
+        ]
+      ]
+    ],
+    "doc": "Read the stream text from its typed host boundary.",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.stream/read-genai-chunk",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'JsObject"
+        ]
+      ],
+      [
+        ":features",
+        [
+          "#{}",
+          ":js-ffi"
+        ]
+      ],
+      [
+        ":return",
+        [
+          "::",
+          "'JsNullish",
+          "'String"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defstruct",
+      "StoreData",
+      [
+        ":states",
+        "'Map"
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.types/StoreData",
+    "js_ffi": null,
+    "schema": "'StructDef",
+    "tags": [],
+    "tests": []
+  },
+  {
+    "code": [
+      "defn",
+      "updater",
+      [
+        "store",
+        "op",
+        "op-id",
+        "op-time"
+      ],
+      [
+        "match",
+        "op",
+        [
+          [
+            ":states",
+            "cursor",
+            "s"
+          ],
+          [
+            "struct-with",
+            "store",
+            [
+              ":states",
+              [
+                "decode-map-as",
+                [
+                  "update-state-tree",
+                  [
+                    ":states",
+                    "store"
+                  ],
+                  "cursor",
+                  "s"
+                ],
+                [
+                  "::",
+                  "'Map",
+                  "'Tag",
+                  "'Dynamic"
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            ":states-merge",
+            "cursor",
+            "s0",
+            "changes"
+          ],
+          [
+            "struct-with",
+            "store",
+            [
+              ":states",
+              [
+                "decode-map-as",
+                [
+                  "update-state-tree-merge",
+                  [
+                    ":states",
+                    "store"
+                  ],
+                  "cursor",
+                  "s0",
+                  "changes"
+                ],
+                [
+                  "::",
+                  "'Map",
+                  "'Tag",
+                  "'Dynamic"
+                ]
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            ":hydrate-storage",
+            "data"
+          ],
+          "data"
+        ],
+        [
+          "_",
+          [
+            "do",
+            [
+              "eprintln",
+              "|unknown op:",
+              "op"
+            ],
+            "store"
+          ]
+        ]
+      ]
+    ],
+    "doc": "",
+    "examples": [],
+    "ffi": null,
+    "ffi_edn": null,
+    "id": "gen-code.updater/updater",
+    "js_ffi": null,
+    "schema": [
+      "{}",
+      [
+        ":kind",
+        ":fn"
+      ],
+      [
+        ":return",
+        "'gen-code.types/StoreData"
+      ],
+      [
+        ":args",
+        [
+          "[]",
+          "'gen-code.types/StoreData",
+          "'gen-code.schema/GenCodeOp",
+          "'String",
+          "'Number"
+        ]
+      ]
+    ],
+    "tags": [],
+    "tests": []
+  }
+]
