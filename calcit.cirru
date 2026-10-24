@@ -50,7 +50,7 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -188,7 +188,7 @@
               :return 'Unit
               :features $ #{} :js-ffi
             when
-              option:none? $ deref *ai-chat
+              .none? $ deref *ai-chat
               initialize-chat! variant
             match (deref *abort-control)
               (:some abort)
@@ -202,7 +202,7 @@
               d! $ :: :states-merge cursor state $ {} (:answer |) (:loading? true)
             let
                 sdk-result $ js-await $ send-genai-stream!
-                  option:unwrap $ deref *ai-chat
+                  .unwrap $ deref *ai-chat
                   , prompt-text
               js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
                 hint-fn $ {}
@@ -250,10 +250,10 @@
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
             let
-                key $ option:unwrap-or (browser/storage-get |gemini-key) |
+                key $ .unwrap-or (browser/storage-get |gemini-key) |
               if (blank? key)
                 let
-                    v $ option:unwrap-or
+                    v $ .unwrap-or
                       browser/prompt! $ str |Required |gemini-key |in |localStorage
                       , |
                   if (blank? v)
@@ -293,7 +293,7 @@
                   js-object (:model model)
                     :config $ js/Object.assign $ js-object
                       :httpOptions $ js-object $ :baseUrl
-                        option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
+                        .unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
                       :responseMimeType |application/json
                     :history $ js-array $ js-object (:role |model)
                       :parts $ js-array $ js-object (:text doc-content)
@@ -305,7 +305,7 @@
             :features $ #{} :js-ffi
         'new-abort-controller! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-abort-controller! ()
-            unsafe-coerce (new js/AbortController) AbortControllerHost
+            js-cast (new js/AbortController) AbortControllerHost
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'gen-code.core/AbortControllerHost)
             :args $ []
@@ -336,7 +336,7 @@
             .!sendMessageStream chat $ js-object (:message prompt-text)
               :config $ js-object
                 :httpOptions $ js-object $ :baseUrl
-                  option:unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
+                  .unwrap-or (get-env |gemini-host) |https://ja.chenyong.life
                 :abortSignal $ .-signal abort
                 :responseMimeType |application/json
           :examples $ []
@@ -415,10 +415,10 @@
                             :async true
                           let
                               event $ read-keyboard-event e
-                              meta? $ option:unwrap-or
+                              meta? $ .unwrap-or
                                 js-nullish->option $ .-metaKey event
                                 , false
-                              key-code $ option:unwrap-or
+                              key-code $ .unwrap-or
                                 js-nullish->option $ .-keyCode event
                                 , -1
                             if
@@ -560,7 +560,7 @@
             println "|Running mode:" $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             match
-              browser/storage-get $ option:unwrap-or (get config/site :storage-key) |workflow
+              browser/storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
                 dispatch! $ :: :hydrate-storage $ schema/normalize-store-data (parse-cirru-edn raw)
               (:none) &unit
@@ -600,7 +600,7 @@
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
             js/localStorage.setItem
-              option:unwrap-or (get config/site :storage-key) |workflow
+              .unwrap-or (get config/site :storage-key) |workflow
               format-cirru-edn $ :store @*reel
             , &unit
           :examples $ []
@@ -694,13 +694,13 @@
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
-                %some $ GenCodeOp :hydrate-storage store
+                Option :some $ GenCodeOp :hydrate-storage store
                 decode-gen-code-op $ :: :hydrate-storage store
             %{} 'TestEntry (:name |rejects-reel-control)
-              :code $ quote $ assert= (%none)
+              :code $ quote $ assert= (Option :none)
                 decode-gen-code-op $ :: :reel/toggle
             %{} 'TestEntry (:name |rejects-invalid-hydration)
-              :code $ quote $ assert= (%none)
+              :code $ quote $ assert= (Option :none)
                 decode-gen-code-op $ :: :hydrate-storage $ {}
         'normalize-store-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-store-data (data)

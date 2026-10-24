@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 
-import {
-  option_$o_none_$q_,
-  option_$o_unwrap,
-} from "../js-out/calcit.core.mjs";
+import { invoke_method } from "@calcit/procs";
 import { consume_genai_stream_$x_ } from "../js-out/gen-code.stream.mjs";
+import { new_abort_controller_$x_ } from "../js-out/gen-code.core.mjs";
 
 const unwrapChunk = (chunkOption) =>
-  option_$o_none_$q_(chunkOption) ? null : option_$o_unwrap(chunkOption);
+  invoke_method("none?", chunkOption) ? null : invoke_method("unwrap", chunkOption);
+
+const controller = new_abort_controller_$x_();
+assert.equal(controller.signal.aborted, false);
+controller.abort();
+assert.equal(controller.signal.aborted, true);
 
 let completedCleanupCount = 0;
 async function* completedStream() {
