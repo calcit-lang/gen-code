@@ -4,6 +4,32 @@ Gen Code Component for Calcit
 
 Demo https://repo.calcit-lang.org/gen-code/ .
 
+### Calcit 0.31.0 迁移
+
+使用者影响：CLI / `@calcit/procs` 配对正式 **0.31.0**，依赖 Reel 0.7.0-alpha.4、
+UI 0.9.0-alpha.4、Respo 0.17.0-alpha.4、JS-FFI 0.2.7（传递 Router 0.9.0-alpha.3）。
+需要同步整张图、重新生成 JS 并完整刷新。Reel、UI、Respo 和传递 Router 使用已发布 alpha tag；JS-FFI 0.2.7 是正式版。
+0.0.17 仍是未发版候选，不移动旧 tag，也不要求消费者引用 main/hash。
+
+`.reset-state` 的 dispatch 回调改为接收单个 `:: :states cursor state` 事件，
+与新版 Respo 一致；原来接收两个参数的自定义回调需同步调整。输入和 Take 同样改用
+单事件 dispatch，修复页面报参数数量错误、状态不更新的问题。其他模型参数和请求地址不变。
+
+开放字段读取不再伪称保留泛型 T，明确返回 Dynamic；插件状态通过字段解码构建本地
+GenCodeState，不用 assert-type 冒充验证。存档恢复对同名外部 StoreData 只按数据处理，
+转为 Map、检查 states 后重建本地 StoreData；嵌套状态也先转 Map 再完整解码。
+名称不代表名义身份或授权，其他无效输入的原 fallback 合同保留，见
+[#41](https://github.com/calcit-lang/gen-code/issues/41)。非法嵌套状态可能更早明确报错。
+
+Demo 从存档启动时清除 drafter 的 loading? 标志，保留 query、answer、code、done? 和其他状态；刷新不会恢复已中断的请求或 AbortController。该清理仅在启动恢复执行，正常渲染中的请求不受影响。
+
+全部定义、完整 strict、未修改的质量基线、原六项附带测试及新增的一项中断请求往返回归、原 stream 回归通过。
+原测试同步单事件合同，并补入非空存档往返断言；不新增测试脚本或放宽预算。
+实际 Demo 验证输入、Take、恢复后继续 Take 及连续刷新恢复。未点 Run/Refresh、
+未调用外部 GenAI 或使用凭据；两处 HUD、存档 key、部署路径和 COS 内置校验保留。
+既有三处 unsafe 与 SDK 开放边界仍存在，原 bundle 体积警告保留。
+以下为历史迁移记录，不代替本轮精确提交的 CI 与评审。
+
 ### 本轮公开 API 与类型边界清理
 
 使用者影响：继续配对正式 CLI / `@calcit/procs` **0.30.1**，正式模块图更新为
