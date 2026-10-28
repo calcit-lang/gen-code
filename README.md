@@ -4,6 +4,20 @@ Gen Code Component for Calcit
 
 Demo https://repo.calcit-lang.org/gen-code/ .
 
+### Calcit 0.32.0 迁移候选：使用者影响
+
+CLI/procs 配对正式 0.32.0，需要重新安装依赖、生成 JS 并刷新。
+Reel 0.7.0、UI 0.9.0、Respo 0.17.0 当前使用本地候选，JS-FFI 为 0.2.8；
+正式标签整图尚待验收。0.0.17 仍是未发版候选，不移动旧 tag 或发布 npm。
+
+官方工具转换 48 处类型写法，49 个定义 schema 保持。单事件 dispatch、输入/Take、
+stream、存档恢复、两处 HUD 及模型配置不变，Google SDK 不升级。
+保留原质量基线与全部测试，不新增强转、预算或脚本；npm 发布年龄门禁为一小时。
+本轮完整 strict、全部定义、原质量基线、七项附带测试、原 stream 回归、构建
+和 immutable 安装通过；独立评审无待处理问题。实际输入、Take、恢复后继续 Take
+及连续刷新通过，浏览器无警告或错误。正式依赖整图和远端 CI 尚待验收。
+不读取凭据、不执行 Run/Refresh、不调用外部生成服务。
+
 ### Calcit 0.31.0 迁移
 
 使用者影响：CLI / `@calcit/procs` 配对正式 **0.31.0**，依赖 Reel 0.7.0-alpha.4、
