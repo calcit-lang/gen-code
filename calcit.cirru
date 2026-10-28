@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :js) (:reload-fn 'gen-code.main/reload!) (:target :browser)
       :feature-policy $ {} $ :js-ffi :allow
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {}
+      :type-slots $ {} $ :dispatch-op |gen-code.schema/DispatchOp
   :files $ {}
     'gen-code.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
@@ -75,12 +75,12 @@
               hint-fn $ {}
                 :args $ [] 'GenCodePluginData0 $ :: 'Fn
                   {}
-                    :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                    :args $ [] 'Enum
                     :return 'Unit
                 :return 'Unit
               match self $
                 :plugin r cursor state
-                d! cursor initial-state
+                d! $ :: :states cursor initial-state
           :examples $ []
           :schema $ :: 'Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
@@ -130,7 +130,7 @@
               :generics $ [] 'T
               :args $ [] 'T $ :: 'Fn
                 {}
-                  :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                  :args $ [] 'Enum
                   :return 'Unit
               :return 'Unit
           :examples $ []
@@ -142,7 +142,7 @@
           :tests $ [] $ %{} 'TestEntry (:name |render-and-reset-contract)
             :code $ quote $ let
                 *renders $ ref 0
-                *reset $ ref $ [] ([] :initial) initial-state
+                *reset $ ref $ :: :states ([] :initial) initial-state
                 render-node $ fn ()
                   hint-fn $ {}
                     :args $ []
@@ -154,15 +154,15 @@
               assert=
                 div $ {}
                 , node
-              .reset-state plugin $ fn (cursor state)
+              .reset-state plugin $ fn (op)
                 hint-fn $ {}
-                  :args $ [] (:: 'List 'Tag) 'gen-code.schema/GenCodeState
+                  :args $ [] 'Enum
                   :return 'Unit
-                reset! *reset $ [] cursor state
+                reset! *reset op
                 , &unit
               assert= 1 @*renders
               assert=
-                [] ([] :drafter) initial-state
+                :: :states ([] :drafter) initial-state
                 , @*reset
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodePluginData0
@@ -330,7 +330,7 @@
           :doc "|The raw Gemini SDK call is kept as a leaf FFI adapter so its capability is lexical."
           :code $ quote $ defn send-genai-request! (chat prompt-text abort)
             hint-fn $ {}
-              :args $ [] 'GenAIChatHost 'String 'AbortControllerHost
+              :args $ [] 'gen-code.core/GenAIChatHost 'String 'gen-code.core/AbortControllerHost
               :return $ :: 'JsNullish 'JsObject
               :features $ #{} :js-ffi
             .!sendMessageStream chat $ js-object (:message prompt-text)
@@ -348,8 +348,8 @@
           :doc "|Keep the Gemini SDK method call and browser abort signal in one typed JS adapter."
           :code $ quote $ defn send-genai-stream! (chat prompt-text)
             hint-fn $ {} (:async true)
-              :args $ [] 'GenAIChatHost 'String
-              :return 'GenAIStreamHost
+              :args $ [] 'gen-code.core/GenAIChatHost 'String
+              :return 'gen-code.stream/GenAIStreamHost
               :features $ #{} :js-ffi
             let
                 abort $ new-abort-controller!
@@ -386,7 +386,11 @@
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
                   :: 'List 'Tag
-                state $ assert-type (schema/read-open-field-or states :data initial-state) 'gen-code.schema/GenCodeState
+                state $ decode-map-as
+                  let
+                      value $ schema/read-open-field-or states :data initial-state
+                    if (struct? value) (&struct:to-map value) value
+                  , 'gen-code.schema/GenCodeState
                 loading? $ :loading? state
                 render-node $ fn ()
                   hint-fn $ {}
@@ -407,7 +411,8 @@
                           hint-fn $ {}
                             :args $ [] 'Dynamic 'Dynamic
                             :return 'Dynamic
-                          d! cursor $ assoc state :query $ decode-map-as (schema/read-open-field-or e :value |) 'String
+                          d! $ :: :states cursor $ assoc state :query
+                            decode-map-as (schema/read-open-field-or e :value |) 'String
                         :on-keydown $ fn (e d!)
                           hint-fn $ {}
                             :args $ [] 'Dynamic 'Dynamic
@@ -442,8 +447,8 @@
                             hint-fn $ {}
                               :args $ [] 'Dynamic 'Dynamic
                               :return 'Dynamic
-                            d! cursor $ assoc state :query $ str (:query state) &newline &newline
-                              trim $ get-hint-code
+                            d! $ :: :states cursor $ assoc state :query
+                              str (:query state) &newline &newline $ trim $ get-hint-code
                         div
                           {} $ :class-name $ str-spaced css/row-middle css/gap8
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
@@ -653,6 +658,10 @@
             respo.ffi.browser :as dom
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
+        'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口的 Enum 事件合同，保留原 Reel 和业务事件解码；代表值不发送。")
+          :code $ quote $ def DispatchOp (:: :unhandled)
+          :examples $ []
+          :schema $ :: 'Enum
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
             :states (:: 'List 'Dynamic) 'Dynamic
@@ -708,7 +717,11 @@
               :args $ [] 'Dynamic
               :return 'gen-code.types/StoreData
             if (struct? data)
-              if (&struct:matches? data gen-code.types/StoreData) (assert-type data 'gen-code.types/StoreData) store
+              if (&struct:matches? data gen-code.types/StoreData) (assert-type data 'gen-code.types/StoreData)
+                if
+                  = (&struct:get-name data) :StoreData
+                  normalize-store-data $ &struct:to-map data
+                  , store
               if (map? data)
                 let
                     empty-map $ {}
@@ -723,9 +736,11 @@
             :code $ quote $ let
                 empty-map $ {}
                 legacy $ {} $ :states empty-map
+                nonempty $ gen-code.types/StoreData :states $ {} (:marker |synthetic)
               do
                 assert= store $ normalize-store-data legacy
                 assert= store $ normalize-store-data store
+                assert= nonempty $ normalize-store-data $ parse-cirru-edn (format-cirru-edn nonempty)
         'read-open-field-or $ %{} 'CodeEntry
           :doc "|Read an intentionally open Respo state field without introducing an Option<T> relation over Dynamic values."
           :code $ quote $ defn read-open-field-or (value field fallback)
@@ -733,10 +748,9 @@
                 found $ reel-schema/read-field value field
               if (nil? found) fallback found
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'T)
-            :args $ [] 'Dynamic 'Tag 'T
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] 'Dynamic 'Tag 'Dynamic
             :features $ #{} :js-ffi
-            :generics $ [] 'T
           :tests $ [] $ %{} 'TestEntry (:name |present-and-missing-store)
             :code $ quote $ let
                 expected store
@@ -779,7 +793,7 @@
           :doc "|Consume a host async iterator and normalize each nullish yield into Option before invoking application code."
           :code $ quote $ defn consume-genai-stream! (stream on-chunk!)
             hint-fn $ {} (:async true)
-              :args $ [] 'GenAIStreamHost $ :: 'Fn
+              :args $ [] 'gen-code.stream/GenAIStreamHost $ :: 'Fn
                 {} (:return 'Unit)
                   :args $ [] $ :: 'Option 'JsObject
               :return 'Unit
