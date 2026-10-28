@@ -8,7 +8,7 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 
 使用者影响：CLI / `@calcit/procs` 配对正式 **0.31.0**，依赖 Reel 0.7.0-alpha.4、
 UI 0.9.0-alpha.4、Respo 0.17.0-alpha.4、JS-FFI 0.2.7（传递 Router 0.9.0-alpha.3）。
-需要同步整张图、重新生成 JS 并完整刷新；这些 UI 模块仍为已发布 alpha tag。
+需要同步整张图、重新生成 JS 并完整刷新。Reel、UI、Respo 和传递 Router 使用已发布 alpha tag；JS-FFI 0.2.7 是正式版。
 0.0.17 仍是未发版候选，不移动旧 tag，也不要求消费者引用 main/hash。
 
 `.reset-state` 的 dispatch 回调改为接收单个 `:: :states cursor state` 事件，
@@ -21,7 +21,9 @@ GenCodeState，不用 assert-type 冒充验证。存档恢复对同名外部 Sto
 名称不代表名义身份或授权，其他无效输入的原 fallback 合同保留，见
 [#41](https://github.com/calcit-lang/gen-code/issues/41)。非法嵌套状态可能更早明确报错。
 
-全部定义、完整 strict、未修改的质量基线、原六项附带测试和原 stream 回归通过。
+Demo 从存档启动时清除 drafter 的 loading? 标志，保留 query、answer、code、done? 和其他状态；刷新不会恢复已中断的请求或 AbortController。该清理仅在启动恢复执行，正常渲染中的请求不受影响。
+
+全部定义、完整 strict、未修改的质量基线、原六项附带测试及新增的一项中断请求往返回归、原 stream 回归通过。
 原测试同步单事件合同，并补入非空存档往返断言；不新增测试脚本或放宽预算。
 实际 Demo 验证输入、Take、恢复后继续 Take 及连续刷新恢复。未点 Run/Refresh、
 未调用外部 GenAI 或使用凭据；两处 HUD、存档 key、部署路径和 COS 内置校验保留。

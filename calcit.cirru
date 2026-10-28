@@ -567,7 +567,8 @@
             match
               browser/storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
-                dispatch! $ :: :hydrate-storage $ schema/normalize-store-data (parse-cirru-edn raw)
+                dispatch! $ :: :hydrate-storage $ schema/clear-interrupted-loading
+                  schema/normalize-store-data $ parse-cirru-edn raw
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev)
@@ -673,6 +674,35 @@
           :code $ quote $ defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
           :examples $ []
           :schema $ :: 'StructDef
+        'clear-interrupted-loading $ %{} 'CodeEntry
+          :doc "|Demo 启动恢复时清除无对应运行中请求的 loading 标志，保留草稿、结果和其他状态；不在正常渲染时调用。"
+          :code $ quote $ defn clear-interrupted-loading (store-data)
+            match
+              get-in (:states store-data) ([] :drafter :data)
+              (:err _) store-data
+              (:ok raw)
+                let
+                    state $ decode-map-as
+                      if (struct? raw) (&struct:to-map raw) raw
+                      , 'gen-code.schema/GenCodeState
+                  if (:loading? state)
+                    struct-with store-data $ :states $ decode-map-as
+                      assoc-in (:states store-data) ([] :drafter :data) (assoc state :loading? false)
+                      :: 'Map 'Tag 'Dynamic
+                    , store-data
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'gen-code.types/StoreData)
+            :args $ [] 'gen-code.types/StoreData
+          :tests $ [] $ %{} 'TestEntry (:name |interrupted-request-roundtrip)
+            :code $ quote $ let
+                state $ GenCodeState :query |draft :answer |partial :code |code :loading? true :done? false
+                original $ gen-code.types/StoreData :states $ {} (:other |kept)
+                  :drafter $ {} $ :data state
+                restored $ clear-interrupted-loading $ normalize-store-data
+                  parse-cirru-edn $ format-cirru-edn original
+                expected $ gen-code.types/StoreData :states $ {} (:other |kept)
+                  :drafter $ {} $ :data (assoc state :loading? false)
+              assert= expected restored
         'decode-gen-code-op $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-gen-code-op (op)
             try
