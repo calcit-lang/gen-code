@@ -31,9 +31,16 @@ answer、code、done? 等字段，不恢复请求或 AbortController。可解析
 原三处 unsafe 和 SDK 开放边界保持，不为清零而伪造可选字段。AbortController 的既有
 浅宿主检查只证明实际 signal/abort 能力，不证明深层值或所有平台行为。
 
-### Usages
+### 候选源码与历史安装示例
 
-Import code:
+当前0.32.1支持位于本PR候选源码，0.0.17尚未发布。可将本PR检出到独立目录，在该
+目录按下方Workflow安装依赖、运行原门禁与构建；跨项目试用须配置显式本地模块路径，
+不能把候选main/hash当作已发布依赖。正式安装需等待匹配0.32.1的新tag发布。
+
+下面的0.0.16依赖示例属于旧项目，要求其配对的Calcit/procs **0.30.1-alpha.5**，
+**不适用于0.32.1**。不要在新版工具链下照抄，也不要将未发布的0.0.17写成可安装版本。
+
+历史安装示例：
 
 ```cirru.no-check
 :dependencies $ {} $ |calcit-lang/gen-code |0.0.16
