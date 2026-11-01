@@ -6,19 +6,11 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 
 ### 使用者影响
 
-CLI / `@calcit/procs` 配对正式 **0.32.1**，升级后需重新安装整图、生成 JS 并完整
-刷新。使用已发布 Reel **0.7.0-alpha.5**、UI **0.9.0**、Respo **0.17.1**、JS-FFI
-**0.2.9**；Reel 和传递 Router 仍为 alpha，不宣称整图全部稳定。
-Google SDK 锁定版本、模型和请求地址不变。**0.0.17 仍是未发版候选**，不移动旧 tag
-或发布 npm；旧 0.0.16 配对 alpha.5 的说明见 [#39](https://github.com/calcit-lang/gen-code/issues/39)。
+候选 **0.0.18** 配对正式 **Calcit CLI / @calcit/procs 0.32.1**，使用正式 Reel **0.7.1**、UI **0.10.0**、Respo **0.18.0**、JS-FFI **0.2.9**（传递 Router **0.9.0**）。消费者须协调完整精确图并重新生成 JS、完整刷新；直接构造上游 DomProps 的代码采用 Option 字段。已发布 **0.0.17 实际配对 Calcit 0.30.1**，旧 tag 不移动；0.0.18 正式 tag 发布前不引用候选 main/hash，不发布 npm。
 
-官方工具转换48处类型表达式，49个定义schema保持。单事件 dispatch、输入/Take、
-stream、存档恢复、两处 HUD 和模型配置保留。原质量基线、七项附带测试及原 stream
-回归继续执行，不新增强转、预算、验证脚本或进程管理依赖。npm等待为一小时，无单包例外。
+本 PR 只改依赖、版本与本文档，Snapshot、原测试、质量基线和工作流相对当前 main 不变。但 0.0.18 的发版范围还包括 main 已合并的 0.31/0.32 迁移：当前 quoted 类型语法、单事件 dispatch/插件回调、名义状态解码及存档恢复，不能将整个新版本描述为只有依赖变化。旧调用方需要按下述方法合同更新，尤其 `.reset-state` 的 dispatch 接收单个 Enum。原 Google SDK 锁定版本仍为 1.4.0，模型与请求地址保持。
 
-真实 Caps strict/toolchain、全定义、完整 strict diagnostics=[]、未改的质量基线、
-原测试、构建和 immutable 安装通过。此前0.32.0候选已验证输入/Take及连续刷新；
-本次未重跑浏览器，不读取凭据、不点Run/Refresh、不调用生成服务。
+本候选从真实已发布 tag 正常 Caps strict 安装五模块，通过 toolchain0.32.1、Yarn immutable、canonical、全定义240、完整 strict diagnostics=[]、原未改质量基线、原七项附带测试、原离线 stream 回归和构建。真实浏览器输入中文/emoji后，Take 调用 get-hint-code 并追加原 `println |demo` 模板；连续两次普通刷新保留完整 query，warn/error=[]。未点击 Run/Refresh、读取凭据或调用外部生成服务，不冒称真实模型请求已验收。npm 一小时新候选包龄与无单包豁免保持。
 
 `.reset-state` 回调接收单个 `:: :states cursor state` 事件，其他自定义回调也须遵守
 单事件合同。开放字段读取如实返回 Dynamic，具体插件状态经过字段解码构造 GenCodeState。
@@ -33,17 +25,14 @@ answer、code、done? 等字段，不恢复请求或 AbortController。可解析
 
 ### 候选源码与历史安装示例
 
-当前0.32.1支持位于本PR候选源码，0.0.17尚未发布。可将本PR检出到独立目录，在该
-目录按下方Workflow安装依赖、运行原门禁与构建；跨项目试用须配置显式本地模块路径，
-不能把候选main/hash当作已发布依赖。正式安装需等待匹配0.32.1的新tag发布。
+当前 0.32.1 支持位于 main 及本 PR 候选源码，0.0.18 尚未发布。可将候选检出到独立目录，按下方 Workflow 安装依赖、运行原门禁与构建；跨项目本地试用必须显式配置本地模块路径，不能把 main/hash 当成发布版本。正式安装需等待 0.0.18 tag。
 
-下面的0.0.16依赖示例属于旧项目，要求其配对的Calcit/procs **0.30.1-alpha.5**，
-**不适用于0.32.1**。不要在新版工具链下照抄，也不要将未发布的0.0.17写成可安装版本。
+下面的 **0.0.17** 是已发布的旧 **Calcit/procs 0.30.1** 图，**不适用于 0.32.1**，不要在新工具链下照抄。原更早 0.0.16 说明见 [#39](https://github.com/calcit-lang/gen-code/issues/39)。
 
 历史安装示例：
 
 ```cirru.no-check
-:dependencies $ {} $ |calcit-lang/gen-code |0.0.16
+:dependencies $ {} $ |calcit-lang/gen-code |0.0.17
 ```
 
 ```cirru.no-check
