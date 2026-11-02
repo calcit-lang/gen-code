@@ -6,9 +6,13 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 
 ### 使用者影响
 
-候选 **0.0.18** 配对正式 **Calcit CLI / @calcit/procs 0.32.1**，使用正式 Reel **0.7.1**、UI **0.10.0**、Respo **0.18.0**、JS-FFI **0.2.9**（传递 Router **0.9.0**）。消费者须协调完整精确图并重新生成 JS、完整刷新；直接构造上游 DomProps 的代码采用 Option 字段。已发布 **0.0.17 实际配对 Calcit 0.30.1**，旧 tag 不移动；0.0.18 正式 tag 发布前不引用候选 main/hash，不发布 npm。
+候选 **0.0.19** 配对正式 **Calcit CLI / @calcit/procs 0.34.1**，使用正式 Reel **0.8.0**、UI **0.12.0**、Respo **0.18.0**、JS-FFI **0.2.9**，传递 Router **0.10.0**。消费者需协调完整精确图并重新生成 JS。候选未发 tag，不使用 main/hash 替代正式发布。
 
-本 PR 只改依赖、版本与本文档，Snapshot、原测试、质量基线和工作流相对当前 main 不变。但 0.0.18 的发版范围还包括 main 已合并的 0.31/0.32 迁移：当前 quoted 类型语法、单事件 dispatch/插件回调、名义状态解码及存档恢复，不能将整个新版本描述为只有依赖变化。旧调用方需要按下述方法合同更新，尤其 `.reset-state` 的 dispatch 接收单个 Enum。原 Google SDK 锁定版本仍为 1.4.0，模型与请求地址保持。
+原字段读取不能直接替换成 Reel 新 field-or，因为新 API 会展开 Option；本次保留原 Map/Struct 读取、缺失/显式 nil 回退、false 和 Option 原值。两处条件子树采用显式 Option，显示条件与内容保持。通过官方 formatter 更新旧类型标注，保留 hud!、单事件派发及现有 SDK 合同。
+
+全部 240 个定义、完整 strict、原质量基线、原七项附带测试、原离线 stream 回归和构建通过。原字段测试补充 false/nil/Option 载荷断言，没有放宽预算。原 Google SDK 锁定版本、模型及请求地址保持；未读取密钥或调用外部生成服务。实际页面中文/emoji 输入、Take 本地模板追加与刷新恢复通过，console warn/error=[]。没有点击 Run/Refresh 或验收真实模型请求。
+
+`.reset-state` 的 dispatch 接收单个 Enum。原 Google SDK 锁定版本仍为 1.4.0，模型与请求地址保持。
 
 本候选从真实已发布 tag 正常 Caps strict 安装五模块，通过 toolchain0.32.1、Yarn immutable、canonical、全定义240、完整 strict diagnostics=[]、原未改质量基线、原七项附带测试、原离线 stream 回归和构建。真实浏览器输入中文/emoji后，Take 调用 get-hint-code 并追加原 `println |demo` 模板；连续两次普通刷新保留完整 query，warn/error=[]。未点击 Run/Refresh、读取凭据或调用外部生成服务，不冒称真实模型请求已验收。npm 一小时新候选包龄与无单包豁免保持。
 
@@ -25,9 +29,9 @@ answer、code、done? 等字段，不恢复请求或 AbortController。可解析
 
 ### 候选源码与历史安装示例
 
-当前 0.32.1 支持位于 main 及本 PR 候选源码，0.0.18 尚未发布。可将候选检出到独立目录，按下方 Workflow 安装依赖、运行原门禁与构建；跨项目本地试用必须显式配置本地模块路径，不能把 main/hash 当成发布版本。正式安装需等待 0.0.18 tag。
+当前 0.34.1 支持位于本 PR 的 0.0.19 候选源码，候选尚未发布。可将候选检出到独立目录，按下方 Workflow 安装依赖、运行原门禁与构建；跨项目本地试用必须显式配置本地模块路径，不能把 main/hash 当成发布版本。正式安装需等待 0.0.19 tag。
 
-下面的 **0.0.17** 是已发布的旧 **Calcit/procs 0.30.1** 图，**不适用于 0.32.1**，不要在新工具链下照抄。原更早 0.0.16 说明见 [#39](https://github.com/calcit-lang/gen-code/issues/39)。
+下面的 **0.0.17** 是已发布的旧 **Calcit/procs 0.30.1** 图，**不适用于 0.34.1**，不要在新工具链下照抄。原更早 0.0.16 说明见 [#39](https://github.com/calcit-lang/gen-code/issues/39)。
 
 历史安装示例：
 
@@ -63,7 +67,7 @@ The server deployment source `dist/*`, destination and main-only
 condition are unchanged. The deployed HTML deliberately changes: its frontend
 asset URLs now point to COS rather than relative server paths.
 
-The current candidate targets formal Calcit/procs 0.32.1 and Yarn 4.18.0,
+The current candidate targets formal Calcit/procs 0.34.1 and Yarn 4.18.0,
 with canonical `calcit.cirru` / `deps.cirru` and published module tags.
 Ref declarations and watch APIs use the current names; model selections are unchanged.
 Application operation cursors are typed Lists; states-merge carries GenCodeState

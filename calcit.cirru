@@ -28,7 +28,9 @@
                 div
                   {} $ :style $ {} (:width 800)
                   .render plugin-gen-code
-                when dev? $ comp-typed-reel (>> states :reel) reel $ {}
+                if dev?
+                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  Option :none
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> respo.schema/Component)
       :ns $ %{} 'NsEntry (:doc |)
@@ -144,7 +146,7 @@
             :plugin
               quote $ Fn $ -> respo.schema/Element
               quote $ List Tag
-              , 'gen-code.schema/GenCodeState
+              , gen-code.schema/GenCodeState
           :examples $ []
           :schema $ quote EnumDef
         'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
@@ -330,7 +332,7 @@
             let
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
-                  :: 'List 'Tag
+                  quote $ List Tag
                 state $ decode-map-as
                   let
                       value $ schema/read-open-field-or states :data initial-state
@@ -418,7 +420,7 @@
                         :inner-text $ :answer state
                       if
                         not $ blank? $ :code state
-                        div
+                        Option :some $ div
                           {} $ :class-name css/column
                           comp-cirru-snippet (:code state)
                             Option :some $ %{} respo-ui.schema/PresentationOptions
@@ -432,6 +434,7 @@
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
                                 on-submit (:code state) d!
+                        Option :none
               assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -566,15 +569,15 @@
           :code $ quote $ defenum GenCodeOp
             :states
               quote $ List Dynamic
-              , 'Dynamic
+              , Dynamic
             :states-merge
               quote $ List Tag
-              , 'gen-code.schema/GenCodeState $ quote $ Map Tag Dynamic
-            :hydrate-storage 'gen-code.types/StoreData
+              , gen-code.schema/GenCodeState $ quote $ Map Tag Dynamic
+            :hydrate-storage gen-code.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
         'GenCodeState $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct GenCodeState (:answer 'String) (:loading? 'Bool) (:done? 'Bool) (:query 'String) (:code 'String)
+          :code $ quote $ defstruct GenCodeState (:answer String) (:loading? Bool) (:done? Bool) (:query String) (:code String)
           :examples $ []
           :schema $ quote StructDef
         'clear-interrupted-loading $ %{} 'CodeEntry
@@ -591,7 +594,7 @@
                   if (:loading? state)
                     struct-with store-data $ :states $ decode-map-as
                       assoc-in (:states store-data) ([] :drafter :data) (assoc state :loading? false)
-                      :: 'Map 'Tag 'Dynamic
+                      quote $ Map Tag Dynamic
                     , store-data
           :examples $ []
           :schema $ quote $ Fn gen-code.types/StoreData (-> gen-code.types/StoreData)
@@ -611,15 +614,15 @@
               match op
                 (:states cursor state)
                   Option :some $ GenCodeOp :states
-                    decode-map-as cursor $ :: 'List 'Dynamic
+                    decode-map-as cursor $ quote $ List Dynamic
                     , state
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
                     Option :some $ GenCodeOp :states-merge
-                      decode-map-as cursor $ :: 'List 'Tag
+                      decode-map-as cursor $ quote $ List Tag
                       assert-type state 'gen-code.schema/GenCodeState
-                      decode-map-as changes $ :: 'Map 'Tag 'Dynamic
+                      decode-map-as changes $ quote $ Map Tag Dynamic
                     Option :none
                 (:hydrate-storage data)
                   if
@@ -669,11 +672,14 @@
                 assert= store $ normalize-store-data store
                 assert= nonempty $ normalize-store-data $ parse-cirru-edn (format-cirru-edn nonempty)
         'read-open-field-or $ %{} 'CodeEntry
-          :doc "|Read an intentionally open Respo state field without introducing an Option<T> relation over Dynamic values."
+          :doc "|Read an open Map/Struct field; missing and nil values use the fallback, while false and Option payloads remain unchanged."
           :code $ quote $ defn read-open-field-or (value field fallback)
             let
-                found $ reel-schema/read-field value field
-              if (nil? found) fallback found
+                fields $ if (struct? value) (&struct:to-map value) (decode-map-as value 'Map)
+              match (get fields field)
+                (:some found)
+                  if (nil? found) fallback found
+                (:none) fallback
           :examples $ []
           :schema $ quote $ Fn Dynamic Tag Dynamic (-> Dynamic) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |present-and-missing-store)
@@ -689,6 +695,20 @@
                   , 'gen-code.types/StoreData
               assert= expected present
               assert= expected missing
+              assert= false $ read-open-field-or
+                {} $ :data false
+                , :data |fallback
+              assert= |fallback $ read-open-field-or
+                {} $ :data nil
+                , :data |fallback
+              assert= (Option :some false)
+                read-open-field-or
+                  {} $ :data $ Option :some false
+                  , :data |fallback
+              assert= (Option :none)
+                read-open-field-or
+                  {} $ :data $ Option :none
+                  , :data |fallback
               , &unit
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
@@ -697,7 +717,6 @@
           :schema $ quote gen-code.types/StoreData
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.schema
-          :require $ reel.schema :as reel-schema
     'gen-code.stream $ %{} 'FileEntry
       :defs $ {}
         'GenAIChunkHost $ %{} 'CodeEntry (:doc |)
@@ -747,7 +766,7 @@
     'gen-code.types $ %{} 'FileEntry
       :defs $ {} $ 'StoreData
         %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct StoreData (:states 'Map)
+          :code $ quote $ defstruct StoreData (:states Map)
           :examples $ []
           :schema $ quote StructDef
       :ns $ %{} 'NsEntry (:doc |)
@@ -760,11 +779,11 @@
               (:states cursor s)
                 struct-with store $ :states $ decode-map-as
                   update-state-tree (:states store) cursor s
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
               (:states-merge cursor s0 changes)
                 struct-with store $ :states $ decode-map-as
                   update-state-tree-merge (:states store) cursor s0 changes
-                  :: 'Map 'Tag 'Dynamic
+                  quote $ Map Tag Dynamic
               (:hydrate-storage data) data
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
