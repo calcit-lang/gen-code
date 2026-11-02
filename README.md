@@ -12,9 +12,7 @@ Demo https://repo.calcit-lang.org/gen-code/ .
 
 全部 240 个定义、完整 strict、原质量基线、原七项附带测试、原离线 stream 回归和构建通过。原字段测试补充 false/nil/Option 载荷断言，没有放宽预算。原 Google SDK 锁定版本、模型及请求地址保持；未读取密钥或调用外部生成服务。实际页面中文/emoji 输入、Take 本地模板追加与刷新恢复通过，console warn/error=[]。没有点击 Run/Refresh 或验收真实模型请求。
 
-`.reset-state` 的 dispatch 接收单个 Enum。原 Google SDK 锁定版本仍为 1.4.0，模型与请求地址保持。
-
-本候选从真实已发布 tag 正常 Caps strict 安装五模块，通过 toolchain0.32.1、Yarn immutable、canonical、全定义240、完整 strict diagnostics=[]、原未改质量基线、原七项附带测试、原离线 stream 回归和构建。真实浏览器输入中文/emoji后，Take 调用 get-hint-code 并追加原 `println |demo` 模板；连续两次普通刷新保留完整 query，warn/error=[]。未点击 Run/Refresh、读取凭据或调用外部生成服务，不冒称真实模型请求已验收。npm 一小时新候选包龄与无单包豁免保持。
+本轮验收使用已发布 tag 进行正常 Caps strict 安装，toolchain 检查确认 CLI / JS 运行时均为 0.34.1。`calcit fix --workflow strict --verify` 的结果为 passed、diagnostics=[]，完整结果见 [本轮成功 CI](https://github.com/calcit-lang/gen-code/actions/runs/41461799635)。npm 一小时包龄与无单包豁免保持。
 
 `.reset-state` 回调接收单个 `:: :states cursor state` 事件，其他自定义回调也须遵守
 单事件合同。开放字段读取如实返回 Dynamic，具体插件状态经过字段解码构造 GenCodeState。
