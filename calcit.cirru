@@ -462,7 +462,9 @@
           :examples $ []
           :schema $ quote $ Fn Dynamic
             Fn $ -> String
-            Fn String Dynamic $ -> Unit
+            Fn String
+              Fn Enum $ -> Unit
+              -> Unit
             -> gen-code.core/GenCodePluginData
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
