@@ -44,7 +44,7 @@
       :typeNone 0
       :typeNotFull 1
       :unresolved 0
-      :unsafeCoerce 1
+      :unsafeCoerce 0
     |gen-code.core/use-gen-code $ {} (:codeDynamic 0)
       :codeNil 0
       :declaredOptional 0
@@ -89,7 +89,7 @@
     :typeNone 0
     :typeNotFull 6
     :unresolved 0
-    :unsafeCoerce 3
+    :unsafeCoerce 2
   :scope $ {} (:includeDependencies false)
     :namespace nil
     :namespacePrefix nil

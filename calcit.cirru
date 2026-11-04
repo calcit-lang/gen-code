@@ -273,11 +273,11 @@
           :examples $ []
           :schema $ quote $ Fn Tag (-> String)
         'read-keyboard-event $ %{} 'CodeEntry
-          :doc "|Narrow the open Respo event payload to the browser keyboard host boundary."
+          :doc "|Check the native keyboard host members at the open Respo event boundary; this does not prove nullable field payloads."
           :code $ quote $ defn read-keyboard-event (event-data)
-            unsafe-coerce
+            js-cast
               schema/read-open-field-or event-data :event $ {}
-              , KeyboardEventHost
+              , 'gen-code.core/KeyboardEventHost
           :examples $ []
           :schema $ quote $ Fn Dynamic (-> gen-code.core/KeyboardEventHost) (:features :js-ffi)
         'send-genai-request! $ %{} 'CodeEntry
@@ -353,11 +353,17 @@
                         :placeholder "|prompts about the task...\n\n<code example>"
                         :value $ :query state
                         :on-input $ fn (e d!)
-                          hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
+                          hint-fn $ Fn respo.schema/RespoEvent
+                            Fn Enum $ -> Unit
+                            -> Unit
                           d! $ :: :states cursor $ assoc state :query
                             decode-map-as (schema/read-open-field-or e :value |) 'String
+                          , &unit
                         :on-keydown $ fn (e d!)
-                          hint-fn $ Fn Dynamic Dynamic (-> Dynamic) (:async)
+                          hint-fn $ Fn respo.schema/RespoEvent
+                            Fn Enum $ -> Unit
+                            -> Unit
+                            :async
                           let
                               event $ read-keyboard-event e
                               meta? $ .unwrap-or
@@ -378,32 +384,45 @@
                                       :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                       :loading? false
                                       :done? true
+                          , &unit
                       div
                         {} $ :class-name css/row-parted
                         a $ {} (:class-name css/link) (:inner-text |Take)
                           :on-click $ fn (e d!)
-                            hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
+                            hint-fn $ Fn respo.schema/RespoEvent
+                              Fn Enum $ -> Unit
+                              -> Unit
                             d! $ :: :states cursor $ assoc state :query
                               str (:query state) &newline &newline $ trim $ get-hint-code
+                            , &unit
                         div
                           {} $ :class-name $ str-spaced css/row-middle css/gap8
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
                             :on-click $ fn (e d!)
-                              hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
+                              hint-fn $ Fn respo.schema/RespoEvent
+                                Fn Enum $ -> Unit
+                                -> Unit
                               initialize-chat! :gemini
                               d! $ :: :states-merge cursor state $ {} (:loading? false)
+                              , &unit
                           if loading?
                             button $ {} (:class-name css/button) (:inner-text |Abort)
                               :style $ {} (:border-color :red) (:color :red)
                               :on-click $ fn (e d!)
-                                hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
+                                hint-fn $ Fn respo.schema/RespoEvent
+                                  Fn Enum $ -> Unit
+                                  -> Unit
                                 match (deref *abort-control)
                                   (:some abort)
                                     do (js/console.warn "|Aborting prev") (.!abort abort)
                                   (:none) &unit
+                                , &unit
                             button $ {} (:class-name css/button) (:inner-text |Run)
                               :on-click $ fn (e d!)
-                                hint-fn $ Fn Dynamic Dynamic (-> Dynamic) (:async)
+                                hint-fn $ Fn respo.schema/RespoEvent
+                                  Fn Enum $ -> Unit
+                                  -> Unit
+                                  :async
                                 let
                                     *text $ ref |
                                   try
@@ -414,6 +433,7 @@
                                         :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                         :loading? false
                                         :done? true
+                                , &unit
                     if loading?
                       pre $ {}
                         :class-name $ str-spaced css/font-code! style-codebox
@@ -426,14 +446,17 @@
                             Option :some $ %{} respo-ui.schema/PresentationOptions
                               :class-name $ Option :some style-snippet
                               :style $ Option :none
-                          =< 0 8
+                          space-y 8
                           div
                             {} $ :class-name css/row-parted
                             span $ {}
                             button $ {} (:class-name css/button) (:inner-text |Accept)
                               :on-click $ fn (e d!)
-                                hint-fn $ Fn Dynamic Dynamic $ -> Dynamic
+                                hint-fn $ Fn respo.schema/RespoEvent
+                                  Fn Enum $ -> Unit
+                                  -> Unit
                                 on-submit (:code state) d!
+                                , &unit
                         Option :none
               assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
           :examples $ []
@@ -452,7 +475,7 @@
             |@google/genai :refer $ GoogleGenAI Modality Type
             |@cirru/writer.ts :refer $ writeCirruCode
             respo-ui.comp :refer $ comp-cirru-snippet
-            respo.comp.space :refer $ =<
+            respo.comp.space :refer $ space-y
             gen-code.$meta :refer $ calcit-dirname
             gen-code.schema :as schema
             gen-code.stream :refer $ consume-genai-stream! read-genai-chunk GenAIStreamHost
@@ -463,6 +486,17 @@
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
           :schema $ quote $ Ref (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData)
+        'decode-dispatch $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-dispatch (op)
+            match (typed/decode-control op)
+              (:some control) (Option :some control)
+              (:none)
+                match (schema/decode-gen-code-op op)
+                  (:some action) (Option :some action)
+                  (:none) (Option :none)
+          :examples $ []
+          :schema $ quote $ Fn Enum
+            -> $ Option gen-code.schema/ResolvedOp
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
@@ -470,15 +504,10 @@
                 (:states ignored-cursor ignored-state) false
                 _ true
               js/console.log |Dispatch: op
-            match (typed/decode-control op)
-              (:some control)
-                reset! *reel $ typed/apply-control updater @*reel control
-              (:none)
-                match (schema/decode-gen-code-op op)
-                  (:some app-op)
-                    reset! *reel $ typed/record-op updater @*reel app-op (generate-id!)
-                      :timestamp $ host/date-now-snapshot
-                  (:none) (eprintln "|Unknown operation:" op)
+            match (decode-dispatch op)
+              (:some resolved)
+                reset! *reel $ next-reel resolved
+              (:none) (eprintln "|Unknown operation:" op)
             , &unit
           :examples $ []
           :schema $ quote $ Fn Enum (-> Unit) (:features :js-ffi)
@@ -514,6 +543,17 @@
             .unwrap $ dom/query-selector |.app
           :examples $ []
           :schema $ quote respo.dom/DomElement
+        'next-reel $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn next-reel (op)
+            match op
+              (reel.typed/Control control) (typed/apply-control updater @*reel control)
+              (gen-code.schema/GenCodeOp action)
+                typed/record-op updater @*reel action (generate-id!)
+                  :timestamp $ host/date-now-snapshot
+          :examples $ []
+          :schema $ quote $ Fn gen-code.schema/ResolvedOp
+            -> $ reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData
+            :features :js-ffi
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -538,7 +578,8 @@
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! mount-target (comp-container @*reel)
+            render-with! mount-target
+              fn () $ comp-container @*reel
               fn (op)
                 hint-fn $ Fn Dynamic $ -> Unit
                 if (enum? op) (dispatch! op) (raise |[gen-code/render]-expected-Enum-operation)
@@ -547,18 +588,18 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.main
           :require
-            respo.core :refer $ render! clear-cache!
+            respo.core :refer $ render-with! clear-cache!
             gen-code.comp.container :refer $ comp-container
             gen-code.updater :refer $ updater
             gen-code.schema :as schema
             reel.util :refer $ listen-devtools!
             gen-code.config :as config
-            |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
             reel.typed :as typed
             js-ffi.shared :as host
             js-ffi.browser :as browser
             respo.ffi.browser :as dom
+            |./calcit.build-errors.mjs :default build-errors
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口的 Enum 事件合同，保留原 Reel 和业务事件解码；代表值不发送。")
@@ -580,6 +621,10 @@
           :code $ quote $ defstruct GenCodeState (:answer String) (:loading? Bool) (:done? Bool) (:query String) (:code String)
           :examples $ []
           :schema $ quote StructDef
+        'ResolvedOp $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion ResolvedOp gen-code.schema/GenCodeOp reel.typed/Control
+          :examples $ []
+          :schema $ quote UnionDef
         'clear-interrupted-loading $ %{} 'CodeEntry
           :doc "|Demo 启动恢复时清除无对应运行中请求的 loading 标志，保留草稿、结果和其他状态；不在正常渲染时调用。"
           :code $ quote $ defn clear-interrupted-loading (store-data)
