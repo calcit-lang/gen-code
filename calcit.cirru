@@ -594,12 +594,12 @@
             gen-code.schema :as schema
             reel.util :refer $ listen-devtools!
             gen-code.config :as config
-            |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
             reel.typed :as typed
             js-ffi.shared :as host
             js-ffi.browser :as browser
             respo.ffi.browser :as dom
+            |./calcit.build-errors.mjs :default build-errors
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
         'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口的 Enum 事件合同，保留原 Reel 和业务事件解码；代表值不发送。")

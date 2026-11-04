@@ -12,6 +12,8 @@ Demo: https://repo.calcit-lang.org/gen-code/
 
 ## 插件合同与边界
 
+在 namespace 的 `:require` 中引入 `gen-code.core :refer (use-gen-code)`。调用 `use-gen-code states get-hint-code on-submit`：`states` 来自 `(>> states :drafter)`，`get-hint-code` 是无参返回 String 的函数，`on-submit` 接收 `(code d!)` 并返回 Unit。
+
 `use-gen-code` 返回插件，`.render` 生成界面，`.reset-state` 向传入的 dispatch 发送一个 `:: :states cursor state` 事件。提交回调接收代码字符串和 dispatch，继续遵守单事件合同。
 
 开放 Map/Struct 字段读取如实返回 Dynamic：缺失或显式 nil 使用 fallback，false 和 Option 载荷原样保留。不能直接换为会展开 Option 的 field-or。外部同名 StoreData 仅作为数据输入，转 Map、检查 states 和嵌套状态，再重建本地类型；名称不代表身份，见 [#41](https://github.com/calcit-lang/gen-code/issues/41)。
@@ -21,6 +23,8 @@ Demo 先恢复存档，再渲染和注册持久化。启动恢复清除中断请
 保留两处已审阅的 SDK unsafe 边界。Chat / stream 的宿主成员检查不证明深层值；未提供 key 时仍走原提示，取消或空值保留原报错。离线测试不代表真实付费模型验收。
 
 ## 开发与验收
+
+使用 Node 24 / Yarn 4.18.0。以下 canonical 检查用于源码改动已暂存的工作区（CI checkout 也满足）；本地先审阅并暂存源码改动，避免把已有未暂存修改误判为格式变化。
 
 ```sh
 caps --strict --ci
@@ -38,7 +42,9 @@ yarn test:stream
 
 `yarn dev` 编译一次后启动 Vite；另开终端运行 `yarn watch` 监听源码。无需增加进程管理依赖。
 
-本轮本地验收：248 个定义、完整 strict（diagnostics=[]）、原七项附带测试、离线 stream 回归、工具链与 immutable 安装、构建全部通过。49 个原定义和所有原 schema 保留；新增 union 及两个派发辅助函数。七个事件回调不再使用 Dynamic 参数/返回提示，unsafe 从 3 降至 2，相应收紧原基线，其他预算不放宽。
+本轮本地验收：248 个定义、完整 strict（diagnostics=[]）、原七项附带测试、离线 stream 与真实 dispatch 回归、工具链与 immutable 安装、构建全部通过。49 个原定义和所有原 schema 保留；新增 union 及两个派发辅助函数。七个事件回调不再使用 Dynamic 参数/返回提示，unsafe 从 3 降至 2，相应收紧原基线，其他预算不放宽。
+
+现有 Node 测试入口还验证真实 dispatch 的 states-merge 状态及历史记录、Reel 控制不进入历史；模块加载时仅提供 mount 查询夹具，并为已发布 bottom-tip 0.1.5 的 ESM 子路径补齐 `.js`（上游 [#42](https://github.com/mvc-works/bottom-tip/issues/42)）；真实 dispatch、store、Reel 和 HUD 模块不作替换。不把它当作 DOM/HUD 交互验收，实际页面另行验收。
 
 实际页面通过合成中文/emoji 输入、Take 追加本地模板、Reel 打开/关闭及刷新恢复；页面异常、console warn/error、失败资源均为空。未点击 Run/Refresh、未读取 key、未调用模型、未操作剪贴板或真实数据。既有 SDK 可选 peer 提示和构建体积 warning 保留。
 
