@@ -85,20 +85,19 @@
           :schema $ quote $ Ref (calcit.core/Option gen-code.core/GenAIChatHost)
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait AbortControllerHost (:signal 'JsObject)
-            .abort $ quote $ Fn (-> Unit)
+            .abort $ Fn $ -> Unit
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
         'GenAIChatHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenAIChatHost
-            .sendMessageStream $ quote $ Fn GenAIChatHost JsObject
-              -> $ JsNullish JsObject
+            .sendMessageStream $ Fn GenAIChatHost JsObject $ -> (JsNullish JsObject)
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
         'GenAIChatsHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenAIChatsHost
-            .create $ quote $ Fn JsObject (-> GenAIChatHost)
+            .create $ Fn JsObject $ -> GenAIChatHost
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
@@ -109,8 +108,8 @@
           :schema $ quote Trait
         'GenCodeActions $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenCodeActions
-            .render $ quote $ Fn T (-> respo.schema/Element) (:generics T)
-            .reset-state $ quote $ Fn T
+            .render $ Fn T (-> respo.schema/Element) (:generics T)
+            .reset-state $ Fn T
               Fn Enum $ -> Unit
               -> Unit
               :generics T
@@ -144,21 +143,26 @@
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodePluginData0
             :plugin
-              quote $ Fn $ -> respo.schema/Element
-              quote $ List Tag
+              Fn $ -> respo.schema/Element
+              List Tag
               , gen-code.schema/GenCodeState
           :examples $ []
           :schema $ quote EnumDef
         'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait KeyboardEventHost
-            :metaKey $ quote $ JsNullish Bool
-            :keyCode $ quote $ JsNullish Number
+            :metaKey $ JsNullish Bool
+            :keyCode $ JsNullish Number
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant cursor state prompt-text d! *text)
-            hint-fn $ Fn Tag (List Tag) gen-code.schema/GenCodeState String Dynamic (Ref String) (-> Unit) (:features :js-ffi) (:async)
+            hint-fn $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
+              Fn Enum $ -> Unit
+              Ref String
+              -> Unit
+              :features :js-ffi
+              :async
             when
               .none? $ deref *ai-chat
               initialize-chat! variant
@@ -167,7 +171,7 @@
                 do (js/console.warn "|Aborting prev") (.!abort abort)
               (:none) &unit
             js/setTimeout $ fn ()
-              hint-fn $ Fn (-> Dynamic) (:features :js-ffi)
+              hint-fn $ Fn (-> Unit) (:features :js-ffi)
               d! $ :: :states-merge cursor state $ {} (:answer |) (:loading? true)
             let
                 sdk-result $ js-await $ send-genai-stream!
@@ -182,8 +186,7 @@
                       (:some t)
                         do (swap! *text str t)
                           d! $ :: :states-merge cursor state $ {}
-                            :answer $ deref $ assert-type *text
-                              quote $ Ref String
+                            :answer $ deref *text
                             :loading? true
                             :done? false
                           , &unit
@@ -191,26 +194,28 @@
                         do (js/console.log "|GenAI chunk has no text") &unit
                   (:none) &unit
                 d! $ :: :states-merge cursor state $ {}
-                  :answer $ deref $ assert-type *text
-                    quote $ Ref String
+                  :answer $ deref *text
                   :loading? true
                   :done? false
                 , &unit
               d! $ :: :states-merge cursor state $ {}
-                :answer $ deref $ assert-type *text
-                  quote $ Ref String
+                :answer $ deref *text
                 :loading? false
                 :done? true
                 :code $ try
-                  writeCirruCode $ js-array $ js/JSON.parse
-                    deref $ assert-type *text $ quote (Ref String)
+                  writeCirruCode $ js-array $ js/JSON.parse (deref *text)
                   fn (err)
                     hint-fn $ Fn Dynamic (-> String) (:features :js-ffi)
                     js/console.error err
                     str err
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Tag (List Tag) gen-code.schema/GenCodeState String Dynamic (Ref String) (-> Unit) (:features :js-ffi) (:async)
+          :schema $ quote $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
+            Fn Enum $ -> Unit
+            Ref String
+            -> Unit
+            :features :js-ffi
+            :async
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
             let
@@ -332,7 +337,7 @@
             let
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
-                  quote $ List Tag
+                  List Tag
                 state $ decode-map-as
                   let
                       value $ schema/read-open-field-or states :data initial-state
@@ -610,12 +615,8 @@
           :schema $ quote Enum
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
-            :states
-              quote $ List Dynamic
-              , Dynamic
-            :states-merge
-              quote $ List Tag
-              , gen-code.schema/GenCodeState $ quote $ Map Tag Dynamic
+            :states (List Dynamic) Dynamic
+            :states-merge (List Tag) gen-code.schema/GenCodeState $ Map Tag Dynamic
             :hydrate-storage gen-code.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
@@ -641,7 +642,7 @@
                   if (:loading? state)
                     struct-with store-data $ :states $ decode-map-as
                       assoc-in (:states store-data) ([] :drafter :data) (assoc state :loading? false)
-                      quote $ Map Tag Dynamic
+                      Map Tag Dynamic
                     , store-data
           :examples $ []
           :schema $ quote $ Fn gen-code.types/StoreData (-> gen-code.types/StoreData)
@@ -661,15 +662,15 @@
               match op
                 (:states cursor state)
                   Option :some $ GenCodeOp :states
-                    decode-map-as cursor $ quote $ List Dynamic
+                    decode-map-as cursor $ List Dynamic
                     , state
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
                     Option :some $ GenCodeOp :states-merge
-                      decode-map-as cursor $ quote $ List Tag
+                      decode-map-as cursor $ List Tag
                       assert-type state 'gen-code.schema/GenCodeState
-                      decode-map-as changes $ quote $ Map Tag Dynamic
+                      decode-map-as changes $ Map Tag Dynamic
                     Option :none
                 (:hydrate-storage data)
                   if
@@ -768,13 +769,13 @@
       :defs $ {}
         'GenAIChunkHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenAIChunkHost
-            :text $ quote $ JsNullish String
+            :text $ JsNullish String
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
         'GenAIStreamHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait GenAIStreamHost
-            .next $ quote $ Fn GenAIStreamHost (-> JsObject)
+            .next $ Fn GenAIStreamHost $ -> JsObject
           :examples $ []
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
@@ -826,11 +827,11 @@
               (:states cursor s)
                 struct-with store $ :states $ decode-map-as
                   update-state-tree (:states store) cursor s
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
               (:states-merge cursor s0 changes)
                 struct-with store $ :states $ decode-map-as
                   update-state-tree-merge (:states store) cursor s0 changes
-                  quote $ Map Tag Dynamic
+                  Map Tag Dynamic
               (:hydrate-storage data) data
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
