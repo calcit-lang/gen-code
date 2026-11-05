@@ -2,7 +2,22 @@
 
 Demo: https://repo.calcit-lang.org/gen-code/
 
-## 使用者影响
+## 0.0.22 候选：使用者影响
+
+CLI / `@calcit/procs` 同步正式 **0.35.0**，配对 Reel **0.9.1**、UI **0.15.0**、
+Respo **0.19.3**、JS-FFI **0.2.12** / Router **0.12.0**。消费者需统一精确图并重新生成 JS。
+流式请求内部 dispatcher 明确为现有 `Fn Enum (-> Unit)` 合同，与公开 on-submit / Respo
+派发一致；定时回调明确返回 Unit。直接调用该内部函数时应传单事件且返回 Unit 的 dispatcher。
+插件协议、派发顺序、SDK版本、模型、请求地址、错误处理与 HUD 保持。
+
+四处已知 `Ref String` 参数上的重复静态标注移除；捕获变量在异步回调内 deref 的类型
+仍精确为 String。原 ResolvedOp union、真实开放 Map/Struct 读取及 SDK 边界保留，
+不把缺省值类型当作开放字段类型，也不丢弃 false / Option 载荷。
+原质量基线与门禁保持；0.35.0 CLI 对既有 quality 命令给出废弃提示，当前仍执行原检查。
+本轮精确离线回归与构建结果见 PR，不调用真实模型或读取 key。
+
+## 0.0.21 历史配对
+
 
 候选 **0.0.21** 配对正式 **Calcit CLI / @calcit/procs 0.34.2**，依赖 Reel **0.9.0**、UI **0.14.1**、Respo **0.19.2**、JS-FFI **0.2.10**，传递 Router **0.11.2**。消费者需统一完整精确依赖图并重新生成 JS；候选发 tag 前不要把 main/hash 当成正式版本。
 
