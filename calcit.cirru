@@ -611,10 +611,14 @@
             |./calcit.build-errors.mjs :default build-errors
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
+        'GenCodeFieldValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion GenCodeFieldValue String Bool
+          :examples $ []
+          :schema $ quote UnionDef
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
             :states (List Dynamic) Dynamic
-            :states-merge (List Tag) gen-code.schema/GenCodeState $ Map Tag Dynamic
+            :states-merge (List Tag) gen-code.schema/GenCodeState $ Map Tag gen-code.schema/GenCodeFieldValue
             :hydrate-storage gen-code.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
@@ -668,7 +672,7 @@
                     Option :some $ GenCodeOp :states-merge
                       decode-map-as cursor $ List Tag
                       assert-type state 'gen-code.schema/GenCodeState
-                      decode-map-as changes $ Map Tag Dynamic
+                      decode-map-as changes $ Map Tag gen-code.schema/GenCodeFieldValue
                     Option :none
                 (:hydrate-storage data)
                   if

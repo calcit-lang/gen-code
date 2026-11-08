@@ -96,13 +96,14 @@ delete globalThis.document;
 const field = (value, name) => invoke_method("unwrap", c.get(value, c.to_tag(name)));
 const before = c.deref(_$s_reel);
 const cursor = c._$L_(c.to_tag("drafter"));
-const changes = c._$n__$M_(c.to_tag("query"), "dispatch 合成提示 🐈");
+const changes = c._$n__$M_(c.to_tag("query"), "dispatch 合成提示 🐈", c.to_tag("loading?"), true);
 dispatch_$x_(c._$o__$o_(c.to_tag("states-merge"), cursor, initial_state, changes));
 const recorded = c.deref(_$s_reel);
 const records = field(recorded, "records");
 assert.equal(invoke_method("len", records), invoke_method("len", field(before, "records")) + 1);
 const state = field(field(field(field(recorded, "store"), "states"), "drafter"), "data");
 assert.equal(field(state, "query"), "dispatch 合成提示 🐈");
+assert.equal(field(state, "loading?"), true);
 const record = invoke_method("unwrap", c.nth(records, invoke_method("len", records) - 1));
 const expectedOp = c._PCT__$o__$o_(
   (await import("../js-out/gen-code.schema.mjs")).GenCodeOp,
