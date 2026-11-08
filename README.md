@@ -4,11 +4,11 @@ Demo: https://repo.calcit-lang.org/gen-code/
 
 ## 0.0.24 候选
 
-使用者需统一 Calcit CLI 和 `@calcit/procs` **0.37.0**，配对正式 Reel **0.10.0**、
+使用者需统一 Calcit CLI 和 `@calcit/procs` **0.38.0**，配对正式 Reel **0.10.0**、
 UI **0.15.2**、Respo **0.19.5**、JS-FFI **0.2.13** 和传递依赖 Router **0.12.2**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同。
 
-Demo 的派发绑定具名 `GenCodeOp`，应用操作与 Reel 控制仍经 `ResolvedOp` union 分流。Editor 等宿主的插件回调继续接收单个原格式操作，回调签名明确为 `Fn AnyEnum (-> Unit)`。
+Demo 的派发绑定具名 `GenCodeOp`，应用操作与 Reel 控制仍经 `ResolvedOp` union 分流。内部状态补丁的值使用 `GenCodeFieldValue` union 表达字符串和布尔值。Editor 等宿主的插件回调继续接收单个原格式操作，回调签名明确为 `Fn AnyEnum (-> Unit)`。
 验收覆盖原严格检查、质量基线、离线流式回归和构建。正式版本以通过验收后的 Git tag 为准。
 
 ## 历史 0.0.22 配对
