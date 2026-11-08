@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'gen-code.main/main!) (:mode :js) (:reload-fn 'gen-code.main/reload!) (:target :browser)
       :feature-policy $ {} $ :js-ffi :allow
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |js-ffi/
-      :type-slots $ {} $ :dispatch-op |gen-code.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'gen-code.schema/GenCodeOp
   :files $ {}
     'gen-code.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
@@ -20,7 +20,9 @@
                     hint-fn $ Fn $ -> String
                     , "|println |demo"
                   fn (code d!)
-                    hint-fn $ Fn String Dynamic $ -> Unit
+                    hint-fn $ Fn String
+                      Fn AnyEnum $ -> Unit
+                      -> Unit
                     println "|submit code" code
               assert-traits plugin-gen-code GenCodeActions
               div
@@ -68,7 +70,7 @@
                 render-node
             .reset-state $ fn (self d!)
               hint-fn $ Fn GenCodePluginData0
-                Fn Enum $ -> Unit
+                Fn AnyEnum $ -> Unit
                 -> Unit
               match self $
                 :plugin r cursor state
@@ -110,7 +112,7 @@
           :code $ quote $ deftrait GenCodeActions
             .render $ Fn T (-> respo.schema/Element) (:generics T)
             .reset-state $ Fn T
-              Fn Enum $ -> Unit
+              Fn AnyEnum $ -> Unit
               -> Unit
               :generics T
           :examples $ []
@@ -133,7 +135,7 @@
                 div $ {}
                 , node
               .reset-state plugin $ fn (op)
-                hint-fn $ Fn Enum $ -> Unit
+                hint-fn $ Fn AnyEnum $ -> Unit
                 reset! *reset op
                 , &unit
               assert= 1 @*renders
@@ -158,7 +160,7 @@
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant cursor state prompt-text d! *text)
             hint-fn $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
-              Fn Enum $ -> Unit
+              Fn AnyEnum $ -> Unit
               Ref String
               -> Unit
               :features :js-ffi
@@ -211,7 +213,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
-            Fn Enum $ -> Unit
+            Fn AnyEnum $ -> Unit
             Ref String
             -> Unit
             :features :js-ffi
@@ -359,14 +361,14 @@
                         :value $ :query state
                         :on-input $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn Enum $ -> Unit
+                            Fn AnyEnum $ -> Unit
                             -> Unit
                           d! $ :: :states cursor $ assoc state :query
                             decode-map-as (schema/read-open-field-or e :value |) 'String
                           , &unit
                         :on-keydown $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn Enum $ -> Unit
+                            Fn AnyEnum $ -> Unit
                             -> Unit
                             :async
                           let
@@ -395,7 +397,7 @@
                         a $ {} (:class-name css/link) (:inner-text |Take)
                           :on-click $ fn (e d!)
                             hint-fn $ Fn respo.schema/RespoEvent
-                              Fn Enum $ -> Unit
+                              Fn AnyEnum $ -> Unit
                               -> Unit
                             d! $ :: :states cursor $ assoc state :query
                               str (:query state) &newline &newline $ trim $ get-hint-code
@@ -405,7 +407,7 @@
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
                             :on-click $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn Enum $ -> Unit
+                                Fn AnyEnum $ -> Unit
                                 -> Unit
                               initialize-chat! :gemini
                               d! $ :: :states-merge cursor state $ {} (:loading? false)
@@ -415,7 +417,7 @@
                               :style $ {} (:border-color :red) (:color :red)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn Enum $ -> Unit
+                                  Fn AnyEnum $ -> Unit
                                   -> Unit
                                 match (deref *abort-control)
                                   (:some abort)
@@ -425,7 +427,7 @@
                             button $ {} (:class-name css/button) (:inner-text |Run)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn Enum $ -> Unit
+                                  Fn AnyEnum $ -> Unit
                                   -> Unit
                                   :async
                                 let
@@ -458,7 +460,7 @@
                             button $ {} (:class-name css/button) (:inner-text |Accept)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn Enum $ -> Unit
+                                  Fn AnyEnum $ -> Unit
                                   -> Unit
                                 on-submit (:code state) d!
                                 , &unit
@@ -468,7 +470,7 @@
           :schema $ quote $ Fn Dynamic
             Fn $ -> String
             Fn String
-              Fn Enum $ -> Unit
+              Fn AnyEnum $ -> Unit
               -> Unit
             -> gen-code.core/GenCodePluginData
             :features :js-ffi
@@ -502,7 +504,7 @@
                   (:some action) (Option :some action)
                   (:none) (Option :none)
           :examples $ []
-          :schema $ quote $ Fn Enum
+          :schema $ quote $ Fn AnyEnum
             -> $ Option gen-code.schema/ResolvedOp
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
@@ -517,7 +519,7 @@
               (:none) (eprintln "|Unknown operation:" op)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Enum (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn gen-code.schema/GenCodeOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -525,14 +527,16 @@
             match
               browser/storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
-                dispatch! $ :: :hydrate-storage $ schema/clear-interrupted-loading
+                dispatch! $ gen-code.schema/GenCodeOp :hydrate-storage $ schema/clear-interrupted-loading
                   schema/normalize-store-data $ parse-cirru-edn raw
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev)
               hint-fn $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
               render-app!
-            listen-devtools! |k dispatch!
+            listen-devtools-toggle! |k $ fn ()
+              reset! *reel $ next-reel $ reel.typed/Control :toggle
+              , &unit
             browser/add-event-listener! |beforeunload $ fn (event)
               hint-fn $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
               persist-storage!
@@ -587,9 +591,7 @@
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel
-              fn (op)
-                hint-fn $ Fn Dynamic $ -> Unit
-                if (enum? op) (dispatch! op) (raise |[gen-code/render]-expected-Enum-operation)
+              , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -599,7 +601,7 @@
             gen-code.comp.container :refer $ comp-container
             gen-code.updater :refer $ updater
             gen-code.schema :as schema
-            reel.util :refer $ listen-devtools!
+            reel.util :refer $ listen-devtools-toggle!
             gen-code.config :as config
             |bottom-tip :default hud!
             reel.typed :as typed
@@ -609,10 +611,6 @@
             |./calcit.build-errors.mjs :default build-errors
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口的 Enum 事件合同，保留原 Reel 和业务事件解码；代表值不发送。")
-          :code $ quote $ def DispatchOp (:: :unhandled)
-          :examples $ []
-          :schema $ quote Enum
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
             :states (List Dynamic) Dynamic
@@ -680,8 +678,8 @@
                 _ $ Option :none
               fn (_) (Option :none)
           :examples $ []
-          :schema $ quote $ Fn Enum
-            -> $ calcit.core/Option gen-code.schema/GenCodeOp
+          :schema $ quote $ Fn AnyEnum
+            -> $ Option gen-code.schema/GenCodeOp
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
