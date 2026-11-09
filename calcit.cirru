@@ -160,67 +160,62 @@
           :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
           :schema $ quote Trait
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn call-genai-msg! (variant cursor state prompt-text d! *text)
-            hint-fn $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
-              Fn AnyEnum $ -> Unit
+          :code $ quote $ defn call-genai-msg! (variant prompt-text emit-patch! *text)
+            hint-fn $ Fn Tag String
+              Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
               Ref String
               -> Unit
               :features :js-ffi
               :async
+            when
+              .none? $ deref *ai-chat
+              initialize-chat! variant
+            match (deref *abort-control)
+              (:some abort)
+                do (js/console.warn "|Aborting prev") (.!abort abort)
+              (:none) &unit
+            emit-patch! $ {} (:answer |) (:loading? true)
             let
-                emit-patch! $ fn (patch)
-                  hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
-                  d! $ :: :states-merge cursor state patch
-                  , &unit
-              when
-                .none? $ deref *ai-chat
-                initialize-chat! variant
-              match (deref *abort-control)
-                (:some abort)
-                  do (js/console.warn "|Aborting prev") (.!abort abort)
-                (:none) &unit
-              emit-patch! $ {} (:answer |) (:loading? true)
-              let
-                  sdk-result $ js-await $ send-genai-stream!
-                    .unwrap $ deref *ai-chat
-                    , prompt-text
-                js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
-                  hint-fn $ Fn (Option JsObject) (-> Unit) (:features :js-ffi)
-                  match chunk-option
-                    (:some chunk)
-                      match
-                        js-nullish->option $ read-genai-chunk chunk
-                        (:some t)
-                          do (swap! *text str t)
-                            emit-patch! $ {}
-                              :answer $ deref *text
-                              :loading? true
-                              :done? false
-                            , &unit
-                        (:none)
-                          do (js/console.log "|GenAI chunk has no text") &unit
-                    (:none) &unit
-                  emit-patch! $ {}
-                    :answer $ deref *text
-                    :loading? true
-                    :done? false
-                  , &unit
+                sdk-result $ js-await $ send-genai-stream!
+                  .unwrap $ deref *ai-chat
+                  , prompt-text
+              js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
+                hint-fn $ Fn (Option JsObject) (-> Unit) (:features :js-ffi)
+                match chunk-option
+                  (:some chunk)
+                    match
+                      js-nullish->option $ read-genai-chunk chunk
+                      (:some t)
+                        do (swap! *text str t)
+                          emit-patch! $ {}
+                            :answer $ deref *text
+                            :loading? true
+                            :done? false
+                          , &unit
+                      (:none)
+                        do (js/console.log "|GenAI chunk has no text") &unit
+                  (:none) &unit
                 emit-patch! $ {}
                   :answer $ deref *text
-                  :loading? false
-                  :done? true
-                  :code $ try
-                    decode-map-as
-                      writeCirruCode $ js-array $ js/JSON.parse (deref *text)
-                      , String
-                    fn (err)
-                      hint-fn $ Fn Dynamic (-> String) (:features :js-ffi)
-                      js/console.error err
-                      str err
-              , &unit
+                  :loading? true
+                  :done? false
+                , &unit
+              emit-patch! $ {}
+                :answer $ deref *text
+                :loading? false
+                :done? true
+                :code $ try
+                  decode-map-as
+                    writeCirruCode $ js-array $ js/JSON.parse (deref *text)
+                    , String
+                  fn (err)
+                    hint-fn $ Fn Dynamic (-> String) (:features :js-ffi)
+                    js/console.error err
+                    str err
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
-            Fn AnyEnum $ -> Unit
+          :schema $ quote $ Fn Tag String
+            Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
             Ref String
             -> Unit
             :features :js-ffi
@@ -353,6 +348,14 @@
                     if (struct? value) (&struct:to-map value) value
                   , 'gen-code.schema/GenCodeState
                 loading? $ :loading? state
+                patch-dispatch $ fn (request-state dispatch!)
+                  hint-fn $ Fn gen-code.schema/GenCodeState
+                    Fn AnyEnum $ -> Unit
+                    -> $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+                  fn (patch)
+                    hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+                    dispatch! $ :: :states-merge cursor request-state patch
+                    , &unit
                 render-node $ fn ()
                   hint-fn $ Fn $ -> respo.schema/Element
                   div
@@ -391,7 +394,7 @@
                               let
                                   *text $ ref |
                                 try
-                                  js-await $ call-genai-msg! :gemini cursor state (:query state) d! *text
+                                  js-await $ call-genai-msg! :gemini (:query state) (patch-dispatch state d!) *text
                                   fn (e)
                                     hint-fn $ Fn Dynamic $ -> Dynamic
                                     d! $ :: :states-merge cursor state $ {}
@@ -440,7 +443,9 @@
                                 let
                                     *text $ ref |
                                   try
-                                    js-await $ call-genai-msg! :gemini cursor (assoc state :code |) (:query state) d! *text
+                                    js-await $ call-genai-msg! :gemini (:query state)
+                                      patch-dispatch (assoc state :code |) d!
+                                      , *text
                                     fn (e)
                                       hint-fn $ Fn Dynamic $ -> Dynamic
                                       d! $ :: :states-merge cursor state $ {}
