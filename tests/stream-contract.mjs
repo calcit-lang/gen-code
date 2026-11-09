@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { registerHooks } from "node:module";
 
-import { invoke_method, ref } from "@calcit/procs";
+import { invoke_method } from "@calcit/procs";
 import { consume_genai_stream_$x_ } from "../js-out/gen-code.stream.mjs";
 import * as c from "../js-out/calcit.core.mjs";
-import { _$s_abort_control, _$s_ai_chat, call_genai_msg_$x_, initial_state, new_abort_controller_$x_ } from "../js-out/gen-code.core.mjs";
+import { _$s_abort_control, _$s_ai_chat, initial_state, new_abort_controller_$x_, use_gen_code } from "../js-out/gen-code.core.mjs";
 
 const unwrapChunk = (chunkOption) =>
   invoke_method("none?", chunkOption) ? null : invoke_method("unwrap", chunkOption);
@@ -105,10 +105,30 @@ const fakeChat = {
     yield { text: '["println","|offline"]' };
   },
 };
+function findRunButton(element) {
+  if (field(element, "attrs").toArray().some(
+    attr => attr.get(0) === c.to_tag("inner-text") && attr.get(1) === "Run",
+  )) return element;
+  for (const pair of field(element, "children").toArray()) {
+    const node = field(pair, "node");
+    if (invoke_method("none?", node)) continue;
+    const child = invoke_method("unwrap", node);
+    if (child.tag === c.to_tag("element")) {
+      const button = findRunButton(child.extra[0]);
+      if (button) return button;
+    }
+  }
+}
+const plugin = use_gen_code(
+  c._$n__$M_(c.to_tag("cursor"), cursor, c.to_tag("data"), initial_state),
+  () => "",
+  () => {},
+);
+const run = findRunButton(invoke_method("render", plugin));
+assert.ok(run);
 try {
   c.reset_$x_(_$s_ai_chat, c._PCT__$o__$o_(c.Option, c.to_tag("some"), fakeChat));
-  await call_genai_msg_$x_(c.to_tag("gemini"), cursor, initial_state, "offline fixture",
-    op => patches.push(op), ref(""));
+  await field(field(run, "event"), "click")(null, op => { patches.push(op); });
   await new Promise(resolve => setTimeout(resolve, 0));
 } finally {
   c.reset_$x_(_$s_ai_chat, originalChat);
@@ -117,8 +137,8 @@ try {
 assert.ok(patches.length > 0);
 for (const op of patches) {
   assert.equal(op.tag, c.to_tag("states-merge"));
-  assert.equal(op.extra[0], cursor);
-  assert.equal(op.extra[1], initial_state);
+  assert.ok(c._$n__$e_(op.extra[0], cursor));
+  assert.ok(c._$n__$e_(op.extra[1], initial_state));
 }
 const initialPatch = patches[0].extra[2];
 assert.equal(field(initialPatch, "answer"), "");
