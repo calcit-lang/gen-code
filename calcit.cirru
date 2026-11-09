@@ -11,7 +11,7 @@
     'gen-code.comp.container $ %{} 'FileEntry
       :defs $ {} $ 'comp-container
         %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control)
             let
                 store $ :store reel
                 states $ :states store
@@ -31,10 +31,12 @@
                   {} $ :style $ {} (:width 800)
                   .render plugin-gen-code
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
+                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
                   Option :none
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.comp.container
           :require (respo-ui.css :as css)
@@ -165,52 +167,57 @@
               -> Unit
               :features :js-ffi
               :async
-            when
-              .none? $ deref *ai-chat
-              initialize-chat! variant
-            match (deref *abort-control)
-              (:some abort)
-                do (js/console.warn "|Aborting prev") (.!abort abort)
-              (:none) &unit
-            js/setTimeout $ fn ()
-              hint-fn $ Fn (-> Unit) (:features :js-ffi)
-              d! $ :: :states-merge cursor state $ {} (:answer |) (:loading? true)
             let
-                sdk-result $ js-await $ send-genai-stream!
-                  .unwrap $ deref *ai-chat
-                  , prompt-text
-              js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
-                hint-fn $ Fn (Option JsObject) (-> Unit) (:features :js-ffi)
-                match chunk-option
-                  (:some chunk)
-                    match
-                      js-nullish->option $ read-genai-chunk chunk
-                      (:some t)
-                        do (swap! *text str t)
-                          d! $ :: :states-merge cursor state $ {}
-                            :answer $ deref *text
-                            :loading? true
-                            :done? false
-                          , &unit
-                      (:none)
-                        do (js/console.log "|GenAI chunk has no text") &unit
-                  (:none) &unit
-                d! $ :: :states-merge cursor state $ {}
+                emit-patch! $ fn (patch)
+                  hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+                  d! $ :: :states-merge cursor state patch
+                  , &unit
+              when
+                .none? $ deref *ai-chat
+                initialize-chat! variant
+              match (deref *abort-control)
+                (:some abort)
+                  do (js/console.warn "|Aborting prev") (.!abort abort)
+                (:none) &unit
+              emit-patch! $ {} (:answer |) (:loading? true)
+              let
+                  sdk-result $ js-await $ send-genai-stream!
+                    .unwrap $ deref *ai-chat
+                    , prompt-text
+                js-await $ consume-genai-stream! sdk-result $ fn (chunk-option)
+                  hint-fn $ Fn (Option JsObject) (-> Unit) (:features :js-ffi)
+                  match chunk-option
+                    (:some chunk)
+                      match
+                        js-nullish->option $ read-genai-chunk chunk
+                        (:some t)
+                          do (swap! *text str t)
+                            emit-patch! $ {}
+                              :answer $ deref *text
+                              :loading? true
+                              :done? false
+                            , &unit
+                        (:none)
+                          do (js/console.log "|GenAI chunk has no text") &unit
+                    (:none) &unit
+                  emit-patch! $ {}
+                    :answer $ deref *text
+                    :loading? true
+                    :done? false
+                  , &unit
+                emit-patch! $ {}
                   :answer $ deref *text
-                  :loading? true
-                  :done? false
-                , &unit
-              d! $ :: :states-merge cursor state $ {}
-                :answer $ deref *text
-                :loading? false
-                :done? true
-                :code $ try
-                  writeCirruCode $ js-array $ js/JSON.parse (deref *text)
-                  fn (err)
-                    hint-fn $ Fn Dynamic (-> String) (:features :js-ffi)
-                    js/console.error err
-                    str err
-            , &unit
+                  :loading? false
+                  :done? true
+                  :code $ try
+                    decode-map-as
+                      writeCirruCode $ js-array $ js/JSON.parse (deref *text)
+                      , String
+                    fn (err)
+                      hint-fn $ Fn Dynamic (-> String) (:features :js-ffi)
+                      js/console.error err
+                      str err
+              , &unit
           :examples $ []
           :schema $ quote $ Fn Tag (List Tag) gen-code.schema/GenCodeState String
             Fn AnyEnum $ -> Unit
@@ -495,31 +502,27 @@
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
           :schema $ quote $ Ref (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData)
-        'decode-dispatch $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn decode-dispatch (op)
-            match (typed/decode-control op)
-              (:some control) (Option :some control)
-              (:none)
-                match (schema/decode-gen-code-op op)
-                  (:some action) (Option :some action)
-                  (:none) (Option :none)
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum
-            -> $ Option gen-code.schema/ResolvedOp
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
               and config/dev? $ match op
-                (:states ignored-cursor ignored-state) false
+                (:states _ _) false
                 _ true
               js/console.log |Dispatch: op
-            match (decode-dispatch op)
-              (:some resolved)
-                reset! *reel $ next-reel resolved
-              (:none) (eprintln "|Unknown operation:" op)
+            reset! *reel $ typed/record-op updater @*reel op (generate-id!)
+              :timestamp $ host/date-now-snapshot
             , &unit
           :examples $ []
           :schema $ quote $ Fn gen-code.schema/GenCodeOp (-> Unit) (:features :js-ffi)
+        'dispatch-render-event! $ %{} 'CodeEntry
+          :doc "|Adapts the plugin's legacy event shape at the Demo render entry."
+          :code $ quote $ defn dispatch-render-event! (op)
+            match (schema/decode-gen-code-op op)
+              (:some action) (dispatch! action)
+              (:none) (eprintln "|Unknown operation:" op)
+            , &unit
+          :examples $ []
+          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -534,9 +537,7 @@
             add-watch! *reel :changes $ fn (reel prev)
               hint-fn $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
               render-app!
-            listen-devtools-toggle! |k $ fn ()
-              reset! *reel $ next-reel $ reel.typed/Control :toggle
-              , &unit
+            listen-devtools! |k on-control!
             browser/add-event-listener! |beforeunload $ fn (event)
               hint-fn $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
               persist-storage!
@@ -554,17 +555,12 @@
             .unwrap $ dom/query-selector |.app
           :examples $ []
           :schema $ quote respo.dom/DomElement
-        'next-reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn next-reel (op)
-            match op
-              (reel.typed/Control control) (typed/apply-control updater @*reel control)
-              (gen-code.schema/GenCodeOp action)
-                typed/record-op updater @*reel action (generate-id!)
-                  :timestamp $ host/date-now-snapshot
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control)
+            reset! *reel $ typed/apply-control updater @*reel control
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn gen-code.schema/ResolvedOp
-            -> $ reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData
-            :features :js-ffi
+          :schema $ quote $ Fn reel.typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -590,8 +586,8 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
-              fn () $ comp-container @*reel
-              , dispatch!
+              fn () $ comp-container @*reel on-control!
+              , dispatch-render-event!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -601,7 +597,7 @@
             gen-code.comp.container :refer $ comp-container
             gen-code.updater :refer $ updater
             gen-code.schema :as schema
-            reel.util :refer $ listen-devtools-toggle!
+            reel.util :refer $ listen-devtools!
             gen-code.config :as config
             |bottom-tip :default hud!
             reel.typed :as typed
@@ -617,7 +613,7 @@
           :schema $ quote UnionDef
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
-            :states (List Dynamic) Dynamic
+            :states (List respo.schema/CoordKey) Dynamic
             :states-merge (List Tag) gen-code.schema/GenCodeState $ Map Tag gen-code.schema/GenCodeFieldValue
             :hydrate-storage gen-code.types/StoreData
           :examples $ []
@@ -626,10 +622,6 @@
           :code $ quote $ defstruct GenCodeState (:answer String) (:loading? Bool) (:done? Bool) (:query String) (:code String)
           :examples $ []
           :schema $ quote StructDef
-        'ResolvedOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defunion ResolvedOp gen-code.schema/GenCodeOp reel.typed/Control
-          :examples $ []
-          :schema $ quote UnionDef
         'clear-interrupted-loading $ %{} 'CodeEntry
           :doc "|Demo 启动恢复时清除无对应运行中请求的 loading 标志，保留草稿、结果和其他状态；不在正常渲染时调用。"
           :code $ quote $ defn clear-interrupted-loading (store-data)
@@ -664,7 +656,7 @@
               match op
                 (:states cursor state)
                   Option :some $ GenCodeOp :states
-                    decode-map-as cursor $ List Dynamic
+                    decode-map-as cursor $ List respo.schema/CoordKey
                     , state
                 (:states-merge cursor state changes)
                   if
