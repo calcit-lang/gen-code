@@ -148,7 +148,7 @@
           :code $ quote $ defenum GenCodePluginData0
             :plugin
               Fn $ -> respo.schema/Element
-              List Tag
+              List respo.schema/CoordKey
               , gen-code.schema/GenCodeState
           :examples $ []
           :schema $ quote EnumDef
@@ -341,21 +341,27 @@
             let
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
-                  List Tag
+                  List respo.schema/CoordKey
                 state $ decode-map-as
                   let
                       value $ schema/read-open-field-or states :data initial-state
                     if (struct? value) (&struct:to-map value) value
                   , 'gen-code.schema/GenCodeState
                 loading? $ :loading? state
+                emit-patch! $ fn (request-state dispatch! patch)
+                  hint-fn $ Fn gen-code.schema/GenCodeState
+                    Fn AnyEnum $ -> Unit
+                    Map Tag gen-code.schema/GenCodeFieldValue
+                    -> Unit
+                  dispatch! $ :: :states-merge cursor request-state patch
+                  , &unit
                 patch-dispatch $ fn (request-state dispatch!)
                   hint-fn $ Fn gen-code.schema/GenCodeState
                     Fn AnyEnum $ -> Unit
                     -> $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
                   fn (patch)
                     hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
-                    dispatch! $ :: :states-merge cursor request-state patch
-                    , &unit
+                    emit-patch! request-state dispatch! patch
                 render-node $ fn ()
                   hint-fn $ Fn $ -> respo.schema/Element
                   div
@@ -397,7 +403,7 @@
                                   js-await $ call-genai-msg! :gemini (:query state) (patch-dispatch state d!) *text
                                   fn (e)
                                     hint-fn $ Fn Dynamic $ -> Dynamic
-                                    d! $ :: :states-merge cursor state $ {}
+                                    emit-patch! state d! $ {}
                                       :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                       :loading? false
                                       :done? true
@@ -420,7 +426,7 @@
                                 Fn AnyEnum $ -> Unit
                                 -> Unit
                               initialize-chat! :gemini
-                              d! $ :: :states-merge cursor state $ {} (:loading? false)
+                              emit-patch! state d! $ {} $ :loading? false
                               , &unit
                           if loading?
                             button $ {} (:class-name css/button) (:inner-text |Abort)
@@ -448,7 +454,7 @@
                                       , *text
                                     fn (e)
                                       hint-fn $ Fn Dynamic $ -> Dynamic
-                                      d! $ :: :states-merge cursor state $ {}
+                                      emit-patch! state d! $ {}
                                         :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                         :loading? false
                                         :done? true
@@ -619,7 +625,7 @@
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
             :states (List respo.schema/CoordKey) Dynamic
-            :states-merge (List Tag) gen-code.schema/GenCodeState $ Map Tag gen-code.schema/GenCodeFieldValue
+            :states-merge (List respo.schema/CoordKey) gen-code.schema/GenCodeState $ Map Tag gen-code.schema/GenCodeFieldValue
             :hydrate-storage gen-code.types/StoreData
           :examples $ []
           :schema $ quote EnumDef
@@ -667,7 +673,7 @@
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
                     Option :some $ GenCodeOp :states-merge
-                      decode-map-as cursor $ List Tag
+                      decode-map-as cursor $ List respo.schema/CoordKey
                       assert-type state 'gen-code.schema/GenCodeState
                       decode-map-as changes $ Map Tag gen-code.schema/GenCodeFieldValue
                     Option :none
