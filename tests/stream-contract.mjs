@@ -120,7 +120,11 @@ for (const op of patches) {
   assert.equal(op.extra[0], cursor);
   assert.equal(op.extra[1], initial_state);
 }
-const finalPatch = patches.find(op => op.extra[2].get(c.to_tag("done?")) === true).extra[2];
+const initialPatch = patches[0].extra[2];
+assert.equal(field(initialPatch, "answer"), "");
+assert.equal(field(initialPatch, "loading?"), true);
+const finalPatch = patches.at(-1).extra[2];
+assert.equal(field(finalPatch, "done?"), true);
 assert.equal(field(finalPatch, "loading?"), false);
 assert.match(field(finalPatch, "code"), /println.*offline/);
 

@@ -179,9 +179,7 @@
                 (:some abort)
                   do (js/console.warn "|Aborting prev") (.!abort abort)
                 (:none) &unit
-              js/setTimeout $ fn ()
-                hint-fn $ Fn (-> Unit) (:features :js-ffi)
-                emit-patch! $ {} (:answer |) (:loading? true)
+              emit-patch! $ {} (:answer |) (:loading? true)
               let
                   sdk-result $ js-await $ send-genai-stream!
                     .unwrap $ deref *ai-chat
