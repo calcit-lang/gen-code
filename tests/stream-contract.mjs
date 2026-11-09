@@ -91,12 +91,14 @@ const uiImport = registerHooks({ resolve(specifier, context, nextResolve) {
     ? "virtual-dom/create-element.js" : specifier, context);
 } });
 const { dispatch_render_event_$x_, on_control_$x_, _$s_reel } = await import("../js-out/gen-code.main.mjs");
+const { GenCodeOp, decode_gen_code_op } = await import("../js-out/gen-code.schema.mjs");
 const { Control } = await import("../js-out/reel.typed.mjs");
 uiImport.deregister();
 delete globalThis.document;
 const field = (value, name) => invoke_method("unwrap", c.get(value, c.to_tag(name)));
 const before = c.deref(_$s_reel);
-const cursor = c._$L_(c.to_tag("drafter"));
+const cursorKeys = [c.to_tag("drafter"), "nested", 7];
+const cursor = c._$L_(...cursorKeys);
 const originalChat = c.deref(_$s_ai_chat);
 const originalAbort = c.deref(_$s_abort_control);
 const patches = [];
@@ -149,16 +151,23 @@ assert.equal(field(finalPatch, "loading?"), false);
 assert.match(field(finalPatch, "code"), /println.*offline/);
 
 const changes = c._$n__$M_(c.to_tag("query"), "dispatch 合成提示 🐈", c.to_tag("loading?"), true);
+assert.ok(invoke_method("none?", decode_gen_code_op(
+  c._$o__$o_(c.to_tag("states-merge"), c._$L_(true), initial_state, changes),
+)));
 dispatch_render_event_$x_(c._$o__$o_(c.to_tag("states-merge"), cursor, initial_state, changes));
 const recorded = c.deref(_$s_reel);
 const records = field(recorded, "records");
 assert.equal(invoke_method("len", records), invoke_method("len", field(before, "records")) + 1);
-const state = field(field(field(field(recorded, "store"), "states"), "drafter"), "data");
+const nested = cursorKeys.reduce(
+  (states, key) => invoke_method("unwrap", c.get(states, key)),
+  field(field(recorded, "store"), "states"),
+);
+const state = field(nested, "data");
 assert.equal(field(state, "query"), "dispatch 合成提示 🐈");
 assert.equal(field(state, "loading?"), true);
 const record = invoke_method("unwrap", c.nth(records, invoke_method("len", records) - 1));
 const expectedOp = c._PCT__$o__$o_(
-  (await import("../js-out/gen-code.schema.mjs")).GenCodeOp,
+  GenCodeOp,
   c.to_tag("states-merge"), cursor, initial_state, changes,
 );
 assert.ok(c._$n__$e_(field(record, "op"), expectedOp));
