@@ -76,7 +76,7 @@
                 -> Unit
               match self $
                 :plugin r cursor state
-                d! $ :: :states cursor initial-state
+                d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor initial-state
           :examples $ []
           :schema $ quote Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
@@ -353,7 +353,7 @@
                     Fn AnyEnum $ -> Unit
                     Map Tag gen-code.schema/GenCodeFieldValue
                     -> Unit
-                  dispatch! $ :: :states-merge cursor request-state patch
+                  dispatch! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states-merge cursor request-state patch
                   , &unit
                 patch-dispatch $ fn (request-state dispatch!)
                   hint-fn $ Fn gen-code.schema/GenCodeState
@@ -379,8 +379,8 @@
                           hint-fn $ Fn respo.schema/RespoEvent
                             Fn AnyEnum $ -> Unit
                             -> Unit
-                          d! $ :: :states cursor $ assoc state :query
-                            decode-map-as (schema/read-open-field-or e :value |) 'String
+                          d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor
+                            assoc state :query $ decode-map-as (schema/read-open-field-or e :value |) 'String
                           , &unit
                         :on-keydown $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
@@ -415,8 +415,8 @@
                             hint-fn $ Fn respo.schema/RespoEvent
                               Fn AnyEnum $ -> Unit
                               -> Unit
-                            d! $ :: :states cursor $ assoc state :query
-                              str (:query state) &newline &newline $ trim $ get-hint-code
+                            d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor
+                              assoc state :query $ str (:query state) &newline &newline $ trim (get-hint-code)
                             , &unit
                         div
                           {} $ :class-name $ str-spaced css/row-middle css/gap8
@@ -618,13 +618,17 @@
             |./calcit.build-errors.mjs :default build-errors
     'gen-code.schema $ %{} 'FileEntry
       :defs $ {}
+        'GenCodeDraftValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion GenCodeDraftValue gen-code.schema/GenCodeState (Map Tag gen-code.schema/GenCodeFieldValue)
+          :examples $ []
+          :schema $ quote UnionDef
         'GenCodeFieldValue $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defunion GenCodeFieldValue String Bool
           :examples $ []
           :schema $ quote UnionDef
         'GenCodeOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodeOp
-            :states (List respo.schema/CoordKey) Dynamic
+            :states (List respo.schema/CoordKey) gen-code.schema/GenCodeDraftValue
             :states-merge (List respo.schema/CoordKey) gen-code.schema/GenCodeState $ Map Tag gen-code.schema/GenCodeFieldValue
             :hydrate-storage gen-code.types/StoreData
           :examples $ []
@@ -668,7 +672,7 @@
                 (:states cursor state)
                   Option :some $ GenCodeOp :states
                     decode-map-as cursor $ List respo.schema/CoordKey
-                    , state
+                    decode-map-as state 'gen-code.schema/GenCodeDraftValue
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
@@ -724,6 +728,12 @@
                 assert= store $ normalize-store-data legacy
                 assert= store $ normalize-store-data store
                 assert= nonempty $ normalize-store-data $ parse-cirru-edn (format-cirru-edn nonempty)
+        'plugin-op-to-wire $ %{} 'CodeEntry
+          :doc "|Preserve anonymous events for hosts that use their own dispatch definition."
+          :code $ quote $ defn plugin-op-to-wire (op)
+            :: (&enum:nth op 0) & $ &enum:params op
+          :examples $ []
+          :schema $ quote $ Fn gen-code.schema/GenCodeOp (-> AnyEnum) (:open :reflect)
         'read-open-field-or $ %{} 'CodeEntry
           :doc "|Read an open Map/Struct field; missing and nil values use the fallback, while false and Option payloads remain unchanged."
           :code $ quote $ defn read-open-field-or (value field fallback)
