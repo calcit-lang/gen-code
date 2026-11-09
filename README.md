@@ -2,9 +2,9 @@
 
 Demo: https://repo.calcit-lang.org/gen-code/
 
-## 0.0.24 候选
+## 0.0.25 候选
 
-使用者需统一 Calcit CLI 和 `@calcit/procs` **0.38.0**，配对正式
+使用者需统一 Calcit CLI 和 `@calcit/procs` **0.40.0**，配对正式
 UI **0.15.2**、Respo **0.19.5**、JS-FFI **0.2.13** 和传递依赖 Router **0.12.2**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同。
 
