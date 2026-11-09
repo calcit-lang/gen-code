@@ -138,6 +138,7 @@ try {
 }
 assert.ok(patches.length > 0);
 for (const op of patches) {
+  assert.ok(invoke_method("none?", c.enum_definition(op)));
   assert.equal(op.tag, c.to_tag("states-merge"));
   assert.ok(c._$n__$e_(op.extra[0], cursor));
   assert.ok(c._$n__$e_(op.extra[1], initial_state));
@@ -151,6 +152,15 @@ assert.equal(field(finalPatch, "loading?"), false);
 assert.match(field(finalPatch, "code"), /println.*offline/);
 
 const changes = c._$n__$M_(c.to_tag("query"), "dispatch 合成提示 🐈", c.to_tag("loading?"), true);
+const legacyDraft = c._$n__$M_(c.to_tag("query"), "旧草稿", c.to_tag("loading?"), false);
+const decodedDraft = invoke_method("unwrap", decode_gen_code_op(
+  c._$o__$o_(c.to_tag("states"), cursor, legacyDraft),
+));
+assert.equal(invoke_method("unwrap", c.enum_definition(decodedDraft)), GenCodeOp);
+assert.ok(c._$n__$e_(decodedDraft.extra[1], legacyDraft));
+assert.ok(invoke_method("none?", decode_gen_code_op(
+  c._$o__$o_(c.to_tag("states"), cursor, 42),
+)));
 assert.ok(invoke_method("none?", decode_gen_code_op(
   c._$o__$o_(c.to_tag("states-merge"), c._$L_(true), initial_state, changes),
 )));
