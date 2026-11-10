@@ -402,7 +402,6 @@
                                 try
                                   js-await $ call-genai-msg! :gemini (:query state) (patch-dispatch state d!) *text
                                   fn (e)
-                                    hint-fn $ Fn Dynamic $ -> Dynamic
                                     emit-patch! state d! $ {}
                                       :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                       :loading? false
@@ -453,7 +452,6 @@
                                       patch-dispatch (assoc state :code |) d!
                                       , *text
                                     fn (e)
-                                      hint-fn $ Fn Dynamic $ -> Dynamic
                                       emit-patch! state d! $ {}
                                         :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                         :loading? false
@@ -492,6 +490,7 @@
               -> Unit
             -> gen-code.core/GenCodePluginData
             :features :js-ffi
+            :open :host
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.core
           :require
@@ -691,6 +690,7 @@
           :examples $ []
           :schema $ quote $ Fn AnyEnum
             -> $ Option gen-code.schema/GenCodeOp
+            :open :decode
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
