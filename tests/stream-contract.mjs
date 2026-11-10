@@ -103,6 +103,7 @@ const cursor = c._$L_(...cursorKeys);
 const originalChat = c.deref(_$s_ai_chat);
 const originalAbort = c.deref(_$s_abort_control);
 const patches = [];
+const keyboardPatches = [];
 const fakeChat = {
   async *sendMessageStream() {
     yield { text: '["println","|offline"]' };
@@ -136,7 +137,6 @@ const enter = { type: "keydown", key: "Enter", code: "Enter", keyCode: 13 };
 try {
   c.reset_$x_(_$s_ai_chat, c._PCT__$o__$o_(c.Option, c.to_tag("some"), fakeChat));
   await field(field(run, "event"), "click")(null, op => { patches.push(op); });
-  const keyboardPatches = [];
   const emit = op => { keyboardPatches.push(op); };
   await keydown(event__GT_edn({ ...enter, metaKey: false }), emit);
   assert.deepEqual(keyboardPatches, []);
@@ -148,7 +148,7 @@ try {
   c.reset_$x_(_$s_abort_control, originalAbort);
 }
 assert.ok(patches.length > 0);
-for (const op of patches) {
+for (const op of [...patches, ...keyboardPatches]) {
   assert.ok(invoke_method("none?", c.enum_definition(op)));
   assert.equal(op.tag, c.to_tag("states-merge"));
   assert.ok(c._$n__$e_(op.extra[0], cursor));
