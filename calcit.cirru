@@ -348,20 +348,21 @@
                     if (struct? value) (&struct:to-map value) value
                   , 'gen-code.schema/GenCodeState
                 loading? $ :loading? state
-                emit-patch! $ fn (request-state dispatch! patch)
-                  hint-fn $ Fn gen-code.schema/GenCodeState
+                wire-dispatch $ fn (dispatch!)
+                  hint-fn $ Fn
                     Fn AnyEnum $ -> Unit
-                    Map Tag gen-code.schema/GenCodeFieldValue
-                    -> Unit
-                  dispatch! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states-merge cursor request-state patch
-                  , &unit
-                patch-dispatch $ fn (request-state dispatch!)
+                    -> $ Fn gen-code.schema/GenCodeOp $ -> Unit
+                  fn (op)
+                    hint-fn $ Fn gen-code.schema/GenCodeOp $ -> Unit
+                    dispatch! $ gen-code.schema/plugin-op-to-wire op
+                    , &unit
+                patch-dispatch $ fn (request-state emit!)
                   hint-fn $ Fn gen-code.schema/GenCodeState
-                    Fn AnyEnum $ -> Unit
+                    Fn gen-code.schema/GenCodeOp $ -> Unit
                     -> $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
                   fn (patch)
                     hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
-                    emit-patch! request-state dispatch! patch
+                    emit! $ gen-code.schema/GenCodeOp :states-merge cursor request-state patch
                 render-node $ fn ()
                   hint-fn $ Fn $ -> respo.schema/Element
                   div
@@ -399,10 +400,11 @@
                               and meta? $ = 13 key-code
                               let
                                   *text $ ref |
+                                  send-patch! $ patch-dispatch state $ wire-dispatch d!
                                 try
-                                  js-await $ call-genai-msg! :gemini (:query state) (patch-dispatch state d!) *text
+                                  js-await $ call-genai-msg! :gemini (:query state) send-patch! *text
                                   fn (e)
-                                    emit-patch! state d! $ {}
+                                    send-patch! $ {}
                                       :answer $ str @*text &newline &newline $ str "|Failed to load: " e
                                       :loading? false
                                       :done? true
@@ -425,7 +427,9 @@
                                 Fn AnyEnum $ -> Unit
                                 -> Unit
                               initialize-chat! :gemini
-                              emit-patch! state d! $ {} $ :loading? false
+                              let
+                                  send-patch! $ patch-dispatch state $ wire-dispatch d!
+                                send-patch! $ {} $ :loading? false
                               , &unit
                           if loading?
                             button $ {} (:class-name css/button) (:inner-text |Abort)
@@ -447,15 +451,18 @@
                                   :async
                                 let
                                     *text $ ref |
+                                    emit! $ wire-dispatch d!
                                   try
                                     js-await $ call-genai-msg! :gemini (:query state)
-                                      patch-dispatch (assoc state :code |) d!
+                                      patch-dispatch (assoc state :code |) emit!
                                       , *text
                                     fn (e)
-                                      emit-patch! state d! $ {}
-                                        :answer $ str @*text &newline &newline $ str "|Failed to load: " e
-                                        :loading? false
-                                        :done? true
+                                      let
+                                          send-patch! $ patch-dispatch state emit!
+                                        send-patch! $ {}
+                                          :answer $ str @*text &newline &newline $ str "|Failed to load: " e
+                                          :loading? false
+                                          :done? true
                                 , &unit
                     if loading?
                       pre $ {}
