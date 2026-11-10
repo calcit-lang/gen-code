@@ -61,7 +61,21 @@ jobs:
           set -euo pipefail
           calcit calcit.cirru --check-only --all-defs
           calcit calcit.cirru fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
-          calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
+          calcit calcit.cirru analyze weak-types --only coverage --coverage-level none,partial --format json |
+            jq -e 'all(.data.definitions[];
+              .coverage == "partial" and
+              (.id == "gen-code.schema/normalize-store-data" or .id == "gen-code.schema/read-open-field-or"))'
+          calcit calcit.cirru analyze weak-types --format json |
+            jq -e '
+              .data.summary.kinds as $k |
+              .data.summary.intents.unresolved == 0 and
+              $k["code-nil"] == 0 and $k["code-dynamic"] == 0 and $k["unsafe-coerce"] <= 2 and
+              all(.data.definitions[];
+                ([.occurrences[] | select(.kind == "unsafe-coerce")] | length) <=
+                (if .id == "gen-code.core/initialize-chat!" or .id == "gen-code.stream/read-genai-chunk"
+                 then 1 else 0 end))'
+          calcit calcit.cirru analyze weak-types --only deprecated-call --summary-only --format json |
+            jq -e '.data.summary.calls == 0'
 
       - name: Test Reel state boundary
         run: calcit test --require-match

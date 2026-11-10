@@ -2,15 +2,17 @@
 
 Demo: https://repo.calcit-lang.org/gen-code/
 
-## 0.0.25 候选
+## 0.0.26 候选
 
-使用者需统一 Calcit CLI 和 `@calcit/procs` **0.40.0**，配对正式
+使用者需统一 Calcit CLI 和 `@calcit/procs` **0.41.0**，配对正式
 UI **0.15.2**、Respo **0.19.5**、JS-FFI **0.2.13** 和传递依赖 Router **0.12.2**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同。
 
 Reel **0.11.0** 是 Demo 的开发依赖。Demo 将插件事件解码为具名 `GenCodeOp`，快捷键与面板通过独立回调接收 `Control`。流式补丁通过 `GenCodeFieldValue` union 约束为字符串或布尔值，Editor 等宿主的插件回调继续接收单个原格式操作。
 内部 `call-genai-msg!` 只向回调交付补丁 Map。插件在派发边界补齐 cursor 和请求状态，生成原格式的 `:states-merge` 事件。
-验收覆盖原严格检查、质量基线、离线流式回归和构建。正式版本以通过验收后的 Git tag 为准。
+Meta+Enter 直接读取 Respo 提供的类型化键盘字段，快捷键条件与派发协议不变。
+质量检查使用 0.41.0 的 coverage、弱类型和弃用视图，继续限制两处既有 SDK 强转。
+验收覆盖完整 strict、原测试、离线快捷键与流式回归和构建。
 
 ## 历史 0.0.22 配对
 
@@ -61,7 +63,8 @@ calcit edit format
 git diff --exit-code --quiet -- calcit.cirru
 calcit --check-only --all-defs
 calcit fix --workflow strict --verify --format json
-calcit analyze quality --baseline config/calcit-quality.cirru
+calcit analyze weak-types --only coverage --summary-only
+calcit analyze weak-types --summary-only
 calcit test --require-match
 yarn build
 yarn test:stream

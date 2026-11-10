@@ -31,10 +31,10 @@
                   {} $ :style $ {} (:width 800)
                   .render plugin-gen-code
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel ({}) on-control
-                  Option :none
+                  Some $ comp-typed-reel (>> states :reel) reel ({}) on-control
+                  , None
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData)
+          :schema $ quote $ Fn (reel.typed/State schema/GenCodeOp gen-code.types/StoreData)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
       :ns $ %{} 'NsEntry (:doc |)
@@ -80,13 +80,13 @@
           :examples $ []
           :schema $ quote Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *abort-control (Option :none)
+          :code $ quote $ defref *abort-control None
           :examples $ []
-          :schema $ quote $ Ref (calcit.core/Option gen-code.core/AbortControllerHost)
+          :schema $ quote $ Ref (Option AbortControllerHost)
         '*ai-chat $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *ai-chat (Option :none)
+          :code $ quote $ defref *ai-chat None
           :examples $ []
-          :schema $ quote $ Ref (calcit.core/Option gen-code.core/GenAIChatHost)
+          :schema $ quote $ Ref (Option GenAIChatHost)
         'AbortControllerHost $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait AbortControllerHost (:signal 'JsObject)
             .abort $ Fn $ -> Unit
@@ -152,13 +152,6 @@
               , gen-code.schema/GenCodeState
           :examples $ []
           :schema $ quote EnumDef
-        'KeyboardEventHost $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ deftrait KeyboardEventHost
-            :metaKey $ JsNullish Bool
-            :keyCode $ JsNullish Number
-          :examples $ []
-          :ffi $ {} (:backend :js) (:kind :external-object) (:target :browser)
-          :schema $ quote Trait
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant prompt-text emit-patch! *text)
             hint-fn $ Fn Tag String
@@ -215,7 +208,7 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn Tag String
-            Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+            Fn (Map Tag schema/GenCodeFieldValue) (-> Unit)
             Ref String
             -> Unit
             :features :js-ffi
@@ -249,10 +242,10 @@
           :code $ quote $ def initial-state
             schema/GenCodeState :answer | :loading? false :done? false :query | :code |
           :examples $ []
-          :schema $ quote gen-code.schema/GenCodeState
+          :schema $ quote schema/GenCodeState
         'initialize-chat! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn initialize-chat! (variant)
-            reset! *ai-chat $ Option :some $ let
+            reset! *ai-chat $ Some $ let
                 model $ pick-model variant
                 doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep $ include-file! |respo.md
                 ai $ unsafe-coerce
@@ -275,20 +268,12 @@
           :code $ quote $ defn new-abort-controller! ()
             js-cast (new js/AbortController) AbortControllerHost
           :examples $ []
-          :schema $ quote $ Fn (-> gen-code.core/AbortControllerHost) (:features :js-ffi)
+          :schema $ quote $ Fn (-> AbortControllerHost) (:features :js-ffi)
         'pick-model $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn pick-model (variant)
             match variant (:gemini |gemini-2.5-flash) (:gemini-pro |gemini-2.5-pro-preview-06-05) (:gemini-pro-1.5 |gemini-1.5-pro) (:gemini-flash-lite |gemini-2.0-flash-lite) (:gemma |gemma-3-27b-it) (_ |gemini-2.5-flash)
           :examples $ []
           :schema $ quote $ Fn Tag (-> String)
-        'read-keyboard-event $ %{} 'CodeEntry
-          :doc "|Check the native keyboard host members at the open Respo event boundary; this does not prove nullable field payloads."
-          :code $ quote $ defn read-keyboard-event (event-data)
-            js-cast
-              schema/read-open-field-or event-data :event $ {}
-              , 'gen-code.core/KeyboardEventHost
-          :examples $ []
-          :schema $ quote $ Fn Dynamic (-> gen-code.core/KeyboardEventHost) (:features :js-ffi)
         'send-genai-request! $ %{} 'CodeEntry
           :doc "|The raw Gemini SDK call is kept as a leaf FFI adapter so its capability is lexical."
           :code $ quote $ defn send-genai-request! (chat prompt-text abort)
@@ -302,7 +287,7 @@
                 :abortSignal $ .-signal abort
                 :responseMimeType |application/json
           :examples $ []
-          :schema $ quote $ Fn gen-code.core/GenAIChatHost String gen-code.core/AbortControllerHost
+          :schema $ quote $ Fn GenAIChatHost String AbortControllerHost
             -> $ JsNullish JsObject
             :features :js-ffi
         'send-genai-stream! $ %{} 'CodeEntry
@@ -312,11 +297,11 @@
             let
                 abort $ new-abort-controller!
                 pending $ send-genai-request! chat prompt-text abort
-              reset! *abort-control $ Option :some abort
+              reset! *abort-control $ Some abort
               if (js-nullish? pending) (raise "|GenAI stream response is nullish")
                 js-cast (js-await pending) GenAIStreamHost
           :examples $ []
-          :schema $ quote $ Fn gen-code.core/GenAIChatHost String (-> gen-code.stream/GenAIStreamHost) (:features :js-ffi) (:async)
+          :schema $ quote $ Fn GenAIChatHost String (-> GenAIStreamHost) (:features :js-ffi) (:async)
         'sep $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def sep (str &newline &newline |----------- &newline &newline)
           :examples $ []
@@ -389,12 +374,11 @@
                             -> Unit
                             :async
                           let
-                              event $ read-keyboard-event e
                               meta? $ .unwrap-or
-                                js-nullish->option $ .-metaKey event
+                                js-nullish->option $ :meta? e
                                 , false
                               key-code $ .unwrap-or
-                                js-nullish->option $ .-keyCode event
+                                js-nullish->option $ :key-code e
                                 , -1
                             if
                               and meta? $ = 13 key-code
@@ -470,12 +454,12 @@
                         :inner-text $ :answer state
                       if
                         not $ blank? $ :code state
-                        Option :some $ div
+                        Some $ div
                           {} $ :class-name css/column
                           comp-cirru-snippet (:code state)
-                            Option :some $ %{} respo-ui.schema/PresentationOptions
-                              :class-name $ Option :some style-snippet
-                              :style $ Option :none
+                            Some $ %{} respo-ui.schema/PresentationOptions
+                              :class-name $ Some style-snippet
+                              :style None
                           space-y 8
                           div
                             {} $ :class-name css/row-parted
@@ -487,7 +471,7 @@
                                   -> Unit
                                 on-submit (:code state) d!
                                 , &unit
-                        Option :none
+                        , None
               assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
           :examples $ []
           :schema $ quote $ Fn Dynamic
@@ -495,7 +479,7 @@
             Fn String
               Fn AnyEnum $ -> Unit
               -> Unit
-            -> gen-code.core/GenCodePluginData
+            -> GenCodePluginData
             :features :js-ffi
             :open :host
       :ns $ %{} 'NsEntry (:doc |)
@@ -518,7 +502,7 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData)
+          :schema $ quote $ Ref (typed/State schema/GenCodeOp gen-code.types/StoreData)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when
@@ -530,7 +514,7 @@
               :timestamp $ host/date-now-snapshot
             , &unit
           :examples $ []
-          :schema $ quote $ Fn gen-code.schema/GenCodeOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GenCodeOp (-> Unit) (:features :js-ffi)
         'dispatch-render-event! $ %{} 'CodeEntry
           :doc "|Adapts the plugin's legacy event shape at the Demo render entry."
           :code $ quote $ defn dispatch-render-event! (op)
@@ -577,7 +561,7 @@
             reset! *reel $ typed/apply-control updater @*reel control
             , &unit
           :examples $ []
-          :schema $ quote $ Fn reel.typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -676,38 +660,38 @@
             try
               match op
                 (:states cursor state)
-                  Option :some $ GenCodeOp :states
+                  Some $ GenCodeOp :states
                     decode-map-as cursor $ List respo.schema/CoordKey
                     decode-map-as state 'gen-code.schema/GenCodeDraftValue
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
-                    Option :some $ GenCodeOp :states-merge
+                    Some $ GenCodeOp :states-merge
                       decode-map-as cursor $ List respo.schema/CoordKey
                       assert-type state 'gen-code.schema/GenCodeState
                       decode-map-as changes $ Map Tag gen-code.schema/GenCodeFieldValue
-                    Option :none
+                    , None
                 (:hydrate-storage data)
                   if
                     and (struct? data) (&struct:matches? data gen-code.types/StoreData)
-                    Option :some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
-                    Option :none
-                _ $ Option :none
-              fn (_) (Option :none)
+                    Some $ GenCodeOp :hydrate-storage $ assert-type data 'gen-code.types/StoreData
+                    , None
+                _ None
+              fn (_) None
           :examples $ []
           :schema $ quote $ Fn AnyEnum
-            -> $ Option gen-code.schema/GenCodeOp
+            -> $ Option GenCodeOp
             :open :decode
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
-                Option :some $ GenCodeOp :hydrate-storage store
+                Some $ GenCodeOp :hydrate-storage store
                 decode-gen-code-op $ :: :hydrate-storage store
             %{} 'TestEntry (:name |rejects-reel-control)
-              :code $ quote $ assert= (Option :none)
+              :code $ quote $ assert= None
                 decode-gen-code-op $ :: :reel/toggle
             %{} 'TestEntry (:name |rejects-invalid-hydration)
-              :code $ quote $ assert= (Option :none)
+              :code $ quote $ assert= None
                 decode-gen-code-op $ :: :hydrate-storage $ {}
         'normalize-store-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-store-data (data)
@@ -740,7 +724,7 @@
           :code $ quote $ defn plugin-op-to-wire (op)
             :: (&enum:nth op 0) & $ &enum:params op
           :examples $ []
-          :schema $ quote $ Fn gen-code.schema/GenCodeOp (-> AnyEnum) (:open :reflect)
+          :schema $ quote $ Fn GenCodeOp (-> AnyEnum) (:open :reflect)
         'read-open-field-or $ %{} 'CodeEntry
           :doc "|Read an open Map/Struct field; missing and nil values use the fallback, while false and Option payloads remain unchanged."
           :code $ quote $ defn read-open-field-or (value field fallback)
@@ -771,14 +755,13 @@
               assert= |fallback $ read-open-field-or
                 {} $ :data nil
                 , :data |fallback
-              assert= (Option :some false)
+              assert= (Some false)
                 read-open-field-or
-                  {} $ :data $ Option :some false
+                  {} $ :data $ Some false
                   , :data |fallback
-              assert= (Option :none)
-                read-open-field-or
-                  {} $ :data $ Option :none
-                  , :data |fallback
+              assert= None $ read-open-field-or
+                {} $ :data None
+                , :data |fallback
               , &unit
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
@@ -813,12 +796,11 @@
               hint-fn $ Fn (JsNullish JsObject) (-> Unit) (:features :js-ffi)
               match (js-nullish->option chunk)
                 (:some value)
-                  on-chunk! $ Option :some value
-                (:none)
-                  on-chunk! $ Option :none
+                  on-chunk! $ Some value
+                (:none) (on-chunk! None)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn gen-code.stream/GenAIStreamHost
+          :schema $ quote $ Fn GenAIStreamHost
             Fn (Option JsObject) (-> Unit)
             -> Unit
             :features :js-ffi
