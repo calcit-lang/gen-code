@@ -474,12 +474,13 @@
                         , None
               assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn StatesInput
             Fn $ -> String
             Fn String
               Fn AnyEnum $ -> Unit
               -> Unit
             -> GenCodePluginData
+            :generics StatesInput
             :features :js-ffi
             :open :host
       :ns $ %{} 'NsEntry (:doc |)
@@ -735,7 +736,7 @@
                   if (nil? found) fallback found
                 (:none) fallback
           :examples $ []
-          :schema $ quote $ Fn Dynamic Tag Dynamic (-> Dynamic) (:features :js-ffi)
+          :schema $ quote $ Fn Raw Tag Fallback (-> Dynamic) (:generics Raw Fallback) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |present-and-missing-store)
             :code $ quote $ let
                 expected store
@@ -818,7 +819,7 @@
     'gen-code.types $ %{} 'FileEntry
       :defs $ {} $ 'StoreData
         %{} 'CodeEntry (:doc |)
-          :code $ quote $ defstruct StoreData (:states Map)
+          :code $ quote $ defstruct StoreData (:states respo.schema/States)
           :examples $ []
           :schema $ quote StructDef
       :ns $ %{} 'NsEntry (:doc |)
