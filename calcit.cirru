@@ -155,7 +155,7 @@
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn call-genai-msg! (variant prompt-text emit-patch! *text)
             hint-fn $ Fn Tag String
-              Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+              Fn (Map Tag schema/GenCodeFieldValue) (-> Unit)
               Ref String
               -> Unit
               :features :js-ffi
@@ -277,7 +277,7 @@
         'send-genai-request! $ %{} 'CodeEntry
           :doc "|The raw Gemini SDK call is kept as a leaf FFI adapter so its capability is lexical."
           :code $ quote $ defn send-genai-request! (chat prompt-text abort)
-            hint-fn $ Fn gen-code.core/GenAIChatHost String gen-code.core/AbortControllerHost
+            hint-fn $ Fn GenAIChatHost String AbortControllerHost
               -> $ JsNullish JsObject
               :features :js-ffi
             .!sendMessageStream chat $ js-object (:message prompt-text)
@@ -293,7 +293,7 @@
         'send-genai-stream! $ %{} 'CodeEntry
           :doc "|Keep the Gemini SDK method call and browser abort signal in one typed JS adapter."
           :code $ quote $ defn send-genai-stream! (chat prompt-text)
-            hint-fn $ Fn gen-code.core/GenAIChatHost String (-> gen-code.stream/GenAIStreamHost) (:features :js-ffi) (:async)
+            hint-fn $ Fn GenAIChatHost String (-> GenAIStreamHost) (:features :js-ffi) (:async)
             let
                 abort $ new-abort-controller!
                 pending $ send-genai-request! chat prompt-text abort
@@ -336,17 +336,17 @@
                 wire-dispatch $ fn (dispatch!)
                   hint-fn $ Fn
                     Fn AnyEnum $ -> Unit
-                    -> $ Fn gen-code.schema/GenCodeOp $ -> Unit
+                    -> $ Fn schema/GenCodeOp $ -> Unit
                   fn (op)
-                    hint-fn $ Fn gen-code.schema/GenCodeOp $ -> Unit
+                    hint-fn $ Fn schema/GenCodeOp $ -> Unit
                     dispatch! $ gen-code.schema/plugin-op-to-wire op
                     , &unit
                 patch-dispatch $ fn (request-state emit!)
-                  hint-fn $ Fn gen-code.schema/GenCodeState
-                    Fn gen-code.schema/GenCodeOp $ -> Unit
-                    -> $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+                  hint-fn $ Fn schema/GenCodeState
+                    Fn schema/GenCodeOp $ -> Unit
+                    -> $ Fn (Map Tag schema/GenCodeFieldValue) (-> Unit)
                   fn (patch)
-                    hint-fn $ Fn (Map Tag gen-code.schema/GenCodeFieldValue) (-> Unit)
+                    hint-fn $ Fn (Map Tag schema/GenCodeFieldValue) (-> Unit)
                     emit! $ gen-code.schema/GenCodeOp :states-merge cursor request-state patch
                 render-node $ fn ()
                   hint-fn $ Fn $ -> respo.schema/Element
@@ -537,14 +537,14 @@
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev)
-              hint-fn $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
+              hint-fn $ Fn (typed/State schema/GenCodeOp gen-code.types/StoreData) (typed/State schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
               render-app!
             listen-devtools! |k on-control!
             browser/add-event-listener! |beforeunload $ fn (event)
-              hint-fn $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
+              hint-fn $ Fn browser/EventHost (-> Unit) (:features :js-ffi)
               persist-storage!
             browser/add-event-listener! |visibilitychange $ fn (event)
-              hint-fn $ Fn js-ffi.browser/EventHost (-> Unit) (:features :js-ffi)
+              hint-fn $ Fn browser/EventHost (-> Unit) (:features :js-ffi)
               match (browser/visibility-state)
                 (:hidden) (persist-storage!)
                 _ &unit
@@ -577,7 +577,7 @@
             if (nil? build-errors)
               do (remove-watch! *reel :changes) (clear-cache!)
                 add-watch! *reel :changes $ fn (reel prev)
-                  hint-fn $ Fn (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (reel.typed/State gen-code.schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
+                  hint-fn $ Fn (typed/State schema/GenCodeOp gen-code.types/StoreData) (typed/State schema/GenCodeOp gen-code.types/StoreData) (-> Unit)
                   render-app!
                 reset! *reel $ typed/refresh updater @*reel schema/store
                 hud! |ok~ |Ok
@@ -669,7 +669,7 @@
                     and (struct? state) (&struct:matches? state GenCodeState)
                     Some $ GenCodeOp :states-merge
                       decode-map-as cursor $ List respo.schema/CoordKey
-                      assert-type state 'gen-code.schema/GenCodeState
+                      assert-type state GenCodeState
                       decode-map-as changes $ Map Tag gen-code.schema/GenCodeFieldValue
                     , None
                 (:hydrate-storage data)
@@ -788,7 +788,7 @@
         'consume-genai-stream! $ %{} 'CodeEntry
           :doc "|Consume a host async iterator and normalize each nullish yield into Option before invoking application code."
           :code $ quote $ defn consume-genai-stream! (stream on-chunk!)
-            hint-fn $ Fn gen-code.stream/GenAIStreamHost
+            hint-fn $ Fn GenAIStreamHost
               Fn (Option JsObject) (-> Unit)
               -> Unit
               :features :js-ffi
