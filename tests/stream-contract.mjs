@@ -4,6 +4,7 @@ import { registerHooks } from "node:module";
 import { invoke_method } from "@calcit/procs";
 import { consume_genai_stream_$x_ } from "../js-out/gen-code.stream.mjs";
 import * as c from "../js-out/calcit.core.mjs";
+import { event__GT_edn } from "../js-out/respo.util.format.mjs";
 import { _$s_abort_control, _$s_ai_chat, initial_state, new_abort_controller_$x_, use_gen_code } from "../js-out/gen-code.core.mjs";
 
 const unwrapChunk = (chunkOption) =>
@@ -102,22 +103,21 @@ const cursor = c._$L_(...cursorKeys);
 const originalChat = c.deref(_$s_ai_chat);
 const originalAbort = c.deref(_$s_abort_control);
 const patches = [];
+const keyboardPatches = [];
 const fakeChat = {
   async *sendMessageStream() {
     yield { text: '["println","|offline"]' };
   },
 };
-function findRunButton(element) {
-  if (field(element, "attrs").toArray().some(
-    attr => attr.get(0) === c.to_tag("inner-text") && attr.get(1) === "Run",
-  )) return element;
+function findElement(element, matches) {
+  if (matches(element)) return element;
   for (const pair of field(element, "children").toArray()) {
     const node = field(pair, "node");
     if (invoke_method("none?", node)) continue;
     const child = invoke_method("unwrap", node);
     if (child.tag === c.to_tag("element")) {
-      const button = findRunButton(child.extra[0]);
-      if (button) return button;
+      const found = findElement(child.extra[0], matches);
+      if (found) return found;
     }
   }
 }
@@ -126,18 +126,29 @@ const plugin = use_gen_code(
   () => "",
   () => {},
 );
-const run = findRunButton(invoke_method("render", plugin));
-assert.ok(run);
+const rendered = invoke_method("render", plugin);
+const run = findElement(rendered, element => field(element, "attrs").toArray().some(
+  attr => attr.get(0) === c.to_tag("inner-text") && attr.get(1) === "Run",
+));
+const textarea = findElement(rendered, element => field(element, "name") === c.to_tag("textarea"));
+assert.ok(run && textarea);
+const keydown = field(field(textarea, "event"), "keydown");
+const enter = { type: "keydown", key: "Enter", code: "Enter", keyCode: 13 };
 try {
   c.reset_$x_(_$s_ai_chat, c._PCT__$o__$o_(c.Option, c.to_tag("some"), fakeChat));
   await field(field(run, "event"), "click")(null, op => { patches.push(op); });
+  const emit = op => { keyboardPatches.push(op); };
+  await keydown(event__GT_edn({ ...enter, metaKey: false }), emit);
+  assert.deepEqual(keyboardPatches, []);
+  await keydown(event__GT_edn({ ...enter, metaKey: true }), emit);
   await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(field(keyboardPatches.at(-1).extra[2], "code"), /println.*offline/);
 } finally {
   c.reset_$x_(_$s_ai_chat, originalChat);
   c.reset_$x_(_$s_abort_control, originalAbort);
 }
 assert.ok(patches.length > 0);
-for (const op of patches) {
+for (const op of [...patches, ...keyboardPatches]) {
   assert.ok(invoke_method("none?", c.enum_definition(op)));
   assert.equal(op.tag, c.to_tag("states-merge"));
   assert.ok(c._$n__$e_(op.extra[0], cursor));
