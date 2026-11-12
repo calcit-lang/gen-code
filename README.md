@@ -4,14 +4,14 @@ Demo: https://repo.calcit-lang.org/gen-code/
 
 ## 0.0.26 候选
 
-使用者需统一 Calcit CLI 和 `@calcit/procs` **0.41.1**，配对正式
+使用者需统一 Calcit CLI 和 `@calcit/procs` **0.42.0**，配对正式
 UI **0.15.2**、Respo **0.19.5**、JS-FFI **0.2.13** 和传递依赖 Router **0.12.2**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同。
 
 Reel **0.11.0** 是 Demo 的开发依赖。Demo 将插件事件解码为具名 `GenCodeOp`，快捷键与面板通过独立回调接收 `Control`。流式补丁通过 `GenCodeFieldValue` union 约束为字符串或布尔值，Editor 等宿主的插件回调继续接收单个原格式操作。
 内部 `call-genai-msg!` 只向回调交付补丁 Map。插件在派发边界补齐 cursor 和请求状态，生成原格式的 `:states-merge` 事件。
 Meta+Enter 直接读取 Respo 提供的类型化键盘字段，快捷键条件与派发协议不变。
-质量检查使用 0.41.1 的 coverage、弱类型和弃用视图，继续限制两处既有 SDK 强转。
+质量检查使用 0.42.0 的 coverage、弱类型和弃用视图，继续限制两处既有 SDK 强转。
 验收覆盖完整 strict、原测试、离线快捷键与流式回归和构建。
 
 ## 历史 0.0.22 配对
@@ -44,6 +44,8 @@ Respo **0.19.3**、JS-FFI **0.2.12** / Router **0.12.0**。消费者需统一精
 在 namespace 的 `:require` 中引入 `gen-code.core :refer (use-gen-code)`。调用 `use-gen-code states get-hint-code on-submit`：`states` 来自 `(>> states :drafter)`，`get-hint-code` 是无参返回 String 的函数；`on-submit` 的合同为 `Fn String (Fn Enum (-> Unit)) (-> Unit)`，接收 `(code d!)` 并返回 Unit。
 
 `use-gen-code` 返回插件，`.render` 生成界面，`.reset-state` 向传入的 dispatch 发送一个 `:: :states cursor state` 事件。提交回调接收代码字符串和 dispatch，继续遵守单事件合同。
+
+类型化宿主可用 `use-gen-code-with-dispatch` 并传入从 `GenCodeOp` 到宿主操作类型的转换函数。内置 Demo 直接派发具名事件。原 `use-gen-code` 仍为旧宿主发送匿名事件。
 
 开放 Map/Struct 字段读取如实返回 Dynamic：缺失或显式 nil 使用 fallback，false 和 Option 载荷原样保留。不能直接换为会展开 Option 的 field-or。外部同名 StoreData 仅作为数据输入，转 Map、检查 states 和嵌套状态，再重建本地类型；名称不代表身份，见 [#41](https://github.com/calcit-lang/gen-code/issues/41)。
 
