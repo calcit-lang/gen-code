@@ -40,6 +40,7 @@
           :schema $ quote $ Fn (reel.typed/State schema/GenCodeOp gen-code.types/StoreData)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :io :state
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.comp.container
           :require (respo-ui.css :as css)
@@ -214,7 +215,7 @@
             Fn (Map Tag schema/GenCodeFieldValue) (-> Unit)
             Ref String
             -> Unit
-            :features :js-ffi
+            :features :io :js-ffi :state
             :async
         'get-gemini-key! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn get-gemini-key! ()
@@ -266,7 +267,7 @@
                 , GenAIChatHost
             , &unit
           :examples $ []
-          :schema $ quote $ Fn Tag (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn Tag (-> Unit) (:features :io :js-ffi :state)
         'new-abort-controller! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-abort-controller! ()
             js-cast (new js/AbortController) AbortControllerHost
@@ -292,7 +293,7 @@
           :examples $ []
           :schema $ quote $ Fn GenAIChatHost String AbortControllerHost
             -> $ JsNullish JsObject
-            :features :js-ffi
+            :features :io :js-ffi
         'send-genai-stream! $ %{} 'CodeEntry
           :doc "|Keep the Gemini SDK method call and browser abort signal in one typed JS adapter."
           :code $ quote $ defn send-genai-stream! (chat prompt-text)
@@ -304,7 +305,7 @@
               if (js-nullish? pending) (raise "|GenAI stream response is nullish")
                 js-cast (js-await pending) GenAIStreamHost
           :examples $ []
-          :schema $ quote $ Fn GenAIChatHost String (-> GenAIStreamHost) (:features :js-ffi) (:async)
+          :schema $ quote $ Fn GenAIChatHost String (-> GenAIStreamHost) (:features :io :js-ffi :state) (:async)
         'sep $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def sep (str &newline &newline |----------- &newline &newline)
           :examples $ []
@@ -334,7 +335,7 @@
               -> Unit
             -> GenCodePluginData
             :generics StatesInput
-            :features :js-ffi
+            :features :io :js-ffi :state
             :open :host
         'use-gen-code-with-dispatch $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-gen-code-with-dispatch (states get-hint-code on-submit encode-op)
@@ -497,7 +498,7 @@
             Fn schema/GenCodeOp $ -> HostOp
             -> GenCodePluginData
             :generics StatesInput HostOp
-            :features :js-ffi
+            :features :io :js-ffi :state
             :open :host
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.core
@@ -531,7 +532,7 @@
               :timestamp $ host/date-now-snapshot
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/GenCodeOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GenCodeOp (-> Unit) (:features :io :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -558,7 +559,7 @@
             js/setInterval persist-storage! 60000
             println "|App started."
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target
             .unwrap $ dom/query-selector |.app
@@ -569,7 +570,7 @@
             reset! *reel $ typed/apply-control updater @*reel control
             , &unit
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :io :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             println "|Saved at" $ :iso $ host/date-now-snapshot
@@ -578,7 +579,7 @@
               format-cirru-edn $ :store @*reel
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -591,14 +592,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel on-control!
               , dispatch!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.main
           :require
@@ -703,21 +704,22 @@
                 decode-gen-code-op $ :: :hydrate-storage $ {}
         'normalize-store-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-store-data (data)
-            hint-fn $ Fn Dynamic $ -> gen-code.types/StoreData
-            if (struct? data)
-              if (&struct:matches? data gen-code.types/StoreData) (assert-type data 'gen-code.types/StoreData)
-                if
-                  = (&struct:get-name data) :StoreData
-                  normalize-store-data $ &struct:to-map data
+            if
+              and (struct? data) (&struct:matches? data gen-code.types/StoreData)
+              assert-type data gen-code.types/StoreData
+              let
+                  candidate $ if
+                    and (struct? data)
+                      = (&struct:get-name data) :StoreData
+                    &struct:to-map data
+                    , data
+                if (map? candidate)
+                  let
+                      states $ read-open-field-or candidate :states $ {}
+                    if (map? states) (gen-code.types/StoreData :states states) store
                   , store
-              if (map? data)
-                let
-                    empty-map $ {}
-                    states $ read-open-field-or data :states empty-map
-                  if (map? states) (gen-code.types/StoreData :states states) store
-                , store
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> gen-code.types/StoreData) (:features :js-ffi)
+          :schema $ quote $ Fn Input (-> gen-code.types/StoreData) (:generics Input) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-and-nominal-hydration)
             :code $ quote $ let
                 empty-map $ {}
@@ -847,7 +849,7 @@
               (:hydrate-storage data) data
               _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
-          :schema $ quote $ Fn gen-code.types/StoreData gen-code.schema/GenCodeOp String Number (-> gen-code.types/StoreData)
+          :schema $ quote $ Fn gen-code.types/StoreData gen-code.schema/GenCodeOp String Number (-> gen-code.types/StoreData) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.updater
           :require $ respo.cursor :refer $ update-state-tree update-state-tree-merge
