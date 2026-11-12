@@ -5,7 +5,7 @@ import { invoke_method } from "@calcit/procs";
 import { consume_genai_stream_$x_ } from "../js-out/gen-code.stream.mjs";
 import * as c from "../js-out/calcit.core.mjs";
 import { event__GT_edn } from "../js-out/respo.util.format.mjs";
-import { _$s_abort_control, _$s_ai_chat, initial_state, new_abort_controller_$x_, use_gen_code } from "../js-out/gen-code.core.mjs";
+import { _$s_abort_control, _$s_ai_chat, initial_state, new_abort_controller_$x_, use_gen_code, use_gen_code_with_dispatch } from "../js-out/gen-code.core.mjs";
 
 const unwrapChunk = (chunkOption) =>
   invoke_method("none?", chunkOption) ? null : invoke_method("unwrap", chunkOption);
@@ -91,7 +91,7 @@ const uiImport = registerHooks({ resolve(specifier, context, nextResolve) {
   return nextResolve(specifier === "virtual-dom/create-element"
     ? "virtual-dom/create-element.js" : specifier, context);
 } });
-const { dispatch_render_event_$x_, on_control_$x_, _$s_reel } = await import("../js-out/gen-code.main.mjs");
+const { dispatch_$x_, on_control_$x_, _$s_reel } = await import("../js-out/gen-code.main.mjs");
 const { GenCodeOp, decode_gen_code_op } = await import("../js-out/gen-code.schema.mjs");
 const { Control } = await import("../js-out/reel.typed.mjs");
 uiImport.deregister();
@@ -175,7 +175,30 @@ assert.ok(invoke_method("none?", decode_gen_code_op(
 assert.ok(invoke_method("none?", decode_gen_code_op(
   c._$o__$o_(c.to_tag("states-merge"), c._$L_(true), initial_state, changes),
 )));
-dispatch_render_event_$x_(c._$o__$o_(c.to_tag("states-merge"), cursor, initial_state, changes));
+const typedPlugin = use_gen_code_with_dispatch(
+  c._$n__$M_(c.to_tag("cursor"), cursor, c.to_tag("data"), initial_state),
+  () => "typed host hint",
+  () => {},
+  op => op,
+);
+const take = findElement(invoke_method("render", typedPlugin), element =>
+  field(element, "attrs").toArray().some(
+    attr => attr.get(0) === c.to_tag("inner-text") && attr.get(1) === "Take",
+  ),
+);
+assert.ok(take);
+let takeOperation;
+field(field(take, "event"), "click")(null, op => { takeOperation = op; });
+assert.equal(invoke_method("unwrap", c.enum_definition(takeOperation)), GenCodeOp);
+assert.equal(takeOperation.tag, c.to_tag("states"));
+assert.ok(c._$n__$e_(takeOperation.extra[0], cursor));
+assert.match(field(takeOperation.extra[1], "query"), /typed host hint/);
+
+const expectedOp = c._PCT__$o__$o_(
+  GenCodeOp,
+  c.to_tag("states-merge"), cursor, initial_state, changes,
+);
+dispatch_$x_(expectedOp);
 const recorded = c.deref(_$s_reel);
 const records = field(recorded, "records");
 assert.equal(invoke_method("len", records), invoke_method("len", field(before, "records")) + 1);
@@ -187,10 +210,6 @@ const state = field(nested, "data");
 assert.equal(field(state, "query"), "dispatch 合成提示 🐈");
 assert.equal(field(state, "loading?"), true);
 const record = invoke_method("unwrap", c.nth(records, invoke_method("len", records) - 1));
-const expectedOp = c._PCT__$o__$o_(
-  GenCodeOp,
-  c.to_tag("states-merge"), cursor, initial_state, changes,
-);
 assert.ok(c._$n__$e_(field(record, "op"), expectedOp));
 on_control_$x_(c._PCT__$o__$o_(Control, c.to_tag("toggle")));
 const controlled = c.deref(_$s_reel);

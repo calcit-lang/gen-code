@@ -15,15 +15,18 @@
             let
                 store $ :store reel
                 states $ :states store
-                plugin-gen-code $ use-gen-code (>> states :drafter)
+                plugin-gen-code $ use-gen-code-with-dispatch (>> states :drafter)
                   fn ()
                     hint-fn $ Fn $ -> String
                     , "|println |demo"
                   fn (code d!)
                     hint-fn $ Fn String
-                      Fn AnyEnum $ -> Unit
+                      Fn schema/GenCodeOp $ -> Unit
                       -> Unit
                     println "|submit code" code
+                  fn (op)
+                    hint-fn $ Fn schema/GenCodeOp $ -> schema/GenCodeOp
+                    , op
               assert-traits plugin-gen-code GenCodeActions
               div
                 {} $ :class-name $ str-spaced css/preset css/global css/row
@@ -45,7 +48,7 @@
             respo.comp.space :refer $ =<
             reel.comp.reel :refer $ comp-typed-reel
             gen-code.config :refer $ dev?
-            gen-code.core :refer $ use-gen-code GenCodeActions
+            gen-code.core :refer $ use-gen-code-with-dispatch GenCodeActions
             gen-code.schema :as schema
     'gen-code.config $ %{} 'FileEntry
       :defs $ {}
@@ -322,7 +325,19 @@
           :examples $ []
           :schema $ quote String
         'use-gen-code $ %{} 'CodeEntry (:doc "|this component can be used to integrate")
-          :code $ quote $ defn use-gen-code (states get-hint-code on-submit)
+          :code $ quote $ defn use-gen-code (states get-hint-code on-submit) (use-gen-code-with-dispatch states get-hint-code on-submit gen-code.schema/plugin-op-to-wire)
+          :examples $ []
+          :schema $ quote $ Fn StatesInput
+            Fn $ -> String
+            Fn String
+              Fn AnyEnum $ -> Unit
+              -> Unit
+            -> GenCodePluginData
+            :generics StatesInput
+            :features :js-ffi
+            :open :host
+        'use-gen-code-with-dispatch $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn use-gen-code-with-dispatch (states get-hint-code on-submit encode-op)
             let
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
@@ -335,11 +350,11 @@
                 loading? $ :loading? state
                 wire-dispatch $ fn (dispatch!)
                   hint-fn $ Fn
-                    Fn AnyEnum $ -> Unit
+                    Fn HostOp $ -> Unit
                     -> $ Fn schema/GenCodeOp $ -> Unit
                   fn (op)
                     hint-fn $ Fn schema/GenCodeOp $ -> Unit
-                    dispatch! $ gen-code.schema/plugin-op-to-wire op
+                    dispatch! $ encode-op op
                     , &unit
                 patch-dispatch $ fn (request-state emit!)
                   hint-fn $ Fn schema/GenCodeState
@@ -363,14 +378,14 @@
                         :value $ :query state
                         :on-input $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn AnyEnum $ -> Unit
+                            Fn HostOp $ -> Unit
                             -> Unit
-                          d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor
+                          d! $ encode-op $ gen-code.schema/GenCodeOp :states cursor
                             assoc state :query $ decode-map-as (schema/read-open-field-or e :value |) 'String
                           , &unit
                         :on-keydown $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
-                            Fn AnyEnum $ -> Unit
+                            Fn HostOp $ -> Unit
                             -> Unit
                             :async
                           let
@@ -398,9 +413,9 @@
                         a $ {} (:class-name css/link) (:inner-text |Take)
                           :on-click $ fn (e d!)
                             hint-fn $ Fn respo.schema/RespoEvent
-                              Fn AnyEnum $ -> Unit
+                              Fn HostOp $ -> Unit
                               -> Unit
-                            d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor
+                            d! $ encode-op $ gen-code.schema/GenCodeOp :states cursor
                               assoc state :query $ str (:query state) &newline &newline $ trim (get-hint-code)
                             , &unit
                         div
@@ -408,7 +423,7 @@
                           a $ {} (:class-name css/link) (:inner-text |Refresh)
                             :on-click $ fn (e d!)
                               hint-fn $ Fn respo.schema/RespoEvent
-                                Fn AnyEnum $ -> Unit
+                                Fn HostOp $ -> Unit
                                 -> Unit
                               initialize-chat! :gemini
                               let
@@ -420,7 +435,7 @@
                               :style $ {} (:border-color :red) (:color :red)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn AnyEnum $ -> Unit
+                                  Fn HostOp $ -> Unit
                                   -> Unit
                                 match (deref *abort-control)
                                   (:some abort)
@@ -430,7 +445,7 @@
                             button $ {} (:class-name css/button) (:inner-text |Run)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn AnyEnum $ -> Unit
+                                  Fn HostOp $ -> Unit
                                   -> Unit
                                   :async
                                 let
@@ -467,7 +482,7 @@
                             button $ {} (:class-name css/button) (:inner-text |Accept)
                               :on-click $ fn (e d!)
                                 hint-fn $ Fn respo.schema/RespoEvent
-                                  Fn AnyEnum $ -> Unit
+                                  Fn HostOp $ -> Unit
                                   -> Unit
                                 on-submit (:code state) d!
                                 , &unit
@@ -477,10 +492,11 @@
           :schema $ quote $ Fn StatesInput
             Fn $ -> String
             Fn String
-              Fn AnyEnum $ -> Unit
+              Fn HostOp $ -> Unit
               -> Unit
+            Fn schema/GenCodeOp $ -> HostOp
             -> GenCodePluginData
-            :generics StatesInput
+            :generics StatesInput HostOp
             :features :js-ffi
             :open :host
       :ns $ %{} 'NsEntry (:doc |)
@@ -516,15 +532,6 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn schema/GenCodeOp (-> Unit) (:features :js-ffi)
-        'dispatch-render-event! $ %{} 'CodeEntry
-          :doc "|Adapts the plugin's legacy event shape at the Demo render entry."
-          :code $ quote $ defn dispatch-render-event! (op)
-            match (schema/decode-gen-code-op op)
-              (:some action) (dispatch! action)
-              (:none) (eprintln "|Unknown operation:" op)
-            , &unit
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :decode)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println "|Running mode:" $ if config/dev? |dev |release
@@ -589,7 +596,7 @@
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel on-control!
-              , dispatch-render-event!
+              , dispatch!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
