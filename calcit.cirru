@@ -690,9 +690,9 @@
                 _ None
               fn (_) None
           :examples $ []
-          :schema $ quote $ Fn AnyEnum
+          :schema $ quote $ Fn Input
             -> $ Option GenCodeOp
-            :open :decode
+            :generics Input
           :tests $ []
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
