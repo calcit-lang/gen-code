@@ -343,11 +343,7 @@
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
                   List respo.schema/CoordKey
-                state $ decode-map-as
-                  let
-                      value $ schema/read-open-field-or states :data initial-state
-                    if (struct? value) (&struct:to-map value) value
-                  , 'gen-code.schema/GenCodeState
+                state $ schema/read-draft $ schema/read-open-field-or states :data initial-state
                 loading? $ :loading? state
                 wire-dispatch $ fn (dispatch!)
                   hint-fn $ Fn
@@ -646,9 +642,7 @@
               (:err _) store-data
               (:ok raw)
                 let
-                    state $ decode-map-as
-                      if (struct? raw) (&struct:to-map raw) raw
-                      , 'gen-code.schema/GenCodeState
+                    state $ read-draft raw
                   if (:loading? state)
                     struct-with store-data $ :states $ decode-map-as
                       assoc-in (:states store-data) ([] :drafter :data) (assoc state :loading? false)
@@ -737,6 +731,13 @@
             :: (&enum:nth op 0) & $ &enum:params op
           :examples $ []
           :schema $ quote $ Fn GenCodeOp (-> AnyEnum) (:open :reflect)
+        'read-draft $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-draft (raw)
+            decode-map-as
+              if (struct? raw) (&struct:to-map raw) raw
+              , 'gen-code.schema/GenCodeState
+          :examples $ []
+          :schema $ quote $ Fn Input (-> GenCodeState) (:generics Input)
         'read-open-field-or $ %{} 'CodeEntry
           :doc "|Read an open Map/Struct field; missing and nil values use the fallback, while false and Option payloads remain unchanged."
           :code $ quote $ defn read-open-field-or (value field fallback)
