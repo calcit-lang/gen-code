@@ -382,7 +382,9 @@
                             Fn HostOp $ -> Unit
                             -> Unit
                           d! $ encode-op $ gen-code.schema/GenCodeOp :states cursor
-                            assoc state :query $ decode-map-as (schema/read-open-field-or e :value |) 'String
+                            assoc state :query $ let
+                                value $ :value e
+                              if (nil? value) | $ decode-map-as value String
                           , &unit
                         :on-keydown $ fn (e d!)
                           hint-fn $ Fn respo.schema/RespoEvent
