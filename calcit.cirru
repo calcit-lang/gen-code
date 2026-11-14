@@ -693,7 +693,10 @@
                 (:states cursor state)
                   Some $ GenCodeOp :states
                     decode-map-as cursor $ List respo.schema/CoordKey
-                    decode-map-as state 'gen-code.schema/GenCodeDraftValue
+                    if
+                      and (struct? state) (&struct:matches? state GenCodeState)
+                      assert-type state GenCodeState
+                      decode-map-as state GenCodeDraftValue
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
@@ -714,6 +717,18 @@
             -> $ Option GenCodeOp
             :generics Input
           :tests $ []
+            %{} 'TestEntry (:name |keeps-nominal-and-legacy-draft-operations)
+              :code $ quote $ let
+                  draft $ GenCodeState :query |draft :answer | :code | :loading? false :done? false
+                  fields $ {} (:query |draft) (:loading? false)
+                assert=
+                  Some $ GenCodeOp :states ([] :draft) draft
+                  decode-gen-code-op $ :: :states ([] :draft) draft
+                assert=
+                  Some $ GenCodeOp :states ([] :draft) fields
+                  decode-gen-code-op $ :: :states ([] :draft) fields
+                assert= None $ decode-gen-code-op $ :: :states ([] :draft)
+                  {} $ :query 7
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
                 Some $ GenCodeOp :hydrate-storage store
