@@ -81,6 +81,13 @@
               match self $
                 :plugin r cursor state
                 d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor initial-state
+            .reset-state-with $ fn (self emit!)
+              hint-fn $ Fn GenCodePluginData0
+                Fn schema/GenCodeOp $ -> Unit
+                -> Unit
+              match self $
+                :plugin r cursor state
+                emit! $ gen-code.schema/GenCodeOp :states cursor initial-state
           :examples $ []
           :schema $ quote Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
@@ -121,33 +128,52 @@
               Fn AnyEnum $ -> Unit
               -> Unit
               :generics T
+            .reset-state-with $ Fn T
+              Fn gen-code.schema/GenCodeOp $ -> Unit
+              -> Unit
+              :generics T
           :examples $ []
           :schema $ quote Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def GenCodePluginData (impl-traits GenCodePluginData0 %gen-code-actions)
           :examples $ []
           :schema $ quote EnumDef
-          :tests $ [] $ %{} 'TestEntry (:name |render-and-reset-contract)
-            :code $ quote $ let
-                *renders $ ref 0
-                *reset $ ref $ :: :states ([] :initial) initial-state
-                render-node $ fn ()
-                  hint-fn $ Fn $ -> respo.schema/Element
-                  swap! *renders inc
+          :tests $ []
+            %{} 'TestEntry (:name |render-and-reset-contract)
+              :code $ quote $ let
+                  *renders $ ref 0
+                  *reset $ ref $ :: :states ([] :initial) initial-state
+                  render-node $ fn ()
+                    hint-fn $ Fn $ -> respo.schema/Element
+                    swap! *renders inc
+                    div $ {}
+                  plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
+                  node $ .render plugin
+                assert=
                   div $ {}
-                plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
-                node $ .render plugin
-              assert=
-                div $ {}
-                , node
-              .reset-state plugin $ fn (op)
-                hint-fn $ Fn AnyEnum $ -> Unit
-                reset! *reset op
-                , &unit
-              assert= 1 @*renders
-              assert=
-                :: :states ([] :drafter) initial-state
-                , @*reset
+                  , node
+                .reset-state plugin $ fn (op)
+                  hint-fn $ Fn AnyEnum $ -> Unit
+                  reset! *reset op
+                  , &unit
+                assert= 1 @*renders
+                assert=
+                  :: :states ([] :drafter) initial-state
+                  , @*reset
+            %{} 'TestEntry (:name |nominal-reset)
+              :code $ quote $ let
+                  captured $ ref $ gen-code.schema/GenCodeOp :states ([] :initial) initial-state
+                  plugin $ %:: GenCodePluginData :plugin
+                    fn () $ div $ {}
+                    [] :drafter
+                    , initial-state
+                .reset-state-with plugin $ fn (op)
+                  hint-fn $ Fn schema/GenCodeOp $ -> Unit
+                  reset! captured op
+                  , &unit
+                assert=
+                  gen-code.schema/GenCodeOp :states ([] :drafter) initial-state
+                  , @captured
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodePluginData0
             :plugin
@@ -343,11 +369,7 @@
                 cursor $ decode-map-as
                   schema/read-open-field-or states :cursor $ []
                   List respo.schema/CoordKey
-                state $ decode-map-as
-                  let
-                      value $ schema/read-open-field-or states :data initial-state
-                    if (struct? value) (&struct:to-map value) value
-                  , 'gen-code.schema/GenCodeState
+                state $ schema/read-draft $ schema/read-open-field-or states :data initial-state
                 loading? $ :loading? state
                 wire-dispatch $ fn (dispatch!)
                   hint-fn $ Fn
@@ -646,9 +668,7 @@
               (:err _) store-data
               (:ok raw)
                 let
-                    state $ decode-map-as
-                      if (struct? raw) (&struct:to-map raw) raw
-                      , 'gen-code.schema/GenCodeState
+                    state $ read-draft raw
                   if (:loading? state)
                     struct-with store-data $ :states $ decode-map-as
                       assoc-in (:states store-data) ([] :drafter :data) (assoc state :loading? false)
@@ -737,6 +757,13 @@
             :: (&enum:nth op 0) & $ &enum:params op
           :examples $ []
           :schema $ quote $ Fn GenCodeOp (-> AnyEnum) (:open :reflect)
+        'read-draft $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn read-draft (raw)
+            decode-map-as
+              if (struct? raw) (&struct:to-map raw) raw
+              , 'gen-code.schema/GenCodeState
+          :examples $ []
+          :schema $ quote $ Fn Input (-> GenCodeState) (:generics Input)
         'read-open-field-or $ %{} 'CodeEntry
           :doc "|Read an open Map/Struct field; missing and nil values use the fallback, while false and Option payloads remain unchanged."
           :code $ quote $ defn read-open-field-or (value field fallback)
@@ -820,7 +847,9 @@
         'read-genai-chunk $ %{} 'CodeEntry
           :doc "|Read the stream text from its typed host boundary."
           :code $ quote $ defn read-genai-chunk (value)
-            .-text $ unsafe-coerce value GenAIChunkHost
+            .-text $ js-cast
+              if (js/Reflect.has value |text) value $ js-object $ :text js/undefined
+              , GenAIChunkHost
           :examples $ []
           :schema $ quote $ Fn JsObject
             -> $ JsNullish String
