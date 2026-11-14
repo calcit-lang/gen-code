@@ -278,7 +278,7 @@
             reset! *ai-chat $ Some $ let
                 model $ pick-model variant
                 doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep $ include-file! |respo.md
-                ai $ unsafe-coerce
+                ai $ js-cast
                   new GoogleGenAI $ js-object $ :apiKey (get-gemini-key!)
                   , GenAIClientHost
               js-cast
@@ -693,7 +693,10 @@
                 (:states cursor state)
                   Some $ GenCodeOp :states
                     decode-map-as cursor $ List respo.schema/CoordKey
-                    decode-map-as state 'gen-code.schema/GenCodeDraftValue
+                    if
+                      and (struct? state) (&struct:matches? state GenCodeState)
+                      assert-type state GenCodeState
+                      decode-map-as state GenCodeDraftValue
                 (:states-merge cursor state changes)
                   if
                     and (struct? state) (&struct:matches? state GenCodeState)
@@ -714,6 +717,18 @@
             -> $ Option GenCodeOp
             :generics Input
           :tests $ []
+            %{} 'TestEntry (:name |keeps-nominal-and-legacy-draft-operations)
+              :code $ quote $ let
+                  draft $ GenCodeState :query |draft :answer | :code | :loading? false :done? false
+                  fields $ {} (:query |draft) (:loading? false)
+                assert=
+                  Some $ GenCodeOp :states ([] :draft) draft
+                  decode-gen-code-op $ :: :states ([] :draft) draft
+                assert=
+                  Some $ GenCodeOp :states ([] :draft) fields
+                  decode-gen-code-op $ :: :states ([] :draft) fields
+                assert= None $ decode-gen-code-op $ :: :states ([] :draft)
+                  {} $ :query 7
             %{} 'TestEntry (:name |decodes-hydration)
               :code $ quote $ assert=
                 Some $ GenCodeOp :hydrate-storage store
@@ -759,9 +774,12 @@
           :schema $ quote $ Fn GenCodeOp (-> AnyEnum) (:open :reflect)
         'read-draft $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-draft (raw)
-            decode-map-as
-              if (struct? raw) (&struct:to-map raw) raw
-              , 'gen-code.schema/GenCodeState
+            if
+              and (struct? raw) (&struct:matches? raw GenCodeState)
+              assert-type raw GenCodeState
+              decode-map-as
+                if (struct? raw) (&struct:to-map raw) raw
+                , GenCodeState
           :examples $ []
           :schema $ quote $ Fn Input (-> GenCodeState) (:generics Input)
         'read-open-field-or $ %{} 'CodeEntry
