@@ -759,9 +759,12 @@
           :schema $ quote $ Fn GenCodeOp (-> AnyEnum) (:open :reflect)
         'read-draft $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn read-draft (raw)
-            decode-map-as
-              if (struct? raw) (&struct:to-map raw) raw
-              , 'gen-code.schema/GenCodeState
+            if
+              and (struct? raw) (&struct:matches? raw GenCodeState)
+              assert-type raw GenCodeState
+              decode-map-as
+                if (struct? raw) (&struct:to-map raw) raw
+                , GenCodeState
           :examples $ []
           :schema $ quote $ Fn Input (-> GenCodeState) (:generics Input)
         'read-open-field-or $ %{} 'CodeEntry
