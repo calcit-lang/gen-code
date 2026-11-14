@@ -106,6 +106,7 @@ const patches = [];
 const keyboardPatches = [];
 const fakeChat = {
   async *sendMessageStream() {
+    yield {};
     yield { text: '["println","|offline"]' };
   },
 };
