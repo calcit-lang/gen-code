@@ -278,7 +278,7 @@
             reset! *ai-chat $ Some $ let
                 model $ pick-model variant
                 doc-content $ str (include-file! |declare-task.md) sep (include-file! |format-guide.md) sep (include-file! |calcit-lang.md) sep $ include-file! |respo.md
-                ai $ unsafe-coerce
+                ai $ js-cast
                   new GoogleGenAI $ js-object $ :apiKey (get-gemini-key!)
                   , GenAIClientHost
               js-cast
