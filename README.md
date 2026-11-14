@@ -45,7 +45,7 @@ Respo **0.19.3**、JS-FFI **0.2.12** / Router **0.12.0**。消费者需统一精
 
 `use-gen-code` 返回插件，`.render` 生成界面，`.reset-state` 向传入的 dispatch 发送一个 `:: :states cursor state` 事件。提交回调接收代码字符串和 dispatch，继续遵守单事件合同。
 
-类型化宿主可用 `use-gen-code-with-dispatch` 并传入从 `GenCodeOp` 到宿主操作类型的转换函数。内置 Demo 直接派发具名事件。原 `use-gen-code` 仍为旧宿主发送匿名事件。
+类型化宿主可用 `use-gen-code-with-dispatch` 并传入从 `GenCodeOp` 到宿主操作类型的转换函数。内置 Demo 直接派发具名事件。原 `use-gen-code` 仍为旧宿主发送匿名事件。 类型化宿主可调用 `(.reset-state-with plugin emit!)`，其中 `emit!` 接收具名 `GenCodeOp`，可复用传给 `use-gen-code-with-dispatch` 的转换函数。
 
 开放 Map/Struct 字段读取如实返回 Dynamic：缺失或显式 nil 使用 fallback，false 和 Option 载荷原样保留。不能直接换为会展开 Option 的 field-or。外部同名 StoreData 仅作为数据输入，转 Map、检查 states 和嵌套状态，再重建本地类型；名称不代表身份，见 [#41](https://github.com/calcit-lang/gen-code/issues/41)。
 

@@ -81,6 +81,13 @@
               match self $
                 :plugin r cursor state
                 d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor initial-state
+            .reset-state-with $ fn (self emit!)
+              hint-fn $ Fn GenCodePluginData0
+                Fn schema/GenCodeOp $ -> Unit
+                -> Unit
+              match self $
+                :plugin r cursor state
+                emit! $ gen-code.schema/GenCodeOp :states cursor initial-state
           :examples $ []
           :schema $ quote Impl
         '*abort-control $ %{} 'CodeEntry (:doc |)
@@ -121,33 +128,52 @@
               Fn AnyEnum $ -> Unit
               -> Unit
               :generics T
+            .reset-state-with $ Fn T
+              Fn gen-code.schema/GenCodeOp $ -> Unit
+              -> Unit
+              :generics T
           :examples $ []
           :schema $ quote Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def GenCodePluginData (impl-traits GenCodePluginData0 %gen-code-actions)
           :examples $ []
           :schema $ quote EnumDef
-          :tests $ [] $ %{} 'TestEntry (:name |render-and-reset-contract)
-            :code $ quote $ let
-                *renders $ ref 0
-                *reset $ ref $ :: :states ([] :initial) initial-state
-                render-node $ fn ()
-                  hint-fn $ Fn $ -> respo.schema/Element
-                  swap! *renders inc
+          :tests $ []
+            %{} 'TestEntry (:name |render-and-reset-contract)
+              :code $ quote $ let
+                  *renders $ ref 0
+                  *reset $ ref $ :: :states ([] :initial) initial-state
+                  render-node $ fn ()
+                    hint-fn $ Fn $ -> respo.schema/Element
+                    swap! *renders inc
+                    div $ {}
+                  plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
+                  node $ .render plugin
+                assert=
                   div $ {}
-                plugin $ %:: GenCodePluginData :plugin render-node ([] :drafter) initial-state
-                node $ .render plugin
-              assert=
-                div $ {}
-                , node
-              .reset-state plugin $ fn (op)
-                hint-fn $ Fn AnyEnum $ -> Unit
-                reset! *reset op
-                , &unit
-              assert= 1 @*renders
-              assert=
-                :: :states ([] :drafter) initial-state
-                , @*reset
+                  , node
+                .reset-state plugin $ fn (op)
+                  hint-fn $ Fn AnyEnum $ -> Unit
+                  reset! *reset op
+                  , &unit
+                assert= 1 @*renders
+                assert=
+                  :: :states ([] :drafter) initial-state
+                  , @*reset
+            %{} 'TestEntry (:name |nominal-reset)
+              :code $ quote $ let
+                  captured $ ref $ gen-code.schema/GenCodeOp :states ([] :initial) initial-state
+                  plugin $ %:: GenCodePluginData :plugin
+                    fn () $ div $ {}
+                    [] :drafter
+                    , initial-state
+                .reset-state-with plugin $ fn (op)
+                  hint-fn $ Fn schema/GenCodeOp $ -> Unit
+                  reset! captured op
+                  , &unit
+                assert=
+                  gen-code.schema/GenCodeOp :states ([] :drafter) initial-state
+                  , @captured
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum GenCodePluginData0
             :plugin
