@@ -38,7 +38,7 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State schema/GenCodeOp gen-code.types/StoreData)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :io :state)
             -> respo.schema/Component
             :features :io :state
       :ns $ %{} 'NsEntry (:doc |)
@@ -68,21 +68,21 @@
     'gen-code.core $ %{} 'FileEntry
       :defs $ {}
         '%gen-code-actions $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl %gen-code-actions GenCodeActions
+          :code $ quote $ defimpl GenCodePluginData GenCodeActions
             .render $ fn (self)
-              hint-fn $ Fn GenCodePluginData0 $ -> respo.schema/Element
+              hint-fn $ Fn GenCodePluginData $ -> respo.schema/Element
               match self $
                 :plugin render-node cursor state
                 render-node
             .reset-state $ fn (self d!)
-              hint-fn $ Fn GenCodePluginData0
+              hint-fn $ Fn GenCodePluginData
                 Fn AnyEnum $ -> Unit
                 -> Unit
               match self $
                 :plugin r cursor state
                 d! $ gen-code.schema/plugin-op-to-wire $ gen-code.schema/GenCodeOp :states cursor initial-state
             .reset-state-with $ fn (self emit!)
-              hint-fn $ Fn GenCodePluginData0
+              hint-fn $ Fn GenCodePluginData
                 Fn schema/GenCodeOp $ -> Unit
                 -> Unit
               match self $
@@ -135,7 +135,11 @@
           :examples $ []
           :schema $ quote Trait
         'GenCodePluginData $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def GenCodePluginData (impl-traits GenCodePluginData0 %gen-code-actions)
+          :code $ quote $ defenum GenCodePluginData (:impls GenCodeActions)
+            :plugin
+              Fn $ -> respo.schema/Element
+              List respo.schema/CoordKey
+              , gen-code.schema/GenCodeState
           :examples $ []
           :schema $ quote EnumDef
           :tests $ []
@@ -175,11 +179,7 @@
                   gen-code.schema/GenCodeOp :states ([] :drafter) initial-state
                   , @captured
         'GenCodePluginData0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum GenCodePluginData0
-            :plugin
-              Fn $ -> respo.schema/Element
-              List respo.schema/CoordKey
-              , gen-code.schema/GenCodeState
+          :code $ quote $ def GenCodePluginData0 GenCodePluginData
           :examples $ []
           :schema $ quote EnumDef
         'call-genai-msg! $ %{} 'CodeEntry (:doc |)
@@ -512,7 +512,7 @@
                                 on-submit (:code state) d!
                                 , &unit
                         , None
-              assert-type (%:: GenCodePluginData :plugin render-node cursor state) 'GenCodePluginData
+              assert-type (GenCodePluginData :plugin render-node cursor state) GenCodePluginData
           :examples $ []
           :schema $ quote $ Fn StatesInput
             Fn $ -> String
@@ -892,13 +892,31 @@
                   update-state-tree (:states store) cursor s
                   Map Tag Dynamic
               (:states-merge cursor s0 changes)
-                struct-with store $ :states $ decode-map-as
-                  update-state-tree-merge (:states store) cursor s0 changes
-                  Map Tag Dynamic
+                let
+                    state $ match
+                      get-in (:states store)
+                        concat cursor $ [] :data
+                      (:ok raw)
+                        if (nil? raw) s0 raw
+                      (:err _) s0
+                    merged $ loop
+                        updated state
+                        xs $ &map:to-list changes
+                      if (empty? xs) updated $ let
+                          pair $ &list:nth xs 0
+                          k $ &list:nth pair 0
+                          v $ &list:nth pair 1
+                          next-state $ if (map? updated) (&map:assoc updated k v)
+                            if (struct? updated)
+                              struct-with updated $ k v
+                              raise $ str-spaced |unknown-state-to-merge updated
+                        recur next-state $ &list:rest xs
+                  struct-with store $ :states $ decode-map-as
+                    update-state-tree (:states store) cursor merged
+                    Map Tag Dynamic
               (:hydrate-storage data) data
-              _ $ do (eprintln "|unknown op:" op) store
           :examples $ []
-          :schema $ quote $ Fn gen-code.types/StoreData gen-code.schema/GenCodeOp String Number (-> gen-code.types/StoreData) (:features :io)
+          :schema $ quote $ Fn gen-code.types/StoreData gen-code.schema/GenCodeOp String Number (-> gen-code.types/StoreData) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.updater
           :require $ respo.cursor :refer $ update-state-tree update-state-tree-merge
