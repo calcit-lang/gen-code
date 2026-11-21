@@ -5,7 +5,7 @@ Demo: https://repo.calcit-lang.org/gen-code/
 ## 0.0.26 候选
 
 使用者需统一 Calcit CLI 和 `@calcit/procs` **0.44.0**，配对正式
-UI **0.15.5**、Respo **0.19.11**、JS-FFI **0.2.18** 和传递依赖 Router **0.12.9**，
+UI **0.15.7**、Respo **0.19.13**、JS-FFI **0.2.19** 和传递依赖 Router **0.12.11**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同。
 
 Reel **0.11.3** 是 Demo 的开发依赖。Demo 将插件事件解码为具名 `GenCodeOp`，快捷键与面板通过独立回调接收 `Control`。流式补丁通过 `GenCodeFieldValue` union 约束为字符串或布尔值，Editor 等宿主的插件回调继续接收单个原格式操作。
