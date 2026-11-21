@@ -564,8 +564,15 @@
             match
               browser/storage-get $ .unwrap-or (get config/site :storage-key) |workflow
               (:some raw)
-                dispatch! $ gen-code.schema/GenCodeOp :hydrate-storage $ schema/clear-interrupted-loading
-                  schema/normalize-store-data $ parse-cirru-edn raw
+                match
+                  schema/try-normalize-store-data $ parse-cirru-edn raw
+                  (:some stored)
+                    dispatch! $ gen-code.schema/GenCodeOp :hydrate-storage $ schema/clear-interrupted-loading stored
+                  (:none)
+                    let
+                        message "|Cannot restore stored workflow: expected a StoreData map with states. The original storage has been left unchanged."
+                      hud! |error message
+                      raise message
               (:none) &unit
             render-app!
             add-watch! *reel :changes $ fn (reel prev)
@@ -741,20 +748,7 @@
                 decode-gen-code-op $ :: :hydrate-storage $ {}
         'normalize-store-data $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn normalize-store-data (data)
-            if
-              and (struct? data) (&struct:matches? data gen-code.types/StoreData)
-              assert-type data gen-code.types/StoreData
-              let
-                  candidate $ if
-                    and (struct? data)
-                      = (&struct:get-name data) :StoreData
-                    &struct:to-map data
-                    , data
-                if (map? candidate)
-                  let
-                      states $ read-open-field-or candidate :states $ {}
-                    if (map? states) (gen-code.types/StoreData :states states) store
-                  , store
+            .unwrap-or (try-normalize-store-data data) store
           :examples $ []
           :schema $ quote $ Fn Input (-> gen-code.types/StoreData) (:generics Input) (:features :js-ffi)
           :tests $ [] $ %{} 'TestEntry (:name |legacy-and-nominal-hydration)
@@ -825,6 +819,42 @@
             gen-code.types/StoreData :states $ {}
           :examples $ []
           :schema $ quote gen-code.types/StoreData
+        'try-normalize-store-data $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn try-normalize-store-data (data)
+            if
+              and (struct? data) (&struct:matches? data gen-code.types/StoreData)
+              Some $ assert-type data gen-code.types/StoreData
+              let
+                  candidate $ if
+                    and (struct? data)
+                      = (&struct:get-name data) :StoreData
+                    &struct:to-map data
+                    , data
+                if (map? candidate)
+                  match
+                    get (decode-map-as candidate 'Map) :states
+                    (:some states)
+                      if (map? states)
+                        Some $ gen-code.types/StoreData :states states
+                        , None
+                    (:none) None
+                  , None
+          :examples $ []
+          :schema $ quote $ Fn Input
+            -> $ Option gen-code.types/StoreData
+            :generics Input
+            :features :js-ffi
+          :tests $ [] $ %{} 'TestEntry (:name |classifies-archive-shape)
+            :code $ quote $ do
+              assert= (Some store)
+                try-normalize-store-data $ {} $ :states ({})
+              assert= None $ try-normalize-store-data $ {}
+              assert= None $ try-normalize-store-data $ {} (:states nil)
+              assert= None $ try-normalize-store-data false
+              assert= None $ try-normalize-store-data $ {} (:states 42)
+              assert= store $ normalize-store-data $ {}
+              assert= store $ normalize-store-data $ {} (:states nil)
+              assert= store $ normalize-store-data $ {} (:states 42)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.schema
     'gen-code.stream $ %{} 'FileEntry
