@@ -2,6 +2,10 @@
 
 Demo: https://repo.calcit-lang.org/gen-code/
 
+## Demo 存档恢复
+
+Demo 仍兼容包含 Map 类型 `:states` 的旧 Map 和 `StoreData` 存档。缺少 `:states` 或其值不是 Map 的存档不再作为空状态加载。若已存数据能解析但不是可恢复的结构，页面会提示错误并停止自动保存，保留原始存档供检查；不会静默用空状态覆盖它。供其他调用方使用的 `normalize-store-data` 仍保留原有回退行为，`try-normalize-store-data` 可用于显式区分恢复失败。
+
 ## 0.0.26 候选
 
 使用者需统一 Calcit CLI 和 `@calcit/procs` **0.44.0**，配对正式
