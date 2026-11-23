@@ -6,13 +6,13 @@ Demo: https://repo.calcit-lang.org/gen-code/
 
 Demo 仍兼容包含 Map 类型 `:states` 的旧 Map 和 `StoreData` 存档。缺少 `:states` 或其值不是 Map 的存档不再作为空状态加载。若已存数据能解析但不是可恢复的结构，页面会提示错误并停止自动保存，保留原始存档供检查；不会静默用空状态覆盖它。供其他调用方使用的 `normalize-store-data` 仍保留原有回退行为，`try-normalize-store-data` 可用于显式区分恢复失败。
 
-## 0.0.28 候选
+## 0.0.29 候选
 
 使用者需统一 Calcit CLI 和 `@calcit/procs` **0.44.0**，配对正式
-UI **0.16.2**、Respo **0.19.15**、JS-FFI **0.2.22** 和传递依赖 Router **0.12.14**，
+UI **0.16.3**、Respo **0.19.16**、JS-FFI **0.2.23** 和传递依赖 Router **0.12.15**，
 然后重新生成 JS。插件继续接收单事件派发，代码生成请求与存档行为沿用原合同；请在正式 Git tag 发布后升级。
 
-Reel **0.11.6** 是 Demo 的开发依赖。Demo 将插件事件解码为具名 `GenCodeOp`，快捷键与面板通过独立回调接收 `Control`。流式补丁通过 `GenCodeFieldValue` union 约束为字符串或布尔值，Editor 等宿主的插件回调继续接收单个原格式操作。
+Reel **0.11.7** 是 Demo 的开发依赖。Demo 将插件事件解码为具名 `GenCodeOp`，快捷键与面板通过独立回调接收 `Control`。流式补丁通过 `GenCodeFieldValue` union 约束为字符串或布尔值，Editor 等宿主的插件回调继续接收单个原格式操作。
 内部 `call-genai-msg!` 只向回调交付补丁 Map。插件在派发边界补齐 cursor 和请求状态，生成原格式的 `:states-merge` 事件。
 Meta+Enter 直接读取 Respo 提供的类型化键盘字段，快捷键条件与派发协议不变。
 质量检查使用 0.44.0 的 coverage、弱类型和弃用视图，继续限制两处既有 SDK 强转。
