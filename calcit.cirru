@@ -896,7 +896,9 @@
           :doc "|Read the stream text from its typed host boundary."
           :code $ quote $ defn read-genai-chunk (value)
             .-text $ js-cast
-              if (js/Reflect.has value |text) value $ js-object $ :text js/undefined
+              if
+                contract/expect-bool |Reflect.has $ js/Reflect.has value |text
+                , value $ js-object $ :text js/undefined
               , GenAIChunkHost
           :examples $ []
           :schema $ quote $ Fn JsObject
@@ -904,6 +906,7 @@
             :features :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns gen-code.stream
+          :require $ js-ffi.contract :as contract
     'gen-code.types $ %{} 'FileEntry
       :defs $ {} $ 'StoreData
         %{} 'CodeEntry (:doc |)
