@@ -2,13 +2,19 @@ import assert from "node:assert/strict";
 import { registerHooks } from "node:module";
 
 import { invoke_method } from "@calcit/procs";
-import { consume_genai_stream_$x_ } from "../js-out/gen-code.stream.mjs";
+import { consume_genai_stream_$x_, read_genai_chunk } from "../js-out/gen-code.stream.mjs";
 import * as c from "../js-out/calcit.core.mjs";
 import { event__GT_edn } from "../js-out/respo.util.format.mjs";
 import { _$s_abort_control, _$s_ai_chat, initial_state, new_abort_controller_$x_, use_gen_code, use_gen_code_with_dispatch } from "../js-out/gen-code.core.mjs";
 
 const unwrapChunk = (chunkOption) =>
   invoke_method("none?", chunkOption) ? null : invoke_method("unwrap", chunkOption);
+
+// The SDK may expose text as an own or inherited property, or omit it.
+assert.equal(read_genai_chunk({ text: "hello" }), "hello");
+assert.equal(read_genai_chunk(Object.create({ text: "inherited" })), "inherited");
+assert.equal(read_genai_chunk({}), undefined);
+assert.equal(read_genai_chunk({ text: null }), null);
 
 const controller = new_abort_controller_$x_();
 assert.equal(controller.signal.aborted, false);
