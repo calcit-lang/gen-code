@@ -69,11 +69,7 @@ jobs:
             jq -e '
               .data.summary.kinds as $k |
               .data.summary.intents.unresolved == 0 and
-              $k["code-nil"] == 0 and $k["code-dynamic"] == 0 and $k["unsafe-coerce"] <= 2 and
-              all(.data.definitions[];
-                ([.occurrences[] | select(.kind == "unsafe-coerce")] | length) <=
-                (if .id == "gen-code.core/initialize-chat!" or .id == "gen-code.stream/read-genai-chunk"
-                 then 1 else 0 end))'
+              $k["code-nil"] == 0 and $k["code-dynamic"] == 0 and $k["unsafe-coerce"] == 0'
           calcit calcit.cirru analyze weak-types --only deprecated-call --summary-only --format json |
             jq -e '.data.summary.calls == 0'
 
